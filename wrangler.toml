@@ -2,8 +2,7 @@ name = "jaxtri-academy"
 compatibility_date = "2026-07-07"
 pages_build_output_dir = "."
 
-# Create a D1 database later and paste the ID here.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "jaxtri_academy"
-# database_id = "c7ecbbaa-09bc-4c0f-ae7f-878cdac27f60"
+[[d1_databases]]
+binding = "DB"
+database_name = "jaxtri_academy"
+database_id = "c7ecbbaa-09bc-4c0f-ae7f-878cdac27f60"
