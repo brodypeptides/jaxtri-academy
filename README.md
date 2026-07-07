@@ -1,13 +1,23 @@
-# Jaxtri Academy v1.1 Manual Static Site
+# Jaxtri Academy v1.2 Manual Portal Foundation
 
-This is the stable GitHub Pages version. No npm. No React. No GitHub Actions required.
+Static GitHub Pages build. No npm, no actions, no backend required.
+
+## New in v1.2
+- Affiliate signup page
+- Affiliate login preview
+- Owner login preview
+- Affiliate dashboard preview
+- Owner dashboard preview
+- Content submission page
+- Owner upload/post content page
+
+## Important
+These are frontend pages only. Real login, uploads, form submissions, and owner-only access require a backend. Recommended later stack:
+- Cloudflare Pages
+- Cloudflare Workers
+- Cloudflare D1
+- Cloudflare R2
+- Cloudflare Access or custom auth
 
 ## Deploy
-1. Copy all files into your repo.
-2. Commit and push with GitHub Desktop.
-3. GitHub Pages settings: Deploy from a branch -> main -> /(root).
-
-## Edit Content
-Use the files in `/content/` for your manually written hooks, video ideas, scripts, captions, b-roll ideas, and approved claims.
-
-Important workflow note: the owner creates the affiliate's GoAffPro account manually after Discord/application approval.
+Push everything to GitHub and use GitHub Pages: Deploy from branch -> main -> /(root).
