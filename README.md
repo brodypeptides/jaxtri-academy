@@ -1,83 +1,101 @@
-# Jaxtri Academy — Sprint 3.1.1 Owner Invite Lockdown
+# Jaxtri Academy — Sprint 4 Team Messaging
 
-This patch keeps Sprint 3.1 direct invites, but removes `Owner` from the Admin panel invite role selector.
+Sprint 4 through 4.4 adds a Discord/Teams-style team layer to the app.
 
-## What changed
+## What is included
 
-- Admin panel can create direct invites for `Affiliate` and `Manager`.
-- `Owner` invites are blocked at the API level, even if someone tries to force the request manually.
-- Existing owner invites still work if they were created intentionally in D1.
-- Owner invite creation is now a D1 Console / command-line-only action.
+- Slide-out roster panel on logged-in pages
+- Online / away / offline presence
+- Direct messages
+- Unread message badges
+- Near-realtime polling refresh
+- Team channels
+- Staff-only Leadership channel
+- Owner/manager channel creation
+- Link and image sharing in messages
 
-## Why
+## Important note about file sharing
 
-Owner access is full command center access. Keeping Owner invites out of the web panel prevents accidental full-access invites.
-
-## No database migration needed
-
-This uses the same Sprint 3 `invites` table.
-
-## How to create an Owner invite manually in D1
-
-Go to Cloudflare → D1 → your database → Console.
-
-Replace the email below, then run:
-
-```sql
-INSERT INTO invites (
-  token,
-  application_id,
-  email,
-  role,
-  status,
-  expires_at,
-  created_by
-)
-VALUES (
-  lower(hex(randomblob(24))),
-  NULL,
-  'OWNER_EMAIL_HERE',
-  'owner',
-  'active',
-  datetime('now', '+14 days'),
-  (SELECT id FROM users WHERE role = 'owner' ORDER BY id ASC LIMIT 1)
-);
-```
-
-Then get the token:
-
-```sql
-SELECT token, email, role, status, expires_at
-FROM invites
-WHERE email = 'OWNER_EMAIL_HERE'
-ORDER BY id DESC
-LIMIT 1;
-```
-
-Your invite link is:
-
-```text
-https://YOUR-SITE.pages.dev/invite.html?token=PASTE_TOKEN_HERE
-```
-
-After the company owner accepts the invite, confirm them:
-
-```sql
-SELECT id, full_name, email, username, role, status, created_at
-FROM users
-WHERE email = 'OWNER_EMAIL_HERE';
-```
+Sprint 4.4 supports sharing **file/image URLs**. Real binary uploads require storage such as Cloudflare R2, which should be a later sprint. This keeps the current version free, stable, and simple.
 
 ## Install
 
-Copy these files into the repo, replacing existing matching files:
+1. Copy the contents of this package into your repo.
+2. Keep your existing `wrangler.toml`.
+3. Commit and push.
+4. Before testing, run this D1 migration:
 
-- `owner-admin.html`
-- `functions/api/admin/invites.js`
-- `README.md`
+```sql
+-- database/sprint4-team-messaging.sql
+```
 
-Then commit and push:
+Run the full contents of `database/sprint4-team-messaging.sql` in Cloudflare D1.
+
+## New files
 
 ```text
-sprint 3.1.1 owner invite lockdown
+assets/roster.js
+functions/lib/team.js
+functions/api/presence.js
+functions/api/roster.js
+functions/api/messages/direct.js
+functions/api/channels.js
+functions/api/channels/[id]/messages.js
+database/sprint4-team-messaging.sql
 ```
+
+## Updated files
+
+The logged-in pages now include:
+
+```html
+<script src="assets/roster.js"></script>
+```
+
+Updated pages include:
+
+```text
+academy-dashboard.html
+feed.html
+training.html
+content-vault.html
+resources.html
+owner-dashboard.html
+owner-recruitment.html
+owner-admin.html
+assets/styles.css
+```
+
+## Permissions
+
+- Owner can message everyone.
+- Manager can message everyone.
+- Affiliate can message owners/managers.
+- Affiliates cannot DM other affiliates yet.
+- General channel is visible to everyone.
+- Leadership channel is visible to owners/managers only.
+- Owners/managers can create channels from the roster panel.
+
+## Presence logic
+
+- Online: active in the last 2 minutes
+- Away: active in the last 15 minutes
+- Offline: older than 15 minutes
+
+The app refreshes presence, roster, channels, and unread counts through polling. This gives a live feel without WebSocket infrastructure.
+
+## Test flow
+
+1. Log in as owner.
+2. Open the floating **Team** button.
+3. Confirm users appear in the roster.
+4. Open **Channels**.
+5. Send a message in **General**.
+6. Invite/create a second user account.
+7. Log in as that user in another browser/incognito window.
+8. Send DMs and confirm unread badges appear.
+9. Paste an image URL into the attachment URL box and send it.
+
+## Future upgrade
+
+Sprint 5 can add actual uploads with Cloudflare R2, message search, push notifications, reactions, typing indicators, and eventually calls/meetings with WebRTC.
