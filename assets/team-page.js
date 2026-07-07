@@ -10,12 +10,26 @@
     activeSubtitle: '',
     refreshTimer: null,
     chatTimer: null,
+    density: 'compact',
   };
 
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, c => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
     }[c]));
+  }
+
+
+  function applyDensity(density) {
+    state.density = density === 'comfort' ? 'comfort' : 'compact';
+    document.body.classList.toggle('chat-density-compact', state.density === 'compact');
+    const button = document.getElementById('teamDensity');
+    if (button) button.textContent = state.density === 'compact' ? 'Compact: On' : 'Compact: Off';
+    try { localStorage.setItem('jaxtri_team_chat_density', state.density); } catch {}
+  }
+
+  function toggleDensity() {
+    applyDensity(state.density === 'compact' ? 'comfort' : 'compact');
   }
 
   function roleLabel(role) {
@@ -361,10 +375,12 @@
     document.getElementById('teamPeopleTab')?.addEventListener('click', () => setTab('people'));
     document.getElementById('teamMessageForm')?.addEventListener('submit', sendMessage);
     document.getElementById('teamRefresh')?.addEventListener('click', () => refreshAll());
+    document.getElementById('teamDensity')?.addEventListener('click', toggleDensity);
   }
 
   async function start() {
     document.body.classList.add('team-page-body');
+    try { applyDensity(localStorage.getItem('jaxtri_team_chat_density') || 'compact'); } catch { applyDensity('compact'); }
     bind();
     await refreshAll();
     state.refreshTimer = setInterval(refreshAll, 10000);

@@ -1,3 +1,33 @@
+# Sprint 4.2.1 — Compact High-Traffic Chat
+
+This patch makes the full Team Chat page better for busy conversations.
+
+## Added
+
+- Smaller message bubbles
+- Tighter spacing between messages
+- Smaller text inside chat messages
+- More messages visible at once
+- Smaller composer box
+- Compact toggle button in the chat header
+- Compact preference saves in the browser
+
+## Install
+
+Copy this package into your repo, keeping your existing `wrangler.toml`.
+
+No D1 migration is needed.
+
+Suggested commit message:
+
+```text
+sprint 4.2.1 compact chat density
+```
+
+## Test
+
+Open `team.html`, send a few messages, and click `Compact: On` to switch between compact and comfort view.
+
 # Sprint 4.2 — Full Team Chat Page
 
 This patch keeps the movable Team tab, but adds a full-page chat workspace.
