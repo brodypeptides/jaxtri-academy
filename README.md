@@ -1,16 +1,13 @@
-# Jaxtri Academy v1.3 Community Foundation
+# Jaxtri Academy v1.4 Optimized
 
-Static GitHub Pages-ready affiliate academy. No npm, no GitHub Actions required.
+Static GitHub Pages version. No npm, no build tools, no GitHub Actions needed.
 
 ## Deploy
-Set GitHub Pages to: Deploy from a branch → main → /(root).
+1. Copy all files into the `jaxtri-academy` repo.
+2. Commit and push with GitHub Desktop.
+3. GitHub Pages: Deploy from branch → `main` → `/(root)`.
 
-## New in v1.3
-- Jaxtri Labs logo added
-- Official website, Discord, GoAffPro, manager email, owner email
-- Skool-style static community feed preview
-- On-site affiliate signup/application layout
-- Login/dashboard previews kept static and Cloudflare-ready
-
-## Important
-Do not store passwords or password hashes in GitHub. Real login, submissions, comments, and uploads should be built later with Cloudflare Pages + Workers + D1 + R2.
+## Notes
+- Logo is used only as a small navbar/card asset, not a giant hero block.
+- Content pages are manual placeholders for your own hooks, scripts, ideas, and approved claims.
+- Login, dashboards, feed, upload, and forms are UI foundations only until Cloudflare backend is added.
