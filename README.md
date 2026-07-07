@@ -1,27 +1,22 @@
-# Jaxtri Platform Phase 1
+# Jaxtri Platform — Roles + Review Foundation
 
-Public site: **Jaxtri Labs Affiliate Program**
-Private site: **Jaxtri Academy**
+Public brand: **Jaxtri Labs Affiliate Program**
+Private product: **Jaxtri Academy**
 
-This is the first Cloudflare-ready foundation.
+This version adds the role model and content review workflow:
 
-## Cloudflare Pages settings
+- One shared login page
+- Roles: owner, manager, affiliate
+- Owner/manager operations area
+- Affiliate content submission page
+- Owner/manager review queue
+- Review statuses: draft, pending_review, approved, rejected, archived
+- Cloudflare D1 schema draft in `assets/schema.sql`
 
+## Demo Login Buttons
+The login page includes demo buttons for owner, manager, affiliate, and pending affiliate. These are static previews only and should be replaced with Cloudflare auth later.
+
+## Cloudflare Pages Settings
 - Framework preset: None
-- Build command: `echo "Static site - no build needed"`
-- Build output directory: `/`
-- Deploy command: leave blank if possible. If required, use `echo "No deploy command needed"`.
-
-## Backend scaffold
-
-- `functions/api/*` contains Pages Functions placeholders.
-- `database/schema.sql` contains the D1 schema draft.
-
-## Next backend steps
-
-1. Create D1 database.
-2. Bind it to Cloudflare Pages as `DB`.
-3. Run `database/schema.sql`.
-4. Implement setup owner endpoint.
-5. Implement auth/session handling.
-6. Implement application insert + owner approval.
+- Build command: echo "Static site - no build needed"
+- Build output directory: /
