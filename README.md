@@ -1,29 +1,24 @@
-# Jaxtri Platform — Sprint 1 Auth
+# Jaxtri Sprint 2 — Recruitment
 
-This build adds the first real backend feature for Cloudflare Pages + D1:
+Adds the first real onboarding workflow:
 
-- `/setup.html` creates the first owner account
-- passwords are hashed with PBKDF2 before storage
-- a secure session cookie is created
-- `/login.html` uses one shared login for owner/manager/affiliate
-- role-based redirects start working
-- `/api/me` checks the current session
+- Public affiliate application form
+- D1 application submission API
+- Owner/manager Recruitment dashboard
+- Approve/reject API endpoints
+- Dashboard card linked to Recruitment
 
-## Important Cloudflare setup
+## Database
+If you have not already created the `applications` table, run the SQL in:
 
-1. Keep your existing `wrangler.toml` with the D1 binding:
+`database/sprint2-recruitment.sql`
 
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "jaxtri_academy"
-database_id = "YOUR_DATABASE_ID"
-```
+Run statements one at a time in Cloudflare D1 if needed.
 
-2. Run the SQL inside `database/schema.sql` in your D1 console.
+## Push instructions
+Copy these files into the repo, commit, push, wait for Cloudflare deploy, then test:
 
-Do **not** type `database/schema.sql` into the SQL console. Open the file, copy its contents, paste the actual SQL, then run it.
-
-3. Push to GitHub. Cloudflare Pages will deploy.
-
-4. Visit `/setup.html` and create your first owner account.
+1. `/apply.html` submit a test application
+2. login as owner
+3. open `/owner-recruitment.html`
+4. approve or reject the test application
