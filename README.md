@@ -1,3 +1,27 @@
+# Sprint 4.2.2 — Mobile Team Chat Scroll Fix
+
+This patch fixes the mobile Team Chat issue where the page/message area could not scroll down properly.
+
+## Fixes
+
+- Enables vertical page scrolling on mobile Team Chat.
+- Keeps the chat message history scrollable with touch scrolling.
+- Prevents the composer from covering the bottom of the chat.
+- Adds safe-area padding for iPhone browser bars/home indicator.
+- No D1 migration required.
+
+## Install
+
+Copy this package into your repo, keep your existing `wrangler.toml`, commit, and push.
+
+Suggested commit message:
+
+```text
+sprint 4.2.2 mobile chat scroll fix
+```
+
+---
+
 # Sprint 4.2.1 — Compact High-Traffic Chat
 
 This patch makes the full Team Chat page better for busy conversations.

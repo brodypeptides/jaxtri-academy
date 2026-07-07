@@ -158,3 +158,79 @@ body.team-page-body.chat-density-compact .team-list .roster-member-main small{
   body.team-page-body.chat-density-compact .team-page-messages .roster-message{max-width:94%}
   body.team-page-body.chat-density-compact .team-chat-actions{gap:6px}
 }
+
+/* Sprint 4.2.2 — mobile team chat scroll fix */
+@media (max-width: 820px) {
+  html,
+  body.team-page-body {
+    min-height: 100%;
+  }
+
+  body.team-page-body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.team-page-body .team-page {
+    width: min(96vw, 760px);
+    min-height: auto;
+    padding-top: 14px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    gap: 12px;
+  }
+
+  body.team-page-body .team-sidebar {
+    max-height: 38svh;
+    overflow: hidden;
+  }
+
+  body.team-page-body .team-chat-main,
+  body.team-page-body.chat-density-compact .team-chat-main {
+    height: calc(100svh - 92px);
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.team-page-body .team-chat-top {
+    flex: 0 0 auto;
+  }
+
+  body.team-page-body .team-page-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  body.team-page-body .team-page-composer {
+    flex: 0 0 auto;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 2;
+  }
+
+  body.team-page-body .team-page-composer textarea {
+    max-height: 82px;
+  }
+
+  body.team-page-body.chat-density-compact .team-page-composer textarea {
+    min-height: 46px;
+    max-height: 72px;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 820px) {
+    body.team-page-body .team-chat-main,
+    body.team-page-body.chat-density-compact .team-chat-main {
+      height: calc(100dvh - 92px);
+    }
+  }
+}
