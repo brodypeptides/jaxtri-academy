@@ -1,39 +1,6 @@
-# Jaxtri Academy — Sprint 6A Commission Dashboard Shell
+-- Sprint 6A: Commission dashboard shell + manual sales tracking
+-- Safe to run more than once.
 
-This sprint can be used before the WordPress/payment processor details are known.
-
-It adds the internal commission foundation:
-
-- Affiliate referral codes
-- Owner/manager commission center
-- Manual sale entry
-- Automatic commission calculation from each user's saved commission percentage
-- Commission statuses: pending, approved, paid, voided
-- Affiliate-facing "My Commissions" page
-- Sales ledger for owners/managers
-- Safe owner-only controls for marking commissions paid and deleting test records
-
-## New pages
-
-- `owner-commissions.html` — staff commission center
-- `commissions.html` — affiliate/member view of their own commissions
-
-## New API routes
-
-- `GET /api/admin/commissions`
-- `POST /api/admin/commissions`
-- `PATCH /api/admin/commissions/:id`
-- `DELETE /api/admin/commissions/:id`
-- `GET /api/admin/affiliate-codes`
-- `POST /api/admin/affiliate-codes`
-- `PATCH /api/admin/affiliate-codes/:id`
-- `GET /api/commissions`
-
-## D1 migration
-
-Run this in Cloudflare D1 before testing:
-
-```sql
 CREATE TABLE IF NOT EXISTS affiliate_codes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -77,23 +44,3 @@ CREATE INDEX IF NOT EXISTS idx_affiliate_sales_affiliate ON affiliate_sales(affi
 CREATE INDEX IF NOT EXISTS idx_affiliate_sales_status ON affiliate_sales(status);
 CREATE INDEX IF NOT EXISTS idx_affiliate_sales_created_at ON affiliate_sales(created_at);
 CREATE INDEX IF NOT EXISTS idx_affiliate_sales_order_id ON affiliate_sales(external_order_id);
-```
-
-The same migration is saved as:
-
-`database/sprint6a-commission-dashboard.sql`
-
-## Testing checklist
-
-1. Owner login → Users → confirm a fake affiliate has a commission percentage.
-2. Owner login → Commissions → generate affiliate code.
-3. Add a manual sale for the affiliate.
-4. Confirm commission amount calculates correctly.
-5. Change sale status from pending → approved.
-6. As owner, mark sale paid.
-7. Affiliate login → My Commissions → confirm they see their sale and status.
-8. Try manager login → confirm manager can view/manage, but cannot mark paid if blocked.
-
-## Notes
-
-This does not connect to WordPress yet. It prepares the internal tracking system first, then the future WordPress/payment connector can push real orders into `affiliate_sales`.

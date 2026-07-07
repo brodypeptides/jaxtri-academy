@@ -21,6 +21,7 @@
       <a href="owner-feed-review.html">Feed Review</a>
       <a href="owner-admin.html">Admin + Invites</a>
       <a href="owner-users.html">Users</a>
+      <a href="owner-commissions.html">Commissions</a>
       <a href="team.html">Team Chat</a>
       <a href="academy-dashboard.html">Academy View</a>
     </nav>
@@ -62,6 +63,11 @@
         <strong>Chat</strong>
         <p>Open the full messaging workspace.</p>
       </a>
+      <a class="metric-card" href="owner-commissions.html">
+        <span>Commissions</span>
+        <strong id="pendingCommission">—</strong>
+        <p id="commissionCount">Loading commission dashboard...</p>
+      </a>
     </section>
 
     <section class="dashboard-two-col" style="margin-top:18px">
@@ -78,6 +84,7 @@
           <a href="owner-feed-review.html">Publish community experiences</a>
           <a href="owner-admin.html">Create direct invite links</a>
           <a href="owner-users.html">Manage users and access</a>
+          <a href="owner-commissions.html">Open commission center</a>
           <a href="team.html">Open team chat</a>
         </div>
       </div>
@@ -121,6 +128,19 @@ async function loadCounts() {
     }
   } catch { document.getElementById('feedReviewCount').textContent = 'Run the feed migration to enable review.'; }
 
+
+
+  try {
+    const r = await fetch('/api/admin/commissions');
+    const d = await r.json();
+    if (r.ok) {
+      document.getElementById('pendingCommission').textContent = `$${Number(d.stats.pending_commission || 0).toFixed(2)}`;
+      document.getElementById('commissionCount').textContent = `${d.stats.counts?.pending || 0} pending sale${(d.stats.counts?.pending || 0) === 1 ? '' : 's'}`;
+    } else {
+      document.getElementById('pendingCommission').textContent = 'Setup';
+      document.getElementById('commissionCount').textContent = 'Run Sprint 6A migration.';
+    }
+  } catch { document.getElementById('commissionCount').textContent = 'Open commission center.'; }
 
   try {
     const r = await fetch('/api/admin/users');

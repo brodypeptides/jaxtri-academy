@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Commissions | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a href="owner-dashboard.html">Overview</a>
+      <a href="owner-recruitment.html">Recruitment</a>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a href="owner-admin.html">Admin + Invites</a>
+      <a href="owner-users.html">Users</a>
+      <a class="active" href="owner-commissions.html">Commissions</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Sprint 6A</p>
+        <h1 class="title">Commission center</h1>
+        <p class="lead">Manual sales tracking, affiliate codes, and commission status management while we wait for WordPress checkout details.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section class="metric-grid commission-stat-grid">
+      <div class="metric-card"><span>Sales</span><strong id="statSales">—</strong><p>Tracked records</p></div>
+      <div class="metric-card"><span>Pending</span><strong id="statPending">—</strong><p>Awaiting review</p></div>
+      <div class="metric-card"><span>Approved</span><strong id="statApproved">—</strong><p>Ready for payout</p></div>
+      <div class="metric-card"><span>Paid</span><strong id="statPaid">—</strong><p>Marked paid</p></div>
+      <div class="metric-card"><span>Total commission</span><strong id="statTotalCommission">—</strong><p>Excludes voided</p></div>
+    </section>
+
+    <section id="commissionStatus" class="notice" style="margin-top:16px">Loading commissions...</section>
+
+    <section class="commission-layout" style="margin-top:18px">
+      <div class="card compact-card">
+        <p class="eyebrow">Manual entry</p>
+        <h2>Add a sale</h2>
+        <p class="small">Use this for testing, private tracking, or manually entered orders until the WordPress connector is ready.</p>
+        <form id="saleForm" class="form compact-form" style="margin-top:14px">
+          <div class="field"><label>Affiliate</label><select id="saleAffiliate" required></select></div>
+          <div class="split">
+            <div class="field"><label>Gross sale amount</label><input id="saleGross" type="number" min="0.01" step="0.01" placeholder="120.00" required></div>
+            <div class="field"><label>Currency</label><input id="saleCurrency" maxlength="8" value="USD"></div>
+          </div>
+          <div class="split">
+            <div class="field"><label>Order ID</label><input id="saleOrder" placeholder="Optional"></div>
+            <div class="field"><label>Customer email</label><input id="saleCustomer" type="email" placeholder="Optional"></div>
+          </div>
+          <div class="split">
+            <div class="field"><label>Source</label><select id="saleSource"><option value="manual">Manual</option><option value="wordpress">WordPress</option><option value="webhook">Webhook</option><option value="import">Import</option></select></div>
+            <div class="field"><label>Owner override %</label><input id="saleRate" type="number" min="0" max="100" step="0.01" placeholder="Use profile %"></div>
+          </div>
+          <div class="field"><label>Notes</label><textarea id="saleNotes" maxlength="1000" placeholder="Internal notes, product details, adjustment reason..."></textarea></div>
+          <button class="btn primary" type="submit">Add pending sale</button>
+        </form>
+        <div id="saleFormStatus" class="notice" style="display:none;margin-top:12px"></div>
+      </div>
+
+      <div class="card compact-card">
+        <div class="section-head-row">
+          <div><p class="eyebrow">Affiliate codes</p><h2>Referral code prep</h2></div>
+          <button class="btn" onclick="loadAll()">Refresh</button>
+        </div>
+        <p class="small">These codes can later power WordPress links like <code>?ref=CODE</code>. For now they are useful for planning, manual tracking, and testing.</p>
+        <div class="field" style="margin-top:12px"><label>Optional store URL preview</label><input id="storeUrl" placeholder="https://store.com" oninput="renderCodes()"></div>
+        <div id="codesList" class="commission-code-list"></div>
+      </div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div><p class="eyebrow">Sales ledger</p><h2>Tracked commissions</h2></div>
+        <div class="commission-filters">
+          <input id="saleSearch" placeholder="Search affiliate, order, customer...">
+          <select id="saleStatusFilter"><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="paid">Paid</option><option value="voided">Voided</option></select>
+          <button class="btn" onclick="loadCommissions()">Apply</button>
+        </div>
+      </div>
+      <div id="salesList" class="sales-list"></div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const statusEl = document.getElementById('commissionStatus');
+const saleFormStatus = document.getElementById('saleFormStatus');
+const salesList = document.getElementById('salesList');
+const codesList = document.getElementById('codesList');
+const saleAffiliate = document.getElementById('saleAffiliate');
+const saleSearch = document.getElementById('saleSearch');
+const saleStatusFilter = document.getElementById('saleStatusFilter');
+let affiliates = [];
+let sales = [];
+let viewer = { is_owner:false };
+let codes = [];
+
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
+function pct(value){const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'Not set'}
+function setNotice(el,msg,type=''){el.style.display='block';el.className=`notice ${type}`;el.textContent=msg}
+function codeLink(code){const base=(document.getElementById('storeUrl').value||'').trim().replace(/\/$/,'');return base?`${base}/?ref=${encodeURIComponent(code)}`:`?ref=${encodeURIComponent(code)}`}
+async function copyText(text){try{await navigator.clipboard.writeText(text);alert('Copied.')}catch{prompt('Copy this:', text)}}
+
+function updateStats(stats={}){
+  document.getElementById('statSales').textContent = stats.total_sales ?? 0;
+  document.getElementById('statPending').textContent = dollars(stats.pending_commission || 0);
+  document.getElementById('statApproved').textContent = dollars(stats.approved_commission || 0);
+  document.getElementById('statPaid').textContent = dollars(stats.paid_commission || 0);
+  document.getElementById('statTotalCommission').textContent = dollars(stats.commission_total || 0);
+}
+
+function renderAffiliateOptions(){
+  const active = affiliates.filter(a => a.status === 'active');
+  saleAffiliate.innerHTML = active.length ? active.map(a => `<option value="${a.id}">${escapeHtml(a.full_name || a.email)} — ${escapeHtml(a.role)} — ${escapeHtml(pct(a.commission_percentage))}${a.affiliate_code?` — ${escapeHtml(a.affiliate_code)}`:''}</option>`).join('') : '<option value="">No active affiliates/managers</option>';
+}
+
+function renderCodes(){
+  if (!codes.length) { codesList.innerHTML = '<div class="notice success" style="margin-top:12px">No affiliate profiles available yet.</div>'; return; }
+  codesList.innerHTML = codes.map(row => {
+    const has = row.code && row.code_status === 'active';
+    const link = has ? codeLink(row.code) : '';
+    return `<article class="commission-code-row">
+      <div>
+        <strong>${escapeHtml(row.full_name || row.email)}</strong>
+        <p class="small">${escapeHtml(row.email)} • ${escapeHtml(row.role)} • ${escapeHtml(pct(row.commission_percentage))}</p>
+        ${has ? `<code>${escapeHtml(row.code)}</code><p class="small">${escapeHtml(link)}</p>` : '<p class="small">No active code yet.</p>'}
+      </div>
+      <div class="actions">
+        ${has ? `<button class="btn" onclick="copyText('${escapeHtml(link)}')">Copy link</button><button class="btn" onclick="toggleCode(${row.code_id}, 'disabled')">Disable</button>` : `<button class="btn primary" onclick="generateCode(${row.user_id})">Generate</button>`}
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function renderSales(){
+  if (!sales.length) { salesList.innerHTML = '<div class="notice success">No sales match this view yet.</div>'; return; }
+  salesList.innerHTML = sales.map(s => `<article class="sale-row">
+    <div class="sale-main">
+      <p class="eyebrow ${s.status === 'paid' ? 'success' : s.status === 'voided' ? 'error' : ''}">${escapeHtml(s.status)} • ${escapeHtml(s.source || 'manual')}</p>
+      <h3>${escapeHtml(s.affiliate_name || s.affiliate_email)}</h3>
+      <p class="small">Order: ${escapeHtml(s.external_order_id || 'No order ID')} • Customer: ${escapeHtml(s.customer_email || 'Not stored')} • Code: ${escapeHtml(s.affiliate_code || 'None')}</p>
+      ${s.notes ? `<p class="small"><strong>Notes:</strong> ${escapeHtml(s.notes)}</p>` : ''}
+    </div>
+    <div class="sale-money">
+      <strong>${escapeHtml(dollars(s.commission_amount, s.currency))}</strong>
+      <span>${escapeHtml(pct(s.commission_percentage))} of ${escapeHtml(dollars(s.gross_amount, s.currency))}</span>
+      <small>${escapeHtml(s.created_at || '')}</small>
+    </div>
+    <div class="actions sale-actions">
+      <select id="saleStatus-${s.id}">
+        ${['pending','approved','paid','voided'].map(x => `<option value="${x}" ${s.status===x?'selected':''}>${x}</option>`).join('')}
+      </select>
+      <button class="btn" onclick="updateSaleStatus(${s.id})">Update</button>
+      ${viewer.is_owner && s.status !== 'paid' ? `<button class="btn danger" onclick="deleteSale(${s.id})">Delete</button>` : ''}
+    </div>
+  </article>`).join('');
+}
+
+async function loadCommissions(){
+  statusEl.style.display='block';statusEl.className='notice';statusEl.textContent='Loading commissions...';
+  const params = new URLSearchParams();
+  if (saleStatusFilter.value) params.set('status', saleStatusFilter.value);
+  if (saleSearch.value.trim()) params.set('q', saleSearch.value.trim());
+  const r = await fetch('/api/admin/commissions?' + params.toString());
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(statusEl,d.error||'Could not load commissions.','error');return}
+  sales = d.sales || []; affiliates = d.affiliates || []; viewer = d.viewer || viewer;
+  updateStats(d.stats || {}); renderAffiliateOptions(); renderSales();
+  setNotice(statusEl,`${sales.length} sale record${sales.length===1?'':'s'} loaded.`,'success');
+}
+
+async function loadCodes(){
+  const r = await fetch('/api/admin/affiliate-codes');
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){codesList.innerHTML = `<div class="notice error" style="margin-top:12px">${escapeHtml(d.error || 'Could not load affiliate codes.')}</div>`;return}
+  codes = d.codes || []; renderCodes();
+}
+async function loadAll(){await Promise.all([loadCommissions(),loadCodes()])}
+
+async function generateCode(userId){
+  const custom = prompt('Optional custom code. Leave blank to auto-generate:') || '';
+  const r = await fetch('/api/admin/affiliate-codes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user_id:userId,code:custom})});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not create code.');return}
+  await loadAll();
+}
+async function toggleCode(id,status){
+  const r = await fetch(`/api/admin/affiliate-codes/${id}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({status})});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not update code.');return}
+  await loadAll();
+}
+
+async function updateSaleStatus(id){
+  const next = document.getElementById(`saleStatus-${id}`).value;
+  const r = await fetch(`/api/admin/commissions/${id}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({status:next})});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not update sale.');return}
+  await loadCommissions();
+}
+async function deleteSale(id){
+  if(!confirm('Delete this test/manual sale? Paid sales cannot be deleted.'))return;
+  const r = await fetch(`/api/admin/commissions/${id}`,{method:'DELETE'});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not delete sale.');return}
+  await loadCommissions();
+}
+
+document.getElementById('saleForm').addEventListener('submit',async e=>{
+  e.preventDefault(); saleFormStatus.style.display='block'; saleFormStatus.className='notice'; saleFormStatus.textContent='Saving sale...';
+  const body={affiliate_user_id:saleAffiliate.value,gross_amount:document.getElementById('saleGross').value,currency:document.getElementById('saleCurrency').value,external_order_id:document.getElementById('saleOrder').value,customer_email:document.getElementById('saleCustomer').value,source:document.getElementById('saleSource').value,commission_percentage:document.getElementById('saleRate').value,notes:document.getElementById('saleNotes').value};
+  const r=await fetch('/api/admin/commissions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(saleFormStatus,d.error||'Could not save sale.','error');return}
+  e.target.reset(); document.getElementById('saleCurrency').value='USD'; setNotice(saleFormStatus,`Sale saved. Commission: $${Number(d.commission_amount||0).toFixed(2)}`,'success'); await loadCommissions();
+});
+
+loadAll();
+</script>
+</body>
+</html>

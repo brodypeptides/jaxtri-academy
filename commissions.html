@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Commissions | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="academy-dashboard.html">Jaxtri Academy</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Academy</strong><small>Affiliate Portal</small></div></div>
+    <nav class="side-nav">
+      <a href="academy-dashboard.html">Dashboard</a>
+      <a href="feed.html">Feed</a>
+      <a href="commissions.html" class="active">Commissions</a>
+      <a href="training.html">Training</a>
+      <a href="content-vault.html">Content Vault</a>
+      <a href="resources.html">Resources</a>
+      <a href="team.html">Team Chat</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Earnings</p>
+        <h1 class="title">My commissions</h1>
+        <p class="lead">View your referral code and commission records. Final payouts are reviewed by Jaxtri leadership.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section id="commissionStatus" class="notice">Loading commissions...</section>
+
+    <section class="metric-grid" style="margin-top:16px">
+      <div class="metric-card"><span>Pending</span><strong id="minePending">—</strong><p>Needs review</p></div>
+      <div class="metric-card"><span>Approved</span><strong id="mineApproved">—</strong><p>Ready for payout</p></div>
+      <div class="metric-card"><span>Paid</span><strong id="minePaid">—</strong><p>Marked paid</p></div>
+      <div class="metric-card"><span>Sales</span><strong id="mineSales">—</strong><p>Total records</p></div>
+    </section>
+
+    <section class="dashboard-two-col" style="margin-top:18px">
+      <div class="card compact-card">
+        <p class="eyebrow">Referral code</p>
+        <h2>Your code</h2>
+        <div id="codeBox" class="commission-own-code"></div>
+        <p class="small">This is preparation for future WordPress/store tracking. Until the store connector is active, leadership may enter sales manually.</p>
+      </div>
+      <div class="card compact-card">
+        <div class="section-head-row"><div><p class="eyebrow">Status guide</p><h2>How commissions move</h2></div></div>
+        <div class="quick-list">
+          <div><strong>Pending</strong><p class="small">Sale was tracked or entered and is waiting for review.</p></div>
+          <div><strong>Approved</strong><p class="small">Leadership reviewed it and it is ready for payout.</p></div>
+          <div><strong>Paid</strong><p class="small">Commission was marked as paid.</p></div>
+          <div><strong>Voided</strong><p class="small">Refund, cancellation, duplicate, or invalid sale.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row"><div><p class="eyebrow">Ledger</p><h2>My tracked sales</h2></div><button class="btn" onclick="loadMine()">Refresh</button></div>
+      <div id="mineList" class="sales-list"></div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const statusEl=document.getElementById('commissionStatus');
+const mineList=document.getElementById('mineList');
+const codeBox=document.getElementById('codeBox');
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
+function pct(value){const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'—'}
+function setNotice(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
+async function copyCode(code){try{await navigator.clipboard.writeText(code);alert('Copied.')}catch{prompt('Copy this:',code)}}
+function renderStats(stats={}){document.getElementById('minePending').textContent=dollars(stats.pending_commission||0);document.getElementById('mineApproved').textContent=dollars(stats.approved_commission||0);document.getElementById('minePaid').textContent=dollars(stats.paid_commission||0);document.getElementById('mineSales').textContent=stats.total_sales||0}
+function renderCode(code){if(!code||!code.code){codeBox.innerHTML='<div class="notice">No referral code assigned yet.</div>';return}codeBox.innerHTML=`<div class="own-code-display"><code>${escapeHtml(code.code)}</code><button class="btn" onclick="copyCode('${escapeHtml(code.code)}')">Copy code</button></div><p class="small">Status: ${escapeHtml(code.status || 'active')}</p>`}
+function renderSales(sales=[]){if(!sales.length){mineList.innerHTML='<div class="notice success">No commission records yet.</div>';return}mineList.innerHTML=sales.map(s=>`<article class="sale-row sale-row-readonly"><div class="sale-main"><p class="eyebrow ${s.status==='paid'?'success':s.status==='voided'?'error':''}">${escapeHtml(s.status)} • ${escapeHtml(s.source||'manual')}</p><h3>${escapeHtml(s.external_order_id||'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code||'None')} • ${escapeHtml(s.created_at||'')}</p></div><div class="sale-money"><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong><span>${escapeHtml(pct(s.commission_percentage))} of ${escapeHtml(dollars(s.gross_amount,s.currency))}</span></div></article>`).join('')}
+async function loadMine(){setNotice('Loading commissions...');const r=await fetch('/api/commissions');const d=await r.json().catch(()=>({error:'Unknown error'}));if(!r.ok){setNotice(d.error||'Could not load commissions.','error');return}renderStats(d.stats||{});renderCode(d.code);renderSales(d.sales||[]);setNotice('Commission records loaded.','success')}
+loadMine();
+</script>
+</body>
+</html>
