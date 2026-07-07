@@ -1,32 +1,25 @@
-# Jaxtri Academy v1.6
+# Jaxtri Academy v1.7 Categorized
 
-Static GitHub Pages version with:
+Static GitHub Pages version with clearer navigation and grouped sections.
 
-- Official Jaxtri links and contact info
-- On-site affiliate signup/application layout
-- Affiliate and owner login preview screens
-- Owner dashboard preview
-- Content Builder page for generating new tabs/pages
-- Manual content vault structure
-- Skool-style static feed preview
+## Main sections
+- Start Here
+- Academy
+- Content Vault
+- Community
+- Resources
+- Owner Tools
 
-## Important
+## Editing content
+Most manual content lives in `/content/`:
+- hooks.html
+- video-ideas.html
+- scripts.html
+- captions.html
+- broll.html
+- claims.html
 
-This is still static. Login, forms, content posting, and uploads are preview screens until moved to a backend such as Cloudflare Pages + Workers + D1/R2.
+The owner portal includes `content-manager.html` as a static planning page for future tab creation. Real owner-created tabs will require a backend later, such as Cloudflare Pages + Workers + D1/R2.
 
-## Current links
-
-- Main website: https://jaxtrilabs.com/
-- Discord: https://discord.gg/5ASbmvde8d
-- GoAffPro Login: https://goaffpro.com/#affiliates
-- Manager: Brodypeptides@gmail.com
-- Owner: jaxtrilabs@gmail.com
-
-## How to add future content
-
-1. Open `owner-dashboard.html` on the site.
-2. Open `Content Builder`.
-3. Generate a page.
-4. Save the generated code as a new `.html` file in the repo.
-5. Link it from `content-vault.html` or the navbar.
-6. Commit and push with GitHub Desktop.
+## Deploy
+Push all files to GitHub Pages using Deploy from Branch: `main` / `(root)`.
