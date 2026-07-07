@@ -1,7 +1,7 @@
 import { json, getUserFromRequest } from '../../../../lib/auth.js';
 
 function canDelete(user) {
-  return user && user.role === 'owner';
+  return user && user.status === 'active' && user.role === 'owner';
 }
 
 export async function onRequestPost({ request, env, params }) {

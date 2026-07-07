@@ -156,5 +156,5 @@ export async function getUserFromRequest(env, req) {
 }
 
 export function canManageRecruitment(user) {
-  return user && (user.role === 'owner' || user.role === 'manager');
+  return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
 }

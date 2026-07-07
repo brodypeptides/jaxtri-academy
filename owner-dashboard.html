@@ -20,6 +20,7 @@
       <a href="owner-recruitment.html">Recruitment</a>
       <a href="owner-feed-review.html">Feed Review</a>
       <a href="owner-admin.html">Admin + Invites</a>
+      <a href="owner-users.html">Users</a>
       <a href="team.html">Team Chat</a>
       <a href="academy-dashboard.html">Academy View</a>
     </nav>
@@ -51,6 +52,11 @@
         <strong id="pendingPosts">—</strong>
         <p id="feedReviewCount">Loading submissions...</p>
       </a>
+      <a class="metric-card" href="owner-users.html">
+        <span>Users</span>
+        <strong id="totalUsers">—</strong>
+        <p id="userCount">Loading user directory...</p>
+      </a>
       <a class="metric-card" href="team.html">
         <span>Team</span>
         <strong>Chat</strong>
@@ -71,6 +77,7 @@
           <a href="owner-recruitment.html">Review affiliate applications</a>
           <a href="owner-feed-review.html">Publish community experiences</a>
           <a href="owner-admin.html">Create direct invite links</a>
+          <a href="owner-users.html">Manage users and access</a>
           <a href="team.html">Open team chat</a>
         </div>
       </div>
@@ -113,6 +120,19 @@ async function loadCounts() {
       document.getElementById('feedReviewCount').textContent = `${pending} submission${pending === 1 ? '' : 's'} waiting`;
     }
   } catch { document.getElementById('feedReviewCount').textContent = 'Run the feed migration to enable review.'; }
+
+
+  try {
+    const r = await fetch('/api/admin/users');
+    const d = await r.json();
+    if (r.ok) {
+      document.getElementById('totalUsers').textContent = d.stats.total;
+      document.getElementById('userCount').textContent = `${d.stats.active} active • ${d.stats.suspended} suspended`;
+    } else {
+      document.getElementById('userCount').textContent = 'Owner-only user management.';
+    }
+  } catch { document.getElementById('userCount').textContent = 'Manage users and access.'; }
+
 }
 loadCounts();
 JaxtriFeed.loadPublishedFeed('ownerFeedPreview', 'No published feed posts yet.');

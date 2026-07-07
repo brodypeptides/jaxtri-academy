@@ -1,7 +1,7 @@
 import { json, getUserFromRequest } from '../../../../lib/auth.js';
 
 function canManage(user) {
-  return user && (user.role === 'owner' || user.role === 'manager');
+  return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
 }
 
 export async function onRequestPost({ request, env, params }) {
