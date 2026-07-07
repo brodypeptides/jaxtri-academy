@@ -10,7 +10,15 @@
     activeTitle: '',
     refreshTimer: null,
     chatTimer: null,
+    drag: {
+      active: false,
+      moved: false,
+      startY: 0,
+      startTop: 0,
+    },
   };
+
+  const TOGGLE_Y_KEY = 'jaxtri_roster_toggle_y';
 
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, c => ({
@@ -60,8 +68,19 @@
     toggle.id = 'rosterToggle';
     toggle.className = 'roster-toggle';
     toggle.type = 'button';
-    toggle.innerHTML = `<span>Team</span><strong id="rosterBadge" hidden>0</strong>`;
-    toggle.addEventListener('click', () => setOpen(!state.open));
+    toggle.innerHTML = `<span class="roster-toggle-grip" aria-hidden="true">⋮⋮</span><span>Team</span><strong id="rosterBadge" hidden>0</strong>`;
+    toggle.title = 'Drag up/down to move. Click to open Team.';
+    toggle.addEventListener('pointerdown', beginToggleDrag);
+    toggle.addEventListener('pointermove', moveToggleDrag);
+    toggle.addEventListener('pointerup', endToggleDrag);
+    toggle.addEventListener('pointercancel', endToggleDrag);
+    toggle.addEventListener('click', (event) => {
+      if (state.drag.moved) {
+        event.preventDefault();
+        return;
+      }
+      setOpen(!state.open);
+    });
 
     const panel = document.createElement('aside');
     panel.id = 'rosterShell';
@@ -109,6 +128,8 @@
 
     document.body.appendChild(toggle);
     document.body.appendChild(panel);
+    positionToggle();
+    window.addEventListener('resize', positionToggle);
 
     document.getElementById('rosterClose').addEventListener('click', () => setOpen(false));
     document.getElementById('rosterBack').addEventListener('click', closeChat);
@@ -150,6 +171,62 @@
     const count = totalUnread();
     badge.hidden = count <= 0;
     badge.textContent = String(count > 99 ? '99+' : count);
+  }
+
+
+  function clampToggleY(y) {
+    const toggle = document.getElementById('rosterToggle');
+    const height = toggle?.offsetHeight || 48;
+    const pad = 14;
+    return Math.max(pad, Math.min(window.innerHeight - height - pad, y));
+  }
+
+  function setToggleY(y, save = true) {
+    const toggle = document.getElementById('rosterToggle');
+    if (!toggle) return;
+    const next = clampToggleY(y);
+    toggle.style.top = `${next}px`;
+    toggle.style.bottom = 'auto';
+    toggle.style.transform = 'none';
+    if (save) localStorage.setItem(TOGGLE_Y_KEY, String(Math.round(next)));
+  }
+
+  function positionToggle() {
+    const saved = Number(localStorage.getItem(TOGGLE_Y_KEY));
+    const toggle = document.getElementById('rosterToggle');
+    if (!toggle) return;
+    const fallback = Math.round((window.innerHeight - toggle.offsetHeight) / 2);
+    setToggleY(Number.isFinite(saved) && saved > 0 ? saved : fallback, false);
+  }
+
+  function beginToggleDrag(event) {
+    const toggle = document.getElementById('rosterToggle');
+    if (!toggle) return;
+    state.drag.active = true;
+    state.drag.moved = false;
+    state.drag.startY = event.clientY;
+    state.drag.startTop = toggle.getBoundingClientRect().top;
+    toggle.classList.add('dragging');
+    toggle.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveToggleDrag(event) {
+    if (!state.drag.active) return;
+    const delta = event.clientY - state.drag.startY;
+    if (Math.abs(delta) > 3) state.drag.moved = true;
+    setToggleY(state.drag.startTop + delta);
+  }
+
+  function endToggleDrag(event) {
+    const toggle = document.getElementById('rosterToggle');
+    if (toggle) {
+      toggle.classList.remove('dragging');
+      toggle.releasePointerCapture?.(event.pointerId);
+    }
+    window.setTimeout(() => {
+      state.drag.active = false;
+      state.drag.moved = false;
+    }, 0);
   }
 
   function updateMe() {

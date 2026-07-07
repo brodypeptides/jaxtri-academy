@@ -99,3 +99,10 @@ The app refreshes presence, roster, channels, and unread counts through polling.
 ## Future upgrade
 
 Sprint 5 can add actual uploads with Cloudflare R2, message search, push notifications, reactions, typing indicators, and eventually calls/meetings with WebRTC.
+
+
+## Sprint 4.1a — movable Team tab
+
+The floating Team button can now be dragged up or down on the right side of the screen. The position is saved in the browser with `localStorage`, so it stays out of the way after refresh.
+
+No database migration is needed for this patch.
