@@ -1,3 +1,64 @@
+# Jaxtri Academy — Sprint 5.1 Commission Profiles
+
+Adds private commission percentage fields to user profiles.
+
+## What changed
+
+- `owner-users.html` now shows a private **Commission** field.
+- Owners can edit commission percentage for affiliates/managers.
+- Managers can view user profiles and commission percentages in read-only mode.
+- Owner accounts remain protected from web-panel changes.
+- Commission data is not shown to regular affiliates.
+
+## D1 migration
+
+Run once in Cloudflare D1:
+
+```sql
+ALTER TABLE users ADD COLUMN commission_percentage REAL;
+```
+
+If D1 says `duplicate column name`, the column already exists.
+
+## Manual D1 examples
+
+Set a commission:
+
+```sql
+UPDATE users
+SET commission_percentage = 15,
+    updated_at = datetime('now')
+WHERE email = 'affiliate@example.com';
+```
+
+Clear a commission:
+
+```sql
+UPDATE users
+SET commission_percentage = NULL,
+    updated_at = datetime('now')
+WHERE email = 'affiliate@example.com';
+```
+
+## Test checklist
+
+1. Run the migration.
+2. Log in as owner.
+3. Open `owner-users.html`.
+4. Set a fake affiliate commission to `15`.
+5. Refresh and confirm it shows `15%`.
+6. Try `101` and confirm it errors.
+7. Log in as manager and confirm commission is visible but read-only.
+8. Log in as affiliate and confirm they cannot access user management.
+
+Suggested commit message:
+
+```text
+sprint 5.1 commission profiles
+```
+
+---
+
 # Jaxtri Academy — Sprint 5 Admin User Management
 
 Sprint 5 adds a safer owner-only user management workspace.

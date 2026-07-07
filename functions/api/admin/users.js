@@ -1,5 +1,9 @@
 import { json, getUserFromRequest } from '../../lib/auth.js';
 
+function isStaff(user) {
+  return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
+}
+
 function isOwner(user) {
   return user && user.status === 'active' && user.role === 'owner';
 }
@@ -30,20 +34,31 @@ async function tableExists(env, name) {
   return Boolean(row);
 }
 
+async function columnExists(env, table, column) {
+  try {
+    const result = await env.DB.prepare(`PRAGMA table_info(${table})`).all();
+    return (result.results || []).some((row) => row.name === column);
+  } catch {
+    return false;
+  }
+}
+
 export async function onRequestGet({ request, env }) {
   try {
     const actor = await getUserFromRequest(env, request);
-    if (!isOwner(actor)) {
-      return json({ error: 'Owner access required for user management.' }, 403);
+    if (!isStaff(actor)) {
+      return json({ error: 'Owner or manager access required for user profiles.' }, 403);
     }
 
     const url = new URL(request.url);
     const q = clean(url.searchParams.get('q')).toLowerCase();
     const roleFilter = clean(url.searchParams.get('role')).toLowerCase();
     const statusFilter = clean(url.searchParams.get('status')).toLowerCase();
+    const hasCommission = await columnExists(env, 'users', 'commission_percentage');
+    const commissionSelect = hasCommission ? ', commission_percentage' : ', NULL AS commission_percentage';
 
     const usersResult = await env.DB.prepare(`
-      SELECT id, full_name, email, username, role, company_title, status, created_at, updated_at
+      SELECT id, full_name, email, username, role, company_title, status, created_at, updated_at${commissionSelect}
       FROM users
       ORDER BY
         CASE role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END,
@@ -113,6 +128,7 @@ export async function onRequestGet({ request, env }) {
     if (roleFilter && roleFilter !== 'all') users = users.filter((user) => user.role === roleFilter);
     if (statusFilter && statusFilter !== 'all') users = users.filter((user) => user.status === statusFilter);
 
+    const commissionSet = users.filter((user) => user.commission_percentage !== null && user.commission_percentage !== undefined && user.commission_percentage !== '').length;
     const stats = {
       total: users.length,
       owners: users.filter((user) => user.role === 'owner').length,
@@ -122,9 +138,19 @@ export async function onRequestGet({ request, env }) {
       pending: users.filter((user) => user.status === 'pending').length,
       suspended: users.filter((user) => user.status === 'suspended').length,
       online: users.filter((user) => user.presence === 'online').length,
+      commission_set: commissionSet,
     };
 
-    return json({ users, stats });
+    return json({
+      users,
+      stats,
+      viewer: {
+        role: actor.role,
+        can_edit_users: isOwner(actor),
+        can_edit_commission: isOwner(actor),
+        commission_ready: hasCommission,
+      },
+    });
   } catch (error) {
     return json({ error: error?.message || 'Could not load users.' }, 500);
   }

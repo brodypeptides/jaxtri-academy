@@ -8,6 +8,15 @@ function clean(value) {
   return String(value || '').trim();
 }
 
+async function columnExists(env, table, column) {
+  try {
+    const result = await env.DB.prepare(`PRAGMA table_info(${table})`).all();
+    return (result.results || []).some((row) => row.name === column);
+  } catch {
+    return false;
+  }
+}
+
 async function logAudit(env, actorId, targetUserId, action, details) {
   try {
     await env.DB.prepare(`
@@ -19,13 +28,29 @@ async function logAudit(env, actorId, targetUserId, action, details) {
   }
 }
 
-async function getTarget(env, id) {
+async function getTarget(env, id, hasCommission) {
+  const commissionSelect = hasCommission ? ', commission_percentage' : ', NULL AS commission_percentage';
   return await env.DB.prepare(`
-    SELECT id, full_name, email, username, role, company_title, status, created_at, updated_at
+    SELECT id, full_name, email, username, role, company_title, status, created_at, updated_at${commissionSelect}
     FROM users
     WHERE id = ?
     LIMIT 1
   `).bind(id).first();
+}
+
+function normalizeCommission(value) {
+  const raw = clean(value);
+  if (!raw) return null;
+  const number = Number(raw);
+  if (!Number.isFinite(number) || number < 0 || number > 100) {
+    throw new Error('Commission percentage must be between 0 and 100.');
+  }
+  return Math.round(number * 100) / 100;
+}
+
+function sameCommission(a, b) {
+  if ((a === null || a === undefined || a === '') && b === null) return true;
+  return Number(a) === Number(b);
 }
 
 export async function onRequestPatch({ request, env, params }) {
@@ -36,7 +61,8 @@ export async function onRequestPatch({ request, env, params }) {
     const id = Number(params.id);
     if (!Number.isFinite(id) || id < 1) return json({ error: 'Invalid user ID.' }, 400);
 
-    const target = await getTarget(env, id);
+    const hasCommission = await columnExists(env, 'users', 'commission_percentage');
+    const target = await getTarget(env, id, hasCommission);
     if (!target) return json({ error: 'User not found.' }, 404);
 
     if (target.role === 'owner') {
@@ -87,6 +113,28 @@ export async function onRequestPatch({ request, env, params }) {
       }
     }
 
+    if (Object.prototype.hasOwnProperty.call(body, 'commission_percentage')) {
+      if (!hasCommission) {
+        return json({ error: 'Commission column missing. Run database/sprint5-1-commission-profiles.sql in D1 first.' }, 400);
+      }
+
+      let nextCommission;
+      try {
+        nextCommission = normalizeCommission(body.commission_percentage);
+      } catch (error) {
+        return json({ error: error.message }, 400);
+      }
+
+      if (!sameCommission(target.commission_percentage, nextCommission)) {
+        updates.push('commission_percentage = ?');
+        binds.push(nextCommission);
+        changes.commission_percentage = {
+          from: target.commission_percentage ?? null,
+          to: nextCommission,
+        };
+      }
+    }
+
     if (!updates.length) {
       return json({ ok: true, user: target, changed: false });
     }
@@ -95,7 +143,7 @@ export async function onRequestPatch({ request, env, params }) {
     await env.DB.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...binds, id).run();
     await logAudit(env, actor.id, id, 'update_user', changes);
 
-    const updated = await getTarget(env, id);
+    const updated = await getTarget(env, id, hasCommission);
     return json({ ok: true, user: updated, changed: true, changes });
   } catch (error) {
     return json({ error: error?.message || 'Could not update user.' }, 500);
