@@ -1,46 +1,27 @@
-# Jaxtri Academy — Cloudflare Foundation
+# Jaxtri Platform Phase 1
 
-This is the first Cloudflare-ready foundation for the Jaxtri Labs Affiliate Program + private Jaxtri Academy.
+Public site: **Jaxtri Labs Affiliate Program**
+Private site: **Jaxtri Academy**
 
-## What is included
+This is the first Cloudflare-ready foundation.
 
-- Public marketing site: **Jaxtri Labs Affiliate Program**
-- Public application page
-- Affiliate login preview
-- Owner login preview
-- Private **Jaxtri Academy** app preview
-- Owner dashboard preview
-- Owner content manager preview
-- Application approval architecture
-- Cloudflare Pages Functions API scaffold
-- D1 database schema
-
-## Current state
-
-This version still works as a static website, but it is structured for Cloudflare backend features.
-
-Preview login uses localStorage only. It is not real security yet.
-
-## Cloudflare setup
-
-Cloudflare Pages settings for now:
+## Cloudflare Pages settings
 
 - Framework preset: None
-- Build command: blank
+- Build command: `echo "Static site - no build needed"`
 - Build output directory: `/`
+- Deploy command: leave blank if possible. If required, use `echo "No deploy command needed"`.
 
-## Backend next steps
+## Backend scaffold
 
-1. Create a Cloudflare D1 database.
-2. Run `schema.sql` against the database.
-3. Add the D1 binding as `DB`.
-4. Replace preview localStorage login with real auth/session endpoints.
-5. Connect application approval to real user creation.
-6. Connect content manager to real published content.
+- `functions/api/*` contains Pages Functions placeholders.
+- `database/schema.sql` contains the D1 schema draft.
 
-## Important links used
+## Next backend steps
 
-- Main site: https://jaxtrilabs.com/
-- Discord: https://discord.gg/5ASbmvde8d
-- Manager email: Brodypeptides@gmail.com
-- Owner email: jaxtrilabs@gmail.com
+1. Create D1 database.
+2. Bind it to Cloudflare Pages as `DB`.
+3. Run `database/schema.sql`.
+4. Implement setup owner endpoint.
+5. Implement auth/session handling.
+6. Implement application insert + owner approval.
