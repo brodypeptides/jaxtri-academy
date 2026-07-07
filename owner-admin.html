@@ -26,13 +26,13 @@
   <section class="dashgrid" style="margin-top:24px">
     <div class="card"><h2>Roles</h2><p>Owner, manager, and affiliate permissions. Owner invites should only be used for trusted leadership.</p></div>
     <div class="card"><h2>Direct Invites</h2><p>Create invite links from an email address without needing an application first.</p></div>
-    <div class="card"><h2>Security</h2><p>Invite links expire, used links lock automatically, and active links can be revoked.</p></div>
+    <div class="card"><h2>Security</h2><p>Invite links expire, used links lock automatically, active links can be revoked, and Owner invites stay out of the web panel.</p></div>
   </section>
 
   <section class="card" style="margin-top:24px">
     <p class="eyebrow">Level 1 email invite</p>
     <h2>Create a direct invite link</h2>
-    <p class="small">Enter an email, choose the account role, then copy the link or open an email draft. No paid email service needed yet.</p>
+    <p class="small">Enter an email, choose Affiliate or Manager, then copy the link or open an email draft. Owner invites are command-line only for security.</p>
 
     <form id="inviteForm" class="form" style="margin-top:18px">
       <div class="split">
@@ -107,7 +107,6 @@ function roleOptionsFor(user) {
   const options = [['affiliate', 'Affiliate']];
   if (user?.role === 'owner') {
     options.push(['manager', 'Manager']);
-    options.push(['owner', 'Owner']);
   }
   return options;
 }

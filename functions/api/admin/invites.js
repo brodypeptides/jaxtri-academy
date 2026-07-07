@@ -19,7 +19,9 @@ function inviteUrl(request, token) {
 
 function canCreateRole(user, role) {
   if (!user) return false;
-  if (user.role === 'owner') return ['affiliate', 'manager', 'owner'].includes(role);
+  // Owner invites are intentionally blocked from the web panel.
+  // Create owner invites only through D1/command-line SQL for safety.
+  if (user.role === 'owner') return ['affiliate', 'manager'].includes(role);
   if (user.role === 'manager') return role === 'affiliate';
   return false;
 }
@@ -105,6 +107,11 @@ export async function onRequestPost({ request, env }) {
 
     if (!email || !email.includes('@')) return json({ error: 'A valid email is required.' }, 400);
     if (!['affiliate', 'manager', 'owner'].includes(role)) return json({ error: 'Invalid role.' }, 400);
+    if (role === 'owner') {
+      return json({
+        error: 'Owner invites are command-line only. Create owner invites from the D1 Console for security.'
+      }, 403);
+    }
     if (!canCreateRole(user, role)) return json({ error: 'You do not have permission to create this invite role.' }, 403);
 
     const existingUser = await userExists(env, email);

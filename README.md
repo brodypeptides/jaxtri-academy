@@ -1,75 +1,83 @@
-# Jaxtri Academy — Sprint 3.1 Direct Admin Invites
+# Jaxtri Academy — Sprint 3.1.1 Owner Invite Lockdown
 
-Sprint 3.1 adds Level 1 email invites:
-
-1. Owner/manager opens `owner-admin.html`.
-2. Admin enters an email address.
-3. Admin chooses a role.
-4. The app creates an invite link.
-5. Admin can copy the link or open an email draft.
-6. The invited person opens `invite.html`, creates their account, and is logged in.
-
-No paid email service is required yet. The `Open email draft` button uses a normal `mailto:` link so you can send the invite manually from your email app.
+This patch keeps Sprint 3.1 direct invites, but removes `Owner` from the Admin panel invite role selector.
 
 ## What changed
 
-New backend files:
+- Admin panel can create direct invites for `Affiliate` and `Manager`.
+- `Owner` invites are blocked at the API level, even if someone tries to force the request manually.
+- Existing owner invites still work if they were created intentionally in D1.
+- Owner invite creation is now a D1 Console / command-line-only action.
 
-```text
-functions/api/admin/invites.js
-functions/api/admin/invites/[id]/revoke.js
+## Why
+
+Owner access is full command center access. Keeping Owner invites out of the web panel prevents accidental full-access invites.
+
+## No database migration needed
+
+This uses the same Sprint 3 `invites` table.
+
+## How to create an Owner invite manually in D1
+
+Go to Cloudflare → D1 → your database → Console.
+
+Replace the email below, then run:
+
+```sql
+INSERT INTO invites (
+  token,
+  application_id,
+  email,
+  role,
+  status,
+  expires_at,
+  created_by
+)
+VALUES (
+  lower(hex(randomblob(24))),
+  NULL,
+  'OWNER_EMAIL_HERE',
+  'owner',
+  'active',
+  datetime('now', '+14 days'),
+  (SELECT id FROM users WHERE role = 'owner' ORDER BY id ASC LIMIT 1)
+);
 ```
 
-Updated files:
+Then get the token:
 
-```text
-owner-admin.html
-owner-dashboard.html
-functions/api/invites/[token].js
+```sql
+SELECT token, email, role, status, expires_at
+FROM invites
+WHERE email = 'OWNER_EMAIL_HERE'
+ORDER BY id DESC
+LIMIT 1;
 ```
 
-New helper/reference file:
+Your invite link is:
 
 ```text
-database/sprint3-1-direct-invites.sql
+https://YOUR-SITE.pages.dev/invite.html?token=PASTE_TOKEN_HERE
 ```
 
-## Copy instructions
+After the company owner accepts the invite, confirm them:
 
-Copy the contents of this folder into the root of your repo. Keep your existing `wrangler.toml` with your correct D1 database ID.
+```sql
+SELECT id, full_name, email, username, role, status, created_at
+FROM users
+WHERE email = 'OWNER_EMAIL_HERE';
+```
 
-## Database
+## Install
 
-If Sprint 3 already works, you do **not** need a new migration. Sprint 3.1 uses the existing `invites` table.
+Copy these files into the repo, replacing existing matching files:
 
-If you have not run Sprint 3's invite table migration yet, run:
+- `owner-admin.html`
+- `functions/api/admin/invites.js`
+- `README.md`
+
+Then commit and push:
 
 ```text
-database/sprint3-invites.sql
+sprint 3.1.1 owner invite lockdown
 ```
-
-## Permissions
-
-- Owner can create affiliate, manager, and owner invites.
-- Manager can create affiliate invites only.
-- Used invite links cannot be revoked.
-- Active invite links can be revoked before the invited person creates an account.
-- Existing users cannot receive duplicate invites. Update their role/status in D1 instead.
-
-## Testing Sprint 3.1
-
-1. Log in as owner.
-2. Go to Admin.
-3. Enter a test email.
-4. Choose `Affiliate` first.
-5. Click `Create invite`.
-6. Copy/open the invite link.
-7. Create the account.
-8. Confirm the new account logs into the Academy.
-9. Repeat with a manager invite when ready.
-
-## Company owner invite
-
-For the company owner, use the `Owner` role only when the app is polished and you are ready to grant full command center access.
-
-A safer option is to invite them as `Manager`, let them test, then promote them to `Owner` in D1 when ready.
