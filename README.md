@@ -1,23 +1,16 @@
-# Jaxtri Academy v1.2 Manual Portal Foundation
+# Jaxtri Academy v1.3 Community Foundation
 
-Static GitHub Pages build. No npm, no actions, no backend required.
-
-## New in v1.2
-- Affiliate signup page
-- Affiliate login preview
-- Owner login preview
-- Affiliate dashboard preview
-- Owner dashboard preview
-- Content submission page
-- Owner upload/post content page
-
-## Important
-These are frontend pages only. Real login, uploads, form submissions, and owner-only access require a backend. Recommended later stack:
-- Cloudflare Pages
-- Cloudflare Workers
-- Cloudflare D1
-- Cloudflare R2
-- Cloudflare Access or custom auth
+Static GitHub Pages-ready affiliate academy. No npm, no GitHub Actions required.
 
 ## Deploy
-Push everything to GitHub and use GitHub Pages: Deploy from branch -> main -> /(root).
+Set GitHub Pages to: Deploy from a branch → main → /(root).
+
+## New in v1.3
+- Jaxtri Labs logo added
+- Official website, Discord, GoAffPro, manager email, owner email
+- Skool-style static community feed preview
+- On-site affiliate signup/application layout
+- Login/dashboard previews kept static and Cloudflare-ready
+
+## Important
+Do not store passwords or password hashes in GitHub. Real login, submissions, comments, and uploads should be built later with Cloudflare Pages + Workers + D1 + R2.
