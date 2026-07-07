@@ -1,0 +1,12 @@
+name = "jaxtri-academy"
+compatibility_date = "2026-07-07"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jaxtri_academy"
+database_id = "PASTE_YOUR_D1_DATABASE_ID_HERE"
+
+# Optional email invite support. Add these as Cloudflare environment variables/secrets:
+# RESEND_API_KEY = "re_..."
+# INVITE_FROM_EMAIL = "Jaxtri Academy <invites@yourdomain.com>"
+# INVITE_BASE_URL = "https://your-cloudflare-pages-domain.pages.dev"
