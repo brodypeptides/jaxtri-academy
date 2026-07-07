@@ -1,25 +1,12 @@
-# Jaxtri Academy v1.7 Categorized
+# Jaxtri Academy v1.8
 
-Static GitHub Pages version with clearer navigation and grouped sections.
+Static GitHub Pages version with public gate + cookie/localStorage preview login.
 
-## Main sections
-- Start Here
-- Academy
-- Content Vault
-- Community
-- Resources
-- Owner Tools
+Public pages visible in nav:
+- Apply Here
+- Affiliate Login
+- Owner Login
 
-## Editing content
-Most manual content lives in `/content/`:
-- hooks.html
-- video-ideas.html
-- scripts.html
-- captions.html
-- broll.html
-- claims.html
+Protected preview pages use browser-only cookies/localStorage. This is not real security; Cloudflare Workers/D1 should handle production auth later.
 
-The owner portal includes `content-manager.html` as a static planning page for future tab creation. Real owner-created tabs will require a backend later, such as Cloudflare Pages + Workers + D1/R2.
-
-## Deploy
-Push all files to GitHub Pages using Deploy from Branch: `main` / `(root)`.
+Academy credentials are separate from GoAffPro credentials.

@@ -1,12 +1,12 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Owner Dashboard | Jaxtri Academy</title><link rel="stylesheet" href="assets/styles.css" /></head><body><header class="site-header">
-    <a class="brand" href="index.html"><img src="assets/jaxtri-logo.png" alt="Jaxtri Labs logo" /> Jaxtri Academy</a>
-    <nav>
-      <a href="start-here.html">Start Here</a>
-      <a href="academy.html">Academy</a>
-      <a href="content-vault.html">Content Vault</a>
-      <a href="community.html">Community</a>
-      <a href="resources.html">Resources</a>
-      <a href="affiliate-login.html">Login</a>
-      <a href="owner-login.html" class="nav-cta">Owner</a>
-    </nav>
-  </header><main><section class="page-hero"><p class="eyebrow">Owner Tools</p><h1>Manage the affiliate system.</h1><p>Static preview for now. Later on Cloudflare, this can become the real place to approve affiliates, create tabs, post updates, and upload content.</p></section><section class="dashboard-shell"><aside class="sidebar"><a class="active" href="owner-dashboard.html">Owner Home</a><a href="content-manager.html">Content Manager</a><a href="upload-content.html">Upload/Post</a><a href="submit-content.html">Submissions</a><a href="feed.html">Community Feed</a><a href="resources.html">Links + Contacts</a></aside><div><div class="owner-tool-grid"><a class="link-card-small hidden-important" href="content-manager.html"><strong>Create future tabs</strong><span>Plan new sections like Hook Ideas, TikTok Scripts, Product Training, or Announcements.</span></a><a class="link-card-small" href="upload-content.html"><strong>Upload / post content</strong><span>Mock upload page for future Cloudflare-powered media and posts.</span></a><a class="link-card-small" href="signup.html"><strong>Review signups</strong><span>Affiliate application flow and Discord onboarding notes.</span></a><a class="link-card-small" href="resources.html"><strong>Update links</strong><span>Main website, Discord, GoAffPro, manager email, owner email.</span></a></div><div class="note" style="margin-top:18px"><h3>Current setup</h3><p>This website is static so it stays reliable on GitHub Pages. To actually create tabs from the owner portal, we will need Cloudflare Pages + Workers + a database later.</p></div></div></section></main><footer><strong>Jaxtri Academy</strong><span>Owner Tools</span></footer></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Owner Dashboard | Jaxtri Academy</title><link rel="stylesheet" href="assets/styles.css"></head><body data-protected="owner"><header class="site-header">
+  <a class="brand" href="owner-dashboard.html"><img src="assets/jaxtri-logo.png" alt="Jaxtri Labs logo" /> Jaxtri Academy</a>
+  <nav>
+    <a href="owner-dashboard.html">Owner Home</a>
+    <a href="content-manager.html">Content Manager</a>
+    <a href="upload-content.html">Upload/Post</a>
+    <a href="community.html">Feed</a>
+    <a href="resources.html">Resources</a>
+    <a href="#" data-logout class="nav-cta">Logout</a>
+  </nav>
+</header>
+<main><section class="page-hero"><p class="eyebrow">Owner Dashboard</p><h1>Manage the academy structure.</h1><p>This is the static owner command center. Later on Cloudflare, this becomes the place where you create tabs, approve affiliates, post feed updates, and manage uploads.</p></section><section class="dashboard-shell"><aside class="sidebar"><a class="active" href="owner-dashboard.html">Overview</a><a href="content-manager.html">Content Manager</a><a href="upload-content.html">Upload/Post</a><a href="feed.html">Community Feed</a><a href="resources.html">Resources</a><a href="#" data-logout>Logout</a></aside><div><div class="dash-grid"><div class="dash-card"><strong>6</strong><span>Core categories</span></div><div class="dash-card"><strong>Manual</strong><span>Content control</span></div><div class="dash-card"><strong>Cloudflare</strong><span>Backend later</span></div></div><section class="section" style="padding-left:0;padding-right:0"><div class="grid cards"><article><span>01</span><h3>Public Gate</h3><p>Only Apply, Affiliate Login, and Owner Login are visible without access.</p></article><article><span>02</span><h3>Affiliate Area</h3><p>Training, vault, resources, and community feed unlock after affiliate login.</p></article><article><span>03</span><h3>Create Tabs Later</h3><p>The content manager is prepared for owner-created categories when connected to Cloudflare.</p></article></div></section></div></section></main><footer><strong>Jaxtri Academy</strong><span>Owner tools preview</span></footer><script src="assets/auth.js"></script></body></html>
