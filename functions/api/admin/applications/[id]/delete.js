@@ -12,6 +12,12 @@ export async function onRequestPost({ request, env, params }) {
     const id = Number(params.id);
     if (!id) return json({ error: 'Invalid application ID.' }, 400);
 
+    try {
+      await env.DB.prepare('DELETE FROM invites WHERE application_id = ?').bind(id).run();
+    } catch (error) {
+      if (!String(error?.message || '').includes('no such table')) throw error;
+    }
+
     await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
 
     return json({ ok: true });

@@ -19,7 +19,7 @@
 
 <main class="dashboard">
   <p class="eyebrow">Affiliate recruitment</p>
-  <h1 class="title">Review applications.</h1>
+  <h1 class="title">Review, approve, and invite affiliates.</h1>
   <div id="me" class="notice">Loading account...</div>
   <div id="status" class="notice" style="margin-top:16px">Loading applications...</div>
 
@@ -27,7 +27,7 @@
 
   <section class="card" style="margin-top:24px">
     <h2>Recruitment queue</h2>
-    <p class="small">Use tabs to separate new applicants from approved, rejected, and archived records.</p>
+    <p class="small">Approve strong applicants, generate Academy invite links, and keep older records archived instead of deleting them.</p>
     <div id="tabs" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"></div>
   </section>
 
@@ -57,13 +57,10 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function isArchived(app) {
-  return Boolean(app.archived_at);
-}
-
-function visibleStatus(app) {
-  return isArchived(app) ? 'archived' : app.status;
-}
+function isArchived(app) { return Boolean(app.archived_at); }
+function visibleStatus(app) { return isArchived(app) ? 'archived' : app.status; }
+function hasInvite(app) { return Boolean(app.invite_token); }
+function inviteUrl(app) { return `${location.origin}/invite.html?token=${encodeURIComponent(app.invite_token || '')}`; }
 
 function filteredApps() {
   return allApplications.filter(app => {
@@ -79,6 +76,10 @@ function countFor(tab) {
   return allApplications.filter(app => !isArchived(app) && app.status === tab).length;
 }
 
+function inviteCount() {
+  return allApplications.filter(app => app.invite_token && app.invite_status === 'active' && !app.invite_used_at).length;
+}
+
 function socials(app) {
   const items = [
     ['TikTok', app.tiktok],
@@ -87,7 +88,6 @@ function socials(app) {
   ].filter(x => x[1]);
 
   if (!items.length) return '<p class="small">No socials provided.</p>';
-
   return items.map(([name, value]) => `<p><strong>${name}:</strong> ${escapeHtml(value)}</p>`).join('');
 }
 
@@ -97,6 +97,35 @@ function statusClass(app) {
   if (status === 'rejected') return 'error';
   if (status === 'archived') return '';
   return '';
+}
+
+function invitePanel(app) {
+  if (app.status !== 'approved' || isArchived(app)) return '';
+
+  if (!app.invite_token) {
+    return `
+      <div class="notice" style="margin-top:14px">
+        <strong>Next step:</strong> Create an Academy invite link for this approved applicant.
+      </div>
+    `;
+  }
+
+  const url = inviteUrl(app);
+  const used = app.invite_status === 'used' || app.invite_used_at;
+  const label = used ? 'Invite used' : 'Invite ready';
+  const cls = used ? 'notice success' : 'notice';
+
+  return `
+    <div class="${cls}" style="margin-top:14px">
+      <strong>${label}</strong>
+      <p class="small">${used ? `Used ${escapeHtml(app.invite_used_at || '')}` : `Expires ${escapeHtml(app.invite_expires_at || '')}`}</p>
+      <input value="${escapeHtml(url)}" readonly style="width:100%;margin-top:8px" onclick="this.select()">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn primary" onclick="copyInvite('${escapeHtml(url)}')">Copy invite</button>
+        <a class="btn" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Open invite</a>
+      </div>
+    </div>
+  `;
 }
 
 function actions(app) {
@@ -109,6 +138,7 @@ function actions(app) {
 
   return `
     ${app.status !== 'approved' ? `<button class="btn primary" onclick="reviewApp(${app.id}, 'approve')">Approve</button>` : ''}
+    ${app.status === 'approved' ? `<button class="btn primary" onclick="createInvite(${app.id})">${hasInvite(app) ? 'Refresh invite' : 'Create invite'}</button>` : ''}
     ${app.status !== 'rejected' ? `<button class="btn" onclick="reviewApp(${app.id}, 'reject')">Reject</button>` : ''}
     <button class="btn" onclick="reviewApp(${app.id}, 'archive')">Archive</button>
   `;
@@ -133,6 +163,7 @@ function card(app) {
       <p class="small">Applied ${escapeHtml(app.created_at || '')}</p>
       ${reviewedLine}
       ${archivedLine}
+      ${invitePanel(app)}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         ${actions(app)}
       </div>
@@ -152,7 +183,7 @@ function renderSummary() {
   const cards = [
     ['Pending', countFor('pending')],
     ['Approved', countFor('approved')],
-    ['Rejected', countFor('rejected')],
+    ['Invites', inviteCount()],
     ['Archived', countFor('archived')]
   ];
 
@@ -178,10 +209,7 @@ function renderApplications() {
   appsEl.innerHTML = apps.map(card).join('');
 }
 
-function setTab(tab) {
-  activeTab = tab;
-  renderApplications();
-}
+function setTab(tab) { activeTab = tab; renderApplications(); }
 
 async function loadApps() {
   statusEl.className = 'notice';
@@ -202,10 +230,7 @@ async function loadApps() {
 
 async function reviewApp(id, action) {
   let body = {};
-
-  if (action === 'reject') {
-    body.note = prompt('Optional rejection note:') || '';
-  }
+  if (action === 'reject') body.note = prompt('Optional rejection note:') || '';
 
   const response = await fetch(`/api/admin/applications/${id}/${action}`, {
     method: 'POST',
@@ -214,17 +239,35 @@ async function reviewApp(id, action) {
   });
 
   const data = await response.json().catch(() => ({ error: 'Unknown error' }));
-
-  if (!response.ok) {
-    alert(data.error || 'Action failed.');
-    return;
-  }
-
+  if (!response.ok) { alert(data.error || 'Action failed.'); return; }
   await loadApps();
 }
 
+async function createInvite(id) {
+  const response = await fetch(`/api/admin/applications/${id}/invite`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { alert(data.error || 'Invite failed.'); return; }
+
+  await copyInvite(data.invite_url);
+  await loadApps();
+}
+
+async function copyInvite(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('Invite link copied.');
+  } catch {
+    prompt('Copy this invite link:', url);
+  }
+}
+
 async function deleteApp(id) {
-  const confirmed = confirm('Permanently delete this application? This cannot be undone.');
+  const confirmed = confirm('Permanently delete this application and related invite records? This cannot be undone.');
   if (!confirmed) return;
 
   const response = await fetch(`/api/admin/applications/${id}/delete`, {
@@ -234,12 +277,7 @@ async function deleteApp(id) {
   });
 
   const data = await response.json().catch(() => ({ error: 'Unknown error' }));
-
-  if (!response.ok) {
-    alert(data.error || 'Delete failed.');
-    return;
-  }
-
+  if (!response.ok) { alert(data.error || 'Delete failed.'); return; }
   await loadApps();
 }
 

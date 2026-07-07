@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Accept Invite | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="index.html">Jaxtri Academy</a>
+  <nav class="nav">
+    <a href="index.html">Public Site</a>
+    <a href="login.html">Login</a>
+  </nav>
+</header>
+
+<main class="hero">
+  <section class="wrap grid">
+    <div>
+      <p class="eyebrow">Academy invite</p>
+      <h1 class="title">Create your Jaxtri Academy account.</h1>
+      <p class="lead">Your application was approved. Set your Academy credentials below. These are separate from any external affiliate tools.</p>
+      <div id="status" class="notice">Checking invite...</div>
+    </div>
+
+    <form id="inviteForm" class="card form" style="display:none">
+      <div class="field">
+        <label>Approved email</label>
+        <input id="email" readonly>
+      </div>
+      <div class="field">
+        <label>Full name</label>
+        <input name="full_name" id="full_name" required>
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input name="username" required placeholder="yourname">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input name="password" type="password" required minlength="8">
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <input name="confirm_password" type="password" required minlength="8">
+      </div>
+      <button class="btn primary" type="submit">Activate Account</button>
+      <p class="small">After activation, you’ll be logged into Jaxtri Academy automatically.</p>
+    </form>
+  </section>
+</main>
+
+<script>
+const params = new URLSearchParams(location.search);
+const token = params.get('token') || '';
+const statusEl = document.getElementById('status');
+const formEl = document.getElementById('inviteForm');
+const emailEl = document.getElementById('email');
+const nameEl = document.getElementById('full_name');
+
+function setStatus(text, type = '') {
+  statusEl.className = `notice ${type}`.trim();
+  statusEl.textContent = text;
+}
+
+async function loadInvite() {
+  if (!token) {
+    setStatus('Missing invite token.', 'error');
+    return;
+  }
+
+  const response = await fetch(`/api/invites/${encodeURIComponent(token)}`);
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+  if (!response.ok) {
+    setStatus(data.error || 'Invite could not be loaded.', 'error');
+    return;
+  }
+
+  emailEl.value = data.invite.email || '';
+  nameEl.value = data.invite.full_name || '';
+  formEl.style.display = 'block';
+  setStatus(`Invite verified. Expires ${data.invite.expires_at}.`, 'success');
+}
+
+formEl.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const body = Object.fromEntries(new FormData(formEl));
+
+  if (body.password !== body.confirm_password) {
+    setStatus('Passwords do not match.', 'error');
+    return;
+  }
+
+  setStatus('Creating account...');
+
+  const response = await fetch(`/api/invites/${encodeURIComponent(token)}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+  if (!response.ok) {
+    setStatus(data.error || 'Could not activate account.', 'error');
+    return;
+  }
+
+  setStatus('Account created. Redirecting...', 'success');
+  location.href = data.redirect || '/academy-dashboard.html';
+});
+
+loadInvite();
+</script>
+</body>
+</html>
