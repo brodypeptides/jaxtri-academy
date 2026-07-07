@@ -11,6 +11,10 @@ function base64ToBytes(str) {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
 }
 
+function sqlDateFromNow(days) {
+  return new Date(Date.now() + days * 86400000).toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -58,11 +62,11 @@ export async function hashPassword(password) {
 
 export async function verifyPassword(password, stored) {
   try {
-    const [type, iters, saltB64, hashB64] = stored.split('$');
+    const [type, iters, saltB64, hashB64] = String(stored || '').split('$');
     if (type !== 'pbkdf2') return false;
 
     const iterations = Number(iters);
-    if (!Number.isFinite(iterations) || iterations > 100000) return false;
+    if (!Number.isFinite(iterations) || iterations > 100000 || iterations < 1) return false;
 
     const salt = base64ToBytes(saltB64);
     const key = await crypto.subtle.importKey(
@@ -84,7 +88,8 @@ export async function verifyPassword(password, stored) {
       256
     );
 
-    return bytesToBase64(new Uint8Array(bits)) === hashB64;
+    const actual = bytesToBase64(new Uint8Array(bits));
+    return actual === hashB64;
   } catch {
     return false;
   }
@@ -92,6 +97,10 @@ export async function verifyPassword(password, stored) {
 
 export function cookie(name, value, maxAge) {
   return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+export function clearCookie(name) {
+  return `${name}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }
 
 export function getCookie(req, name) {
@@ -106,13 +115,20 @@ export function getCookie(req, name) {
 export async function createSession(env, userId, remember = false) {
   const id = randomId();
   const days = remember ? 30 : 1;
-  const expires = new Date(Date.now() + days * 86400000).toISOString();
+  const expires = sqlDateFromNow(days);
 
   await env.DB.prepare('INSERT INTO sessions (id,user_id,expires_at) VALUES (?,?,?)')
     .bind(id, userId, expires)
     .run();
 
   return { id, maxAge: days * 86400 };
+}
+
+export async function deleteSession(env, req) {
+  const sid = getCookie(req, 'jaxtri_session');
+  if (sid) {
+    await env.DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sid).run();
+  }
 }
 
 export async function getUserFromRequest(env, req) {
@@ -137,4 +153,8 @@ export async function getUserFromRequest(env, req) {
     .first();
 
   return row || null;
+}
+
+export function canManageRecruitment(user) {
+  return user && (user.role === 'owner' || user.role === 'manager');
 }

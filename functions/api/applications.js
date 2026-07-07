@@ -18,9 +18,21 @@ export async function onRequestPost({ request, env }) {
     const whyJoin = clean(body.why_join);
     const agreement = Boolean(body.agreement);
 
-    if (!fullName || !email || !whyJoin) return json({ error: 'Name, email, and why you want to join are required.' }, 400);
+    if (!fullName || !email || !whyJoin) {
+      return json({ error: 'Name, email, and why you want to join are required.' }, 400);
+    }
     if (!email.includes('@')) return json({ error: 'Please enter a valid email.' }, 400);
     if (!agreement) return json({ error: 'Please confirm that you understand applications are reviewed.' }, 400);
+
+    const existing = await env.DB.prepare(`
+      SELECT id FROM applications
+      WHERE lower(email) = ? AND status = 'pending'
+      LIMIT 1
+    `).bind(email).first().catch(() => null);
+
+    if (existing) {
+      return json({ error: 'You already have a pending application under this email.' }, 409);
+    }
 
     await env.DB.prepare(`
       INSERT INTO applications
