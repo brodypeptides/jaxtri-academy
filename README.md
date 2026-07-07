@@ -1,25 +1,43 @@
-# Jaxtri Academy — Sprint 4.1.1 Chat Composer Fix
+# Sprint 4.2 — Full Team Chat Page
 
-This is a small UI patch for the Sprint 4/4.1 Team roster panel.
+This patch keeps the movable Team tab, but adds a full-page chat workspace.
 
-## What it fixes
+## Added
 
-- Keeps the lower chat composer visible inside the roster drawer.
-- Makes the message history area shrink correctly on shorter screens.
-- Uses `100dvh` so mobile browser bars do not hide the bottom controls.
-- Adds safer bottom padding for devices with safe-area insets.
-- Compacts the attachment/link box on short screens.
+- `team.html` full-screen team chat page
+- `assets/team-page.js` full-page chat logic
+- Dashboard/nav links to Team Chat
+- Full-width channel + DM messaging
+- Larger message history area
+- Bigger visible send/attachment composer
+- Right-side conversation details and active-member list on desktop
+- The compact side drawer now includes a **Full page** button
 
-## No database changes
+## D1
 
-No D1 migration is required.
+No new database migration is required if Sprint 4 tables already exist.
 
-## Install
+If you see errors about missing attachment columns, run these in D1:
 
-Copy this package into the repo, keeping your existing `wrangler.toml`.
+```sql
+ALTER TABLE direct_messages ADD COLUMN attachment_url TEXT;
+ALTER TABLE direct_messages ADD COLUMN attachment_name TEXT;
+ALTER TABLE channel_messages ADD COLUMN attachment_url TEXT;
+ALTER TABLE channel_messages ADD COLUMN attachment_name TEXT;
+```
 
-Commit message:
+If D1 says `duplicate column name`, that column already exists and you can ignore it.
+
+## Test
+
+1. Push this patch.
+2. Open `/team.html` while logged in.
+3. Send a General channel message.
+4. Open People and test a DM.
+5. Use the movable Team tab and click **Full page**.
+
+Suggested commit message:
 
 ```text
-sprint 4.1.1 chat composer fix
+sprint 4.2 full team chat page
 ```

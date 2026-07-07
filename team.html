@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Team Chat | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="team-page-body">
+<header class="header">
+  <a class="brand" href="academy-dashboard.html">Jaxtri Academy</a>
+  <nav class="nav">
+    <a id="teamDashboardLink" href="academy-dashboard.html">Dashboard</a>
+    <a href="team.html">Team</a>
+    <a href="feed.html">Feed</a>
+    <a href="training.html">Training</a>
+    <a href="content-vault.html">Vault</a>
+    <button id="logout" class="btn">Logout</button>
+  </nav>
+</header>
+
+<main class="team-page">
+  <aside class="team-panel team-sidebar">
+    <div class="team-sidebar-head">
+      <p class="eyebrow">Team hub</p>
+      <h1>Chat</h1>
+      <p class="small">Full-screen channels, DMs, presence, unread badges, and shared links.</p>
+    </div>
+
+    <div id="teamMe" class="team-me">Loading account...</div>
+
+    <div class="team-tabs">
+      <button id="teamChannelsTab" class="active" type="button">Channels</button>
+      <button id="teamPeopleTab" type="button">People</button>
+    </div>
+
+    <div id="teamStatus" class="notice" style="display:none"></div>
+    <div id="teamSidebarList" class="team-list"></div>
+  </aside>
+
+  <section class="team-panel team-chat-main">
+    <div class="team-chat-top">
+      <div>
+        <p class="eyebrow" id="teamChatType">Team chat</p>
+        <h2 id="teamChatTitle">Loading...</h2>
+        <p id="teamChatSubtitle" class="small" style="margin:4px 0 0">Getting conversations ready.</p>
+      </div>
+      <div class="team-chat-actions">
+        <span id="teamUnreadPill" class="pill">Loading</span>
+        <button id="teamRefresh" class="btn" type="button">Refresh</button>
+      </div>
+    </div>
+
+    <div id="teamMessages" class="team-page-messages">
+      <div class="team-empty"><div><h2>Loading team chat...</h2><p>Getting your conversations ready.</p></div></div>
+    </div>
+
+    <form id="teamMessageForm" class="team-page-composer">
+      <textarea id="teamMessageBody" placeholder="Type a message..."></textarea>
+      <details class="roster-attach-box">
+        <summary>Add file/image link</summary>
+        <div class="team-attach-grid">
+          <input id="teamAttachmentUrl" type="url" placeholder="https://example.com/file-or-image.png">
+          <input id="teamAttachmentName" type="text" placeholder="Attachment name, optional">
+        </div>
+        <p class="small">Sprint 4.4 supports shared links and image URLs. Real uploads come later with R2 storage.</p>
+      </details>
+      <div class="team-composer-row">
+        <p class="small" style="margin:0">Tip: use the full page for longer messages and the side tab for quick replies.</p>
+        <button class="btn primary" type="submit">Send message</button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="team-panel team-details">
+    <div class="team-detail-block" id="teamConversationMeta">
+      <p class="small">Choose a conversation to view details.</p>
+    </div>
+    <div class="team-detail-block">
+      <h3>Active now</h3>
+      <div id="teamOnlineList" class="team-online-list"><p class="small">Loading presence...</p></div>
+    </div>
+  </aside>
+</main>
+
+<script src="assets/session.js"></script>
+<script src="assets/team-page.js"></script>
+</body>
+</html>

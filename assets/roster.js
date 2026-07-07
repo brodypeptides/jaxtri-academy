@@ -91,7 +91,7 @@
           <p class="eyebrow">Team roster</p>
           <h2>Members</h2>
         </div>
-        <button id="rosterClose" class="btn" type="button">Close</button>
+        <div class="roster-head-actions"><a class="btn primary" href="team.html">Full page</a><button id="rosterClose" class="btn" type="button">Close</button></div>
       </div>
 
       <div id="rosterMe" class="roster-me">Loading team...</div>
