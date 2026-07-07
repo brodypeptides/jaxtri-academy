@@ -1,1 +1,64 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feed | Jaxtri Academy</title><link rel="stylesheet" href="assets/styles.css"></head><body><header class="header"><a class="brand" href="academy-dashboard.html">Jaxtri Academy</a><nav class="nav"><a href="academy-dashboard.html">Dashboard</a><a href="feed.html">Feed</a><a href="training.html">Training</a><a href="content-vault.html">Vault</a><a href="resources.html">Resources</a><a href="team.html">Team</a><button id="logout" class="btn">Logout</button></nav></header><main class="dashboard"><p class="eyebrow">Academy</p><h1 class="title">Feed</h1><div id="me" class="notice">Loading account...</div><section class="card" style="margin-top:24px"><h2>Coming soon</h2><p>This area is ready for the next sprint.</p></section></main><script src="assets/session.js"></script><script src="assets/roster.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Feed | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="academy-dashboard.html">Jaxtri Academy</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Academy</strong><small>Affiliate Portal</small></div></div>
+    <nav class="side-nav">
+      <a href="academy-dashboard.html">Dashboard</a>
+      <a class="active" href="feed.html">Feed</a>
+      <a href="training.html">Training</a>
+      <a href="content-vault.html">Content Vault</a>
+      <a href="resources.html">Resources</a>
+      <a href="team.html">Team Chat</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="back-row"><a class="btn" href="academy-dashboard.html">← Back to dashboard</a><a class="btn" href="content-vault.html">Content Vault</a><a class="btn" href="resources.html">Resources</a></div>
+    <div class="page-head compact-page-head">
+      <div><p class="eyebrow">Community</p><h1 class="title">Main feed</h1><p class="lead">Published affiliate experiences and team updates.</p></div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section class="dashboard-two-col feed-layout">
+      <div class="card compact-card">
+        <p class="eyebrow">Submit</p>
+        <h2>Share an experience</h2>
+        <p class="small">Submissions go into review first. Approved posts appear here.</p>
+        <form id="feedPostForm" class="form compact-form" style="margin-top:14px">
+          <div class="field"><label>Title</label><input name="title" maxlength="120" placeholder="Short title"></div>
+          <div class="field"><label>Post</label><textarea name="body" maxlength="3000" placeholder="Write your update or experience..."></textarea></div>
+          <div class="field"><label>Optional image/link URL</label><input name="media_url" type="url" placeholder="https://..."></div>
+          <button class="btn primary" type="submit">Submit for review</button>
+        </form>
+        <div id="feedPostStatus" class="notice" style="display:none;margin-top:12px"></div>
+      </div>
+
+      <div>
+        <div id="mainFeed" class="feed-list"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script src="assets/social-feed.js"></script>
+<script>
+JaxtriFeed.wirePostForm('feedPostForm', 'feedPostStatus');
+JaxtriFeed.loadPublishedFeed('mainFeed', 'No approved feed posts yet.');
+</script>
+</body>
+</html>

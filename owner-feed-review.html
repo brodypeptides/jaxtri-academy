@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Feed Review | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a href="owner-dashboard.html">Overview</a>
+      <a href="owner-recruitment.html">Recruitment</a>
+      <a class="active" href="owner-feed-review.html">Feed Review</a>
+      <a href="owner-admin.html">Admin + Invites</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div><p class="eyebrow">Review queue</p><h1 class="title">Feed submissions</h1><p class="lead">Approve member stories before they appear in the main Academy feed.</p></div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <div class="section-head-row" style="margin-top:10px">
+      <div id="reviewTabs" class="actions"></div>
+      <button id="refreshReview" class="btn">Refresh</button>
+    </div>
+    <div id="reviewStatus" class="notice" style="margin-top:14px">Loading feed submissions...</div>
+    <section id="reviewPosts" class="list compact-list"></section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script src="assets/social-feed.js"></script>
+<script src="assets/feed-review.js"></script>
+</body>
+</html>

@@ -6,8 +6,8 @@
   <title>Admin | Jaxtri Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body>
-<header class="header">
+<body class="dashboard-v2">
+<header class="header compact-header">
   <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
   <nav class="nav">
     <a href="owner-dashboard.html">Dashboard</a>
@@ -18,9 +18,21 @@
   </nav>
 </header>
 
-<main class="dashboard">
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a href="owner-dashboard.html">Overview</a>
+      <a href="owner-recruitment.html">Recruitment</a>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a class="active" href="owner-admin.html">Admin + Invites</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+<main class="app-main dashboard dashboard-compact">
   <p class="eyebrow">Admin</p>
-  <h1 class="title">Invite and manage access.</h1>
+  <h1 class="title">Admin</h1><p class="lead">Direct invites, access controls, and security tools.</p>
   <div id="me" class="notice">Loading account...</div>
 
   <section class="dashgrid" style="margin-top:24px">
@@ -78,6 +90,7 @@
     <div id="invitesList" class="list"></div>
   </section>
 </main>
+</div>
 
 <script src="assets/session.js"></script><script src="assets/roster.js"></script>
 <script>

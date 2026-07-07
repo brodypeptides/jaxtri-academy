@@ -3,41 +3,84 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Jaxtri Command Center</title>
+  <title>Command Center | Jaxtri Academy</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body>
-<header class="header">
+<body class="dashboard-v2">
+<header class="header compact-header">
   <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
-  <nav class="nav">
-    <a href="owner-dashboard.html">Dashboard</a>
-    <a href="owner-recruitment.html">Recruitment</a>
-    <a href="owner-admin.html">Admin</a>
-    <a href="team.html">Team</a><a href="academy-dashboard.html">Academy</a>
-    <button id="logout" class="btn">Logout</button>
-  </nav>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
 </header>
-<main class="dashboard">
-  <p class="eyebrow">Owner access</p>
-  <h1 class="title">Command center</h1>
-  <div id="me" class="notice">Loading account...</div>
 
-  <section class="dashgrid" style="margin-top:24px">
-    <a class="card" href="owner-recruitment.html">
-      <h2>Recruitment</h2>
-      <p id="recruitmentCount">Loading applications...</p>
-    </a>
-    <a class="card" href="owner-admin.html">
-      <h2>Direct Invites</h2>
-      <p id="inviteCount">Loading invites...</p>
-    </a>
-    <a class="card" href="owner-admin.html">
-      <h2>Admin</h2>
-      <p>Create invite links from an email, manage active invites, and revoke access before activation.</p>
-    </a>
-  <a class="card" href="team.html"><h2>Team Chat</h2><p>Open the full team messaging workspace.</p></a></section>
-</main>
-<script src="assets/session.js"></script><script src="assets/roster.js"></script>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a class="active" href="owner-dashboard.html">Overview</a>
+      <a href="owner-recruitment.html">Recruitment</a>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a href="owner-admin.html">Admin + Invites</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Owner access</p>
+        <h1 class="title">Command center</h1>
+        <p class="lead">A cleaner operator dashboard for recruitment, invites, feed review, and team activity.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section class="metric-grid">
+      <a class="metric-card" href="owner-recruitment.html">
+        <span>Recruitment</span>
+        <strong id="pendingApps">—</strong>
+        <p id="recruitmentCount">Loading applications...</p>
+      </a>
+      <a class="metric-card" href="owner-admin.html">
+        <span>Active invites</span>
+        <strong id="activeInvites">—</strong>
+        <p id="inviteCount">Loading invites...</p>
+      </a>
+      <a class="metric-card" href="owner-feed-review.html">
+        <span>Feed review</span>
+        <strong id="pendingPosts">—</strong>
+        <p id="feedReviewCount">Loading submissions...</p>
+      </a>
+      <a class="metric-card" href="team.html">
+        <span>Team</span>
+        <strong>Chat</strong>
+        <p>Open the full messaging workspace.</p>
+      </a>
+    </section>
+
+    <section class="dashboard-two-col" style="margin-top:18px">
+      <div class="card compact-card">
+        <p class="eyebrow">Main feed</p>
+        <h2>Recently published</h2>
+        <div id="ownerFeedPreview" class="feed-list compact-feed"></div>
+      </div>
+      <div class="card compact-card">
+        <p class="eyebrow">Quick actions</p>
+        <h2>Next moves</h2>
+        <div class="quick-list">
+          <a href="owner-recruitment.html">Review affiliate applications</a>
+          <a href="owner-feed-review.html">Publish community experiences</a>
+          <a href="owner-admin.html">Create direct invite links</a>
+          <a href="team.html">Open team chat</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script src="assets/social-feed.js"></script>
 <script>
 async function loadCounts() {
   try {
@@ -46,26 +89,33 @@ async function loadCounts() {
     if (r.ok) {
       const pending = d.applications.filter(a => a.status === 'pending' && !a.archived_at).length;
       const archived = d.applications.filter(a => a.archived_at).length;
-      document.getElementById('recruitmentCount').textContent = `${pending} pending application${pending === 1 ? '' : 's'} waiting for review. ${archived} archived.`;
+      document.getElementById('pendingApps').textContent = pending;
+      document.getElementById('recruitmentCount').textContent = `${pending} pending • ${archived} archived`;
     }
-  } catch {
-    document.getElementById('recruitmentCount').textContent = 'Review affiliate applications.';
-  }
+  } catch { document.getElementById('recruitmentCount').textContent = 'Review affiliate applications.'; }
 
   try {
     const r = await fetch('/api/admin/invites');
     const d = await r.json();
     if (r.ok) {
       const active = d.invites.filter(i => i.status === 'active' && !i.used_at).length;
-      const direct = d.invites.filter(i => i.source === 'direct').length;
-      document.getElementById('inviteCount').textContent = `${active} active invite${active === 1 ? '' : 's'}. ${direct} direct invite${direct === 1 ? '' : 's'} created.`;
-      return;
+      document.getElementById('activeInvites').textContent = active;
+      document.getElementById('inviteCount').textContent = `${active} active invite${active === 1 ? '' : 's'}`;
     }
-  } catch {}
+  } catch { document.getElementById('inviteCount').textContent = 'Create direct invite links.'; }
 
-  document.getElementById('inviteCount').textContent = 'Create direct invite links by email.';
+  try {
+    const r = await fetch('/api/admin/feed-posts');
+    const d = await r.json();
+    if (r.ok) {
+      const pending = d.posts.filter(p => p.status === 'pending').length;
+      document.getElementById('pendingPosts').textContent = pending;
+      document.getElementById('feedReviewCount').textContent = `${pending} submission${pending === 1 ? '' : 's'} waiting`;
+    }
+  } catch { document.getElementById('feedReviewCount').textContent = 'Run the feed migration to enable review.'; }
 }
 loadCounts();
+JaxtriFeed.loadPublishedFeed('ownerFeedPreview', 'No published feed posts yet.');
 </script>
 </body>
 </html>

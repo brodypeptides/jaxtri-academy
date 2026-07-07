@@ -6,18 +6,30 @@
   <title>Recruitment | Jaxtri Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body>
-<header class="header">
+<body class="dashboard-v2">
+<header class="header compact-header">
   <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
   <nav class="nav">
     <a href="owner-dashboard.html">Dashboard</a>
-    <a href="owner-recruitment.html">Recruitment</a>
+    <a class="active" href="owner-recruitment.html">Recruitment</a>
     <a href="owner-admin.html">Admin</a>
     <a href="team.html">Team</a><button id="logout" class="btn">Logout</button>
   </nav>
 </header>
 
-<main class="dashboard">
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a href="owner-dashboard.html">Overview</a>
+      <a class="active" href="owner-recruitment.html">Recruitment</a>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a href="owner-admin.html">Admin + Invites</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+<main class="app-main dashboard dashboard-compact">
   <p class="eyebrow">Affiliate recruitment</p>
   <h1 class="title">Review, approve, and invite affiliates.</h1>
   <div id="me" class="notice">Loading account...</div>
@@ -33,6 +45,7 @@
 
   <section id="applications" style="display:grid;gap:16px;margin-top:24px"></section>
 </main>
+</div>
 
 <script src="assets/session.js"></script><script src="assets/roster.js"></script>
 <script>
