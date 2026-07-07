@@ -1,19 +1,13 @@
-# Jaxtri Academy
+# Jaxtri Academy v1.1 Manual Static Site
 
-Static v1.0 that works directly on GitHub Pages with **no npm install, no React build, and no GitHub Actions required**.
+This is the stable GitHub Pages version. No npm. No React. No GitHub Actions required.
 
-## Publish
+## Deploy
+1. Copy all files into your repo.
+2. Commit and push with GitHub Desktop.
+3. GitHub Pages settings: Deploy from a branch -> main -> /(root).
 
-GitHub Pages settings:
+## Edit Content
+Use the files in `/content/` for your manually written hooks, video ideas, scripts, captions, b-roll ideas, and approved claims.
 
-- Source: Deploy from a branch
-- Branch: main
-- Folder: /(root)
-
-Site URL:
-
-https://brodypeptides.github.io/jaxtri-academy/
-
-## Edit links
-
-Open `index.html` and replace the placeholder GoAffPro / Discord links in the Resources section.
+Important workflow note: the owner creates the affiliate's GoAffPro account manually after Discord/application approval.
