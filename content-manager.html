@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Content Builder | Jaxtri Academy</title><link rel="stylesheet" href="assets/styles.css"></head><body>
+<header class="site-header"><a class="brand" href="index.html"><img src="assets/jaxtri-logo.png" alt="Jaxtri Labs logo" /> Jaxtri Academy</a><nav><a href="owner-dashboard.html">Owner Panel</a><a href="content-manager.html">Content Builder</a><a href="content-vault.html">Vault</a><a href="owner-login.html" class="nav-cta">Logout</a></nav></header>
+<main><section class="page-hero"><p class="eyebrow">Owner Content Builder</p><h1>Create new tabs without breaking the site.</h1><p>For now this generates a finished HTML page you can save into the repo. Later, Cloudflare can make this button publish directly from the owner portal.</p></section>
+<section class="form-panel"><div class="notice">Static mode: this generator does not upload automatically. It creates code for you to copy into a new <strong>.html</strong> file.</div>
+<div class="form-grid">
+<div class="input-group"><label>Tab/Page Title</label><input id="title" value="Hook Ideas"></div>
+<div class="input-group"><label>File name / slug</label><input id="slug" value="hook-ideas"></div>
+<div class="input-group"><label>Category</label><select id="category"><option>Content Vault</option><option>Training</option><option>Resources</option><option>Announcements</option><option>Custom</option></select></div>
+<div class="input-group"><label>Status</label><select id="status"><option>Approved</option><option>Testing</option><option>Draft</option><option>Archived</option></select></div>
+<div class="input-group full"><label>Page description</label><textarea id="desc">Add your manually-created hooks, ideas, scripts, or notes here.</textarea></div>
+<div class="input-group full"><label>First content block</label><textarea id="body">Paste your real content here. Example: Hook #1, platform, notes, and when affiliates should use it.</textarea></div>
+<div class="full copy-row"><button class="button primary" onclick="generatePage()">Generate Page Code</button><button class="button secondary" onclick="copyCode()">Copy Code</button><span class="template-note">Save as: <strong id="fileName">hook-ideas.html</strong></span></div>
+<div class="input-group full"><label>Generated HTML</label><textarea id="output" class="builder-output" spellcheck="false"></textarea></div>
+</div></section>
+<section class="section"><div class="section-heading"><p class="eyebrow">How to add the tab</p><h2>Three manual steps for now.</h2></div><div class="grid cards"><article><span>01</span><h3>Create file</h3><p>Copy generated code into a new file named like <strong>hook-ideas.html</strong>.</p></article><article><span>02</span><h3>Add link</h3><p>Add a link to that file in <strong>content-vault.html</strong> or the navbar if needed.</p></article><article><span>03</span><h3>Push</h3><p>Commit and push in GitHub Desktop. GitHub Pages updates automatically.</p></article></div></section></main><footer><strong>Jaxtri Academy</strong><span>Content builder • v1.6</span></footer>
+<script>
+function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
+function cleanSlug(s){return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'new-page'}
+function generatePage(){
+ const title=document.getElementById('title').value||'New Content';
+ const slug=cleanSlug(document.getElementById('slug').value||title);
+ const category=document.getElementById('category').value;
+ const status=document.getElementById('status').value;
+ const desc=document.getElementById('desc').value;
+ const body=document.getElementById('body').value;
+ document.getElementById('fileName').textContent=slug+'.html';
+ const html=`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${esc(title)} | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="assets/jaxtri-logo.png" alt="Jaxtri Labs logo" /> Jaxtri Academy</a>
+    <nav><a href="feed.html">Feed</a><a href="training.html">Training</a><a href="content-vault.html">Content Vault</a><a href="resources.html">Resources</a><a href="owner-login.html" class="nav-cta">Owner</a></nav>
+  </header>
+  <main>
+    <section class="page-hero"><p class="eyebrow">${esc(category)} • ${esc(status)}</p><h1>${esc(title)}</h1><p>${esc(desc)}</p></section>
+    <section class="section"><div class="manual-grid"><article class="editable-card"><div class="tag-row"><span class="tag approved">${esc(status)}</span><span class="tag">Manual Content</span></div><h3>${esc(title)}</h3><div class="placeholder">${esc(body).replaceAll('\n','<br>')}</div></article></div></section>
+  </main>
+  <footer><strong>Jaxtri Academy</strong><span>Manual content page</span></footer>
+</body>
+</html>`;
+ document.getElementById('output').value=html;
+}
+function copyCode(){navigator.clipboard.writeText(document.getElementById('output').value)}
+generatePage();
+</script></body></html>
