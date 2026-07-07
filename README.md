@@ -1,45 +1,29 @@
-# Jaxtri Platform — Auth + Invites Foundation
+# Jaxtri Platform — Sprint 1 Auth
 
-This build starts the real Cloudflare backend foundation for Jaxtri.
+This build adds the first real backend feature for Cloudflare Pages + D1:
 
-## Included
+- `/setup.html` creates the first owner account
+- passwords are hashed with PBKDF2 before storage
+- a secure session cookie is created
+- `/login.html` uses one shared login for owner/manager/affiliate
+- role-based redirects start working
+- `/api/me` checks the current session
 
-- Public **Jaxtri Labs Affiliate Program**
-- Single shared login for owner, manager, and affiliate
-- Bootstrap owner setup page at `/setup.html`
-- Application form saved to D1
-- Owner/manager application review queue
-- Invite-based account creation
-- Optional email invites using Resend
-- Affiliate content submission
-- Owner/manager content review queue
-- D1 database schema
-- Cloudflare Pages Functions API scaffold
+## Important Cloudflare setup
 
-## First setup
+1. Keep your existing `wrangler.toml` with the D1 binding:
 
-1. Keep your current `wrangler.toml` if it already has your real D1 database ID.
-2. If needed, copy `wrangler.toml.example` to `wrangler.toml` and paste your real D1 database ID.
-3. Run the SQL in `database/schema.sql` against your D1 database in Cloudflare.
-4. Push to GitHub.
-5. Visit `/setup.html` once to create the first owner account.
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "jaxtri_academy"
+database_id = "YOUR_DATABASE_ID"
+```
 
-## Email invites
+2. Run the SQL inside `database/schema.sql` in your D1 console.
 
-Email sending is optional. If you do not configure email, the invite API returns a link you can copy manually.
+Do **not** type `database/schema.sql` into the SQL console. Open the file, copy its contents, paste the actual SQL, then run it.
 
-To enable email invites, add Cloudflare environment variables/secrets:
+3. Push to GitHub. Cloudflare Pages will deploy.
 
-- `RESEND_API_KEY`
-- `INVITE_FROM_EMAIL`
-- `INVITE_BASE_URL`
-
-## Roles
-
-- `owner`: full control, including Admin section.
-- `manager`: daily operations, approvals, content review.
-- `affiliate`: Academy access and content submissions.
-
-## Notes
-
-This is a foundation. It is meant to be pushed and tested on Cloudflare Pages with D1 bound as `DB`.
+4. Visit `/setup.html` and create your first owner account.

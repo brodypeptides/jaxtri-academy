@@ -1,0 +1,7 @@
+name = "jaxtri-academy"
+compatibility_date = "2026-07-07"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jaxtri_academy"
+database_id = "PASTE_YOUR_D1_DATABASE_ID_HERE"

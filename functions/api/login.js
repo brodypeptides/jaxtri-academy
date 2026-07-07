@@ -1,14 +1,3 @@
-import { json, bad, readJson, verifyPassword, randomToken, sha256, sessionCookie, redirectFor } from './_lib.js';
-export async function onRequestPost(context) {
-  const body = await readJson(context.request);
-  const identity = String(body.identity || '').toLowerCase().trim();
-  const password = String(body.password || '');
-  const user = await context.env.DB.prepare(`SELECT * FROM users WHERE lower(email)=? OR lower(username)=? LIMIT 1`).bind(identity, identity).first();
-  if (!user || !await verifyPassword(password, user.password_hash)) return bad('Invalid login.', 401);
-  if (user.status === 'suspended') return bad('Account suspended.', 403);
-  const token = randomToken(32);
-  const tokenHash = await sha256(token);
-  const maxDays = body.remember ? 30 : 1;
-  await context.env.DB.prepare(`INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), datetime('now', ?))`).bind(user.id, tokenHash, `+${maxDays} days`).run();
-  return json({ ok: true, redirect: redirectFor(user) }, 200, { 'set-cookie': sessionCookie(token, !!body.remember) });
-}
+import { json, verifyPassword, createSession, cookie } from '../lib/auth.js';
+function redirectFor(role,status){if(status==='pending')return '/pending.html';if(role==='owner'||role==='manager')return '/owner-dashboard.html';return '/academy-dashboard.html'}
+export async function onRequestPost({request,env}){const body=await request.json().catch(()=>null);if(!body)return json({error:'Invalid request.'},400);const id=(body.identifier||'').toLowerCase();const user=await env.DB.prepare('SELECT * FROM users WHERE lower(email)=? OR lower(username)=? LIMIT 1').bind(id,id).first();if(!user)return json({error:'Invalid login.'},401);const ok=await verifyPassword(body.password||'',user.password_hash);if(!ok)return json({error:'Invalid login.'},401);if(user.status==='suspended')return json({error:'Account suspended.'},403);const session=await createSession(env,user.id,!!body.remember);return json({ok:true,redirect:redirectFor(user.role,user.status)},200,{'set-cookie':cookie('jaxtri_session',session.id,session.maxAge)});}
