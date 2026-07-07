@@ -1,24 +1,38 @@
-# Jaxtri Sprint 2 — Recruitment
+# Jaxtri Sprint 2 — Recruitment (Fixed)
 
-Adds the first real onboarding workflow:
+This fixed package includes the missing shared auth helper at:
 
-- Public affiliate application form
-- D1 application submission API
-- Owner/manager Recruitment dashboard
-- Approve/reject API endpoints
-- Dashboard card linked to Recruitment
+```text
+functions/lib/auth.js
+```
 
-## Database
-If you have not already created the `applications` table, run the SQL in:
+That fixes Cloudflare build errors like:
 
-`database/sprint2-recruitment.sql`
+```text
+Could not resolve "../lib/auth.js"
+Could not resolve "../../lib/auth.js"
+Could not resolve "../../../../lib/auth.js"
+```
 
-Run statements one at a time in Cloudflare D1 if needed.
+## What Sprint 2 adds
 
-## Push instructions
-Copy these files into the repo, commit, push, wait for Cloudflare deploy, then test:
+- Public affiliate application form (`apply.html`)
+- Application submitted confirmation page
+- Recruitment page for owner/manager review (`owner-recruitment.html`)
+- Public application API (`functions/api/applications.js`)
+- Owner/manager recruitment API (`functions/api/admin/applications.js`)
+- Approve/reject API routes
+- Shared auth helper (`functions/lib/auth.js`)
+- D1 schema for the applications table (`database/sprint2-recruitment.sql`)
 
-1. `/apply.html` submit a test application
-2. login as owner
-3. open `/owner-recruitment.html`
-4. approve or reject the test application
+## Important
+
+Do **not** delete your existing files when copying this in. Merge/copy these files into your repo so your Sprint 1 files like login, setup, me, logout, assets, and wrangler.toml stay in place.
+
+After copying:
+
+1. Commit in GitHub Desktop.
+2. Push.
+3. Wait for Cloudflare deployment.
+4. Test `/apply.html`.
+5. Test `/owner-recruitment.html` while logged in as owner.
