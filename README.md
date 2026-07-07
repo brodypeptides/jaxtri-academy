@@ -1,67 +1,75 @@
-# Jaxtri Academy — Sprint 3 Invites
+# Jaxtri Academy — Sprint 3.1 Direct Admin Invites
 
-Sprint 3 completes the first end-to-end onboarding loop:
+Sprint 3.1 adds Level 1 email invites:
 
-1. Visitor applies.
-2. Owner/manager reviews in Recruitment.
-3. Approved application gets an Academy invite link.
-4. Applicant opens invite link.
-5. Applicant creates password + username.
-6. Affiliate account is created.
-7. Affiliate is automatically logged into the Academy.
+1. Owner/manager opens `owner-admin.html`.
+2. Admin enters an email address.
+3. Admin chooses a role.
+4. The app creates an invite link.
+5. Admin can copy the link or open an email draft.
+6. The invited person opens `invite.html`, creates their account, and is logged in.
+
+No paid email service is required yet. The `Open email draft` button uses a normal `mailto:` link so you can send the invite manually from your email app.
+
+## What changed
+
+New backend files:
+
+```text
+functions/api/admin/invites.js
+functions/api/admin/invites/[id]/revoke.js
+```
+
+Updated files:
+
+```text
+owner-admin.html
+owner-dashboard.html
+functions/api/invites/[token].js
+```
+
+New helper/reference file:
+
+```text
+database/sprint3-1-direct-invites.sql
+```
 
 ## Copy instructions
 
-Copy the contents of this folder into the root of your repo. Do not delete or replace `wrangler.toml` unless it keeps your correct D1 database ID.
+Copy the contents of this folder into the root of your repo. Keep your existing `wrangler.toml` with your correct D1 database ID.
 
-## Database migration
+## Database
 
-Run this once in Cloudflare D1 before testing invites:
+If Sprint 3 already works, you do **not** need a new migration. Sprint 3.1 uses the existing `invites` table.
 
-```sql
-CREATE TABLE IF NOT EXISTS invites (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  token TEXT NOT NULL UNIQUE,
-  application_id INTEGER,
-  email TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'affiliate' CHECK (role IN ('owner','manager','affiliate')),
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','used','revoked')),
-  expires_at TEXT NOT NULL,
-  used_at TEXT,
-  used_by INTEGER,
-  created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY(application_id) REFERENCES applications(id) ON DELETE CASCADE,
-  FOREIGN KEY(used_by) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_invites_token ON invites(token);
-CREATE INDEX IF NOT EXISTS idx_invites_application_id ON invites(application_id);
-CREATE INDEX IF NOT EXISTS idx_invites_email ON invites(email);
-CREATE INDEX IF NOT EXISTS idx_invites_status ON invites(status);
-```
-
-The same SQL is also saved in:
+If you have not run Sprint 3's invite table migration yet, run:
 
 ```text
 database/sprint3-invites.sql
 ```
 
-## Testing Sprint 3
+## Permissions
+
+- Owner can create affiliate, manager, and owner invites.
+- Manager can create affiliate invites only.
+- Used invite links cannot be revoked.
+- Active invite links can be revoked before the invited person creates an account.
+- Existing users cannot receive duplicate invites. Update their role/status in D1 instead.
+
+## Testing Sprint 3.1
 
 1. Log in as owner.
-2. Go to Recruitment.
-3. Approve an application.
-4. Click `Create invite`.
-5. Copy/open the generated invite link.
-6. Create an affiliate account.
-7. Confirm the affiliate lands on `academy-dashboard.html`.
-8. Log out and log back in with the new affiliate account.
+2. Go to Admin.
+3. Enter a test email.
+4. Choose `Affiliate` first.
+5. Click `Create invite`.
+6. Copy/open the invite link.
+7. Create the account.
+8. Confirm the new account logs into the Academy.
+9. Repeat with a manager invite when ready.
 
-## Notes
+## Company owner invite
 
-- Invite links expire after 14 days.
-- Used invites are marked `used` and cannot be reused.
-- Existing active invite links are reused if you click `Create invite` again before they expire.
-- The invite system creates affiliate accounts only. Owner/manager direct invites can be added later.
+For the company owner, use the `Owner` role only when the app is polished and you are ready to grant full command center access.
+
+A safer option is to invite them as `Manager`, let them test, then promote them to `Owner` in D1 when ready.

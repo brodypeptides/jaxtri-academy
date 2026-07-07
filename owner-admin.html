@@ -1,1 +1,284 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin | Jaxtri Command Center</title><link rel="stylesheet" href="assets/styles.css"></head><body><header class="header"><a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a><nav class="nav"><a href="owner-dashboard.html">Dashboard</a><a href="owner-recruitment.html">Recruitment</a><a href="academy-dashboard.html">Academy</a><button id="logout" class="btn">Logout</button></nav></header><main class="dashboard"><p class="eyebrow">Admin</p><h1 class="title">System settings.</h1><div id="me" class="notice">Loading account...</div><section class="dashgrid" style="margin-top:24px"><div class="card"><h2>Roles</h2><p>Owner, manager, and affiliate permissions.</p></div><div class="card"><h2>Branding</h2><p>Logo, colors, and public website copy.</p></div><div class="card"><h2>Security</h2><p>Sessions, invites, and account settings.</p></div></section></main><script src="assets/session.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav">
+    <a href="owner-dashboard.html">Dashboard</a>
+    <a href="owner-recruitment.html">Recruitment</a>
+    <a href="owner-admin.html">Admin</a>
+    <a href="academy-dashboard.html">Academy</a>
+    <button id="logout" class="btn">Logout</button>
+  </nav>
+</header>
+
+<main class="dashboard">
+  <p class="eyebrow">Admin</p>
+  <h1 class="title">Invite and manage access.</h1>
+  <div id="me" class="notice">Loading account...</div>
+
+  <section class="dashgrid" style="margin-top:24px">
+    <div class="card"><h2>Roles</h2><p>Owner, manager, and affiliate permissions. Owner invites should only be used for trusted leadership.</p></div>
+    <div class="card"><h2>Direct Invites</h2><p>Create invite links from an email address without needing an application first.</p></div>
+    <div class="card"><h2>Security</h2><p>Invite links expire, used links lock automatically, and active links can be revoked.</p></div>
+  </section>
+
+  <section class="card" style="margin-top:24px">
+    <p class="eyebrow">Level 1 email invite</p>
+    <h2>Create a direct invite link</h2>
+    <p class="small">Enter an email, choose the account role, then copy the link or open an email draft. No paid email service needed yet.</p>
+
+    <form id="inviteForm" class="form" style="margin-top:18px">
+      <div class="split">
+        <div class="field">
+          <label for="inviteEmail">Email</label>
+          <input id="inviteEmail" type="email" autocomplete="email" placeholder="person@example.com" required>
+        </div>
+        <div class="field">
+          <label for="inviteRole">Role</label>
+          <select id="inviteRole"></select>
+        </div>
+      </div>
+      <div class="split">
+        <div class="field">
+          <label for="inviteDays">Expires after</label>
+          <select id="inviteDays">
+            <option value="7">7 days</option>
+            <option value="14" selected>14 days</option>
+            <option value="30">30 days</option>
+            <option value="60">60 days</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn primary" type="submit">Create invite</button>
+        </div>
+      </div>
+    </form>
+
+    <div id="inviteStatus" class="notice" style="margin-top:16px;display:none"></div>
+    <div id="inviteResult" style="margin-top:16px"></div>
+  </section>
+
+  <section class="card" style="margin-top:24px">
+    <div style="display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>
+        <p class="eyebrow">Invites</p>
+        <h2>Recent invite links</h2>
+        <p class="small">Copy, email, open, or revoke invite links from here.</p>
+      </div>
+      <button class="btn" onclick="loadInvites()">Refresh</button>
+    </div>
+    <div id="invitesList" class="list"></div>
+  </section>
+</main>
+
+<script src="assets/session.js"></script>
+<script>
+const form = document.getElementById('inviteForm');
+const inviteEmail = document.getElementById('inviteEmail');
+const inviteRole = document.getElementById('inviteRole');
+const inviteDays = document.getElementById('inviteDays');
+const inviteStatus = document.getElementById('inviteStatus');
+const inviteResult = document.getElementById('inviteResult');
+const invitesList = document.getElementById('invitesList');
+let currentUser = null;
+let invites = [];
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>'"]/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+  }[c]));
+}
+
+function statusClass(status) {
+  if (status === 'used') return 'success';
+  if (status === 'revoked') return 'error';
+  return '';
+}
+
+function roleOptionsFor(user) {
+  const options = [['affiliate', 'Affiliate']];
+  if (user?.role === 'owner') {
+    options.push(['manager', 'Manager']);
+    options.push(['owner', 'Owner']);
+  }
+  return options;
+}
+
+function renderRoleOptions() {
+  inviteRole.innerHTML = roleOptionsFor(currentUser).map(([value, label]) => {
+    const warning = value === 'owner' ? ' — full access' : '';
+    return `<option value="${value}">${label}${warning}</option>`;
+  }).join('');
+}
+
+function showStatus(message, type = '') {
+  inviteStatus.style.display = 'block';
+  inviteStatus.className = `notice ${type}`.trim();
+  inviteStatus.textContent = message;
+}
+
+function emailSubject(role) {
+  const label = role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Affiliate';
+  return `Your Jaxtri Academy ${label} invite`;
+}
+
+function emailBody(invite) {
+  const roleLabel = invite.role === 'owner' ? 'Owner' : invite.role === 'manager' ? 'Manager' : 'Affiliate';
+  return [
+    `Hey,`,
+    ``,
+    `Here is your Jaxtri Academy ${roleLabel} invite link:`,
+    invite.invite_url,
+    ``,
+    `Use this link to create your account. It expires on ${invite.expires_at}.`,
+    ``,
+    `— Jaxtri Labs`
+  ].join('\n');
+}
+
+function mailto(invite) {
+  return `mailto:${encodeURIComponent(invite.email)}?subject=${encodeURIComponent(emailSubject(invite.role))}&body=${encodeURIComponent(emailBody(invite))}`;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Copied.');
+  } catch {
+    prompt('Copy this:', text);
+  }
+}
+
+function resultCard(invite, reused = false) {
+  return `
+    <div class="notice success">
+      <strong>${reused ? 'Existing active invite reused.' : 'Invite created.'}</strong>
+      <p class="small">${escapeHtml(invite.email)} • ${escapeHtml(invite.role)} • expires ${escapeHtml(invite.expires_at)}</p>
+      <input value="${escapeHtml(invite.invite_url)}" readonly style="width:100%;margin-top:8px" onclick="this.select()">
+      <div class="actions">
+        <button class="btn primary" onclick="copyText('${escapeHtml(invite.invite_url)}')">Copy link</button>
+        <a class="btn" href="${escapeHtml(mailto(invite))}">Open email draft</a>
+        <a class="btn" href="${escapeHtml(invite.invite_url)}" target="_blank" rel="noreferrer">Open invite</a>
+      </div>
+    </div>
+  `;
+}
+
+function inviteCard(invite) {
+  const isActive = invite.status === 'active' && !invite.used_at;
+  const source = invite.source === 'application' ? `Application: ${invite.application_name || 'Applicant'}` : 'Direct invite';
+  return `
+    <article class="card">
+      <p class="eyebrow ${statusClass(invite.status)}">${escapeHtml(invite.status)}</p>
+      <h2>${escapeHtml(invite.email)}</h2>
+      <p><strong>Role:</strong> ${escapeHtml(invite.role)}</p>
+      <p><strong>Source:</strong> ${escapeHtml(source)}</p>
+      <p class="small">Created ${escapeHtml(invite.created_at || '')}${invite.created_by_name ? ` by ${escapeHtml(invite.created_by_name)}` : ''}</p>
+      <p class="small">Expires ${escapeHtml(invite.expires_at || '')}${invite.used_at ? ` • Used ${escapeHtml(invite.used_at)}` : ''}</p>
+      <input value="${escapeHtml(invite.invite_url)}" readonly style="width:100%;margin-top:8px" onclick="this.select()">
+      <div class="actions">
+        <button class="btn primary" onclick="copyText('${escapeHtml(invite.invite_url)}')">Copy link</button>
+        <a class="btn" href="${escapeHtml(mailto(invite))}">Open email draft</a>
+        <a class="btn" href="${escapeHtml(invite.invite_url)}" target="_blank" rel="noreferrer">Open invite</a>
+        ${isActive ? `<button class="btn danger" onclick="revokeInvite(${invite.id})">Revoke</button>` : ''}
+      </div>
+    </article>
+  `;
+}
+
+function renderInvites() {
+  if (!invites.length) {
+    invitesList.innerHTML = '<div class="notice success">No invites created yet.</div>';
+    return;
+  }
+
+  const active = invites.filter(i => i.status === 'active' && !i.used_at).length;
+  const used = invites.filter(i => i.status === 'used' || i.used_at).length;
+  const revoked = invites.filter(i => i.status === 'revoked').length;
+
+  invitesList.innerHTML = `
+    <div class="notice"><strong>${active}</strong> active • <strong>${used}</strong> used • <strong>${revoked}</strong> revoked</div>
+    ${invites.map(inviteCard).join('')}
+  `;
+}
+
+async function loadMeForAdmin() {
+  const response = await fetch('/api/me');
+  const data = await response.json().catch(() => ({}));
+  if (response.ok) currentUser = data.user;
+  renderRoleOptions();
+}
+
+async function loadInvites() {
+  invitesList.innerHTML = '<div class="notice">Loading invites...</div>';
+  const response = await fetch('/api/admin/invites');
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) {
+    invitesList.innerHTML = `<div class="notice error">${escapeHtml(data.error || 'Could not load invites.')}</div>`;
+    return;
+  }
+  invites = data.invites || [];
+  renderInvites();
+}
+
+async function revokeInvite(id) {
+  if (!confirm('Revoke this invite link? The person will no longer be able to use it.')) return;
+
+  const response = await fetch(`/api/admin/invites/${id}/revoke`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({})
+  });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { alert(data.error || 'Could not revoke invite.'); return; }
+  await loadInvites();
+}
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  inviteResult.innerHTML = '';
+  showStatus('Creating invite...');
+
+  const role = inviteRole.value;
+  if (role === 'owner' && !confirm('Owner invites grant full command center access. Only continue for trusted company leadership.')) {
+    showStatus('Owner invite canceled.');
+    return;
+  }
+
+  const response = await fetch('/api/admin/invites', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      email: inviteEmail.value,
+      role,
+      expires_days: inviteDays.value
+    })
+  });
+
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) {
+    showStatus(data.error || 'Invite could not be created.', 'error');
+    return;
+  }
+
+  showStatus(data.reused ? 'Existing invite found and reused.' : 'Invite created successfully.', 'success');
+  inviteResult.innerHTML = resultCard(data.invite, data.reused);
+  form.reset();
+  renderRoleOptions();
+  inviteDays.value = '14';
+  await loadInvites();
+});
+
+loadMeForAdmin();
+loadInvites();
+</script>
+</body>
+</html>

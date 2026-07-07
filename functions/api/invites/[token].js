@@ -108,7 +108,11 @@ export async function onRequestPost({ request, env, params }) {
     }
 
     const passwordHash = await hashPassword(password);
-    const companyTitle = invite.role === 'affiliate' ? 'Affiliate, Jaxtri Labs' : '';
+    const companyTitle = invite.role === 'owner'
+      ? 'Owner, Jaxtri Labs'
+      : invite.role === 'manager'
+        ? 'Manager, Jaxtri Labs'
+        : 'Affiliate, Jaxtri Labs';
 
     await env.DB.prepare(`
       INSERT INTO users (full_name, email, username, password_hash, role, company_title, status)
