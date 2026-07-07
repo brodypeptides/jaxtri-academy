@@ -1,10 +1,249 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recruitment | Jaxtri Command Center</title><link rel="stylesheet" href="assets/styles.css"></head><body><header class="header"><a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a><nav class="nav"><a href="owner-dashboard.html">Dashboard</a><a href="owner-recruitment.html">Recruitment</a><a href="owner-admin.html">Admin</a><button id="logout" class="btn">Logout</button></nav></header><main class="dashboard"><p class="eyebrow">Affiliate recruitment</p><h1 class="title">Review applications.</h1><div id="me" class="notice">Loading account...</div><div id="status" class="notice" style="margin-top:16px">Loading applications...</div><section id="summary" class="dashgrid" style="margin-top:24px"></section><section id="applications" class="list"></section></main><script src="assets/session.js"></script><script>
-const appsEl=document.getElementById('applications');const statusEl=document.getElementById('status');const summaryEl=document.getElementById('summary');
-function escapeHtml(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
-function socials(a){return [['TikTok',a.tiktok],['Instagram',a.instagram],['YouTube',a.youtube]].filter(x=>x[1]).map(([k,v])=>`<p><strong>${k}:</strong> ${escapeHtml(v)}</p>`).join('')||'<p class="small">No socials provided.</p>'}
-function card(a){return `<article class="card"><span class="pill ${escapeHtml(a.status)}">${escapeHtml(a.status)}</span><h2>${escapeHtml(a.full_name)}</h2><p><strong>Email:</strong> ${escapeHtml(a.email)}</p><p><strong>Discord:</strong> ${escapeHtml(a.discord_username||'Not provided')}</p><p><strong>Experience:</strong> ${escapeHtml(a.experience||'Not provided')}</p>${socials(a)}<p><strong>Why join:</strong></p><p>${escapeHtml(a.why_join)}</p><p class="small">Applied ${escapeHtml(a.created_at||'')}</p><div class="actions"><button class="btn primary" onclick="reviewApp(${a.id},'approve')" ${a.status==='approved'?'disabled':''}>Approve</button><button class="btn danger" onclick="reviewApp(${a.id},'reject')" ${a.status==='rejected'?'disabled':''}>Reject</button></div></article>`}
-function counts(apps){const statuses=['pending','approved','rejected'];summaryEl.innerHTML=statuses.map(s=>{const n=apps.filter(a=>a.status===s).length;return `<div class="card"><h2>${n}</h2><p>${s[0].toUpperCase()+s.slice(1)}</p></div>`}).join('')}
-async function loadApps(){statusEl.textContent='Loading applications...';const r=await fetch('/api/admin/applications');const d=await r.json().catch(()=>({error:'Unknown error'}));if(!r.ok){statusEl.className='notice error';statusEl.textContent=d.error||'Could not load applications.';return}counts(d.applications);if(!d.applications.length){statusEl.className='notice success';statusEl.textContent='No applications yet.';appsEl.innerHTML='';return}statusEl.className='notice success';statusEl.textContent=`${d.applications.length} application${d.applications.length===1?'':'s'} loaded.`;appsEl.innerHTML=d.applications.map(card).join('')}
-async function reviewApp(id,action){const ok=confirm(`${action==='approve'?'Approve':'Reject'} this application?`);if(!ok)return;const r=await fetch(`/api/admin/applications/${id}/${action}`,{method:'POST'});const d=await r.json().catch(()=>({error:'Unknown error'}));if(!r.ok){alert(d.error||'Action failed.');return}await loadApps()}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recruitment | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav">
+    <a href="owner-dashboard.html">Dashboard</a>
+    <a href="owner-recruitment.html">Recruitment</a>
+    <a href="owner-admin.html">Admin</a>
+    <button id="logout" class="btn">Logout</button>
+  </nav>
+</header>
+
+<main class="dashboard">
+  <p class="eyebrow">Affiliate recruitment</p>
+  <h1 class="title">Review applications.</h1>
+  <div id="me" class="notice">Loading account...</div>
+  <div id="status" class="notice" style="margin-top:16px">Loading applications...</div>
+
+  <section id="summary" class="dashgrid" style="margin-top:24px"></section>
+
+  <section class="card" style="margin-top:24px">
+    <h2>Recruitment queue</h2>
+    <p class="small">Use tabs to separate new applicants from approved, rejected, and archived records.</p>
+    <div id="tabs" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"></div>
+  </section>
+
+  <section id="applications" style="display:grid;gap:16px;margin-top:24px"></section>
+</main>
+
+<script src="assets/session.js"></script>
+<script>
+const appsEl = document.getElementById('applications');
+const statusEl = document.getElementById('status');
+const summaryEl = document.getElementById('summary');
+const tabsEl = document.getElementById('tabs');
+let allApplications = [];
+let activeTab = 'pending';
+
+const tabs = [
+  ['pending', 'Pending'],
+  ['approved', 'Approved'],
+  ['rejected', 'Rejected'],
+  ['archived', 'Archived'],
+  ['all', 'All']
+];
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>'"]/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+  }[c]));
+}
+
+function isArchived(app) {
+  return Boolean(app.archived_at);
+}
+
+function visibleStatus(app) {
+  return isArchived(app) ? 'archived' : app.status;
+}
+
+function filteredApps() {
+  return allApplications.filter(app => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'archived') return isArchived(app);
+    return !isArchived(app) && app.status === activeTab;
+  });
+}
+
+function countFor(tab) {
+  if (tab === 'all') return allApplications.length;
+  if (tab === 'archived') return allApplications.filter(isArchived).length;
+  return allApplications.filter(app => !isArchived(app) && app.status === tab).length;
+}
+
+function socials(app) {
+  const items = [
+    ['TikTok', app.tiktok],
+    ['Instagram', app.instagram],
+    ['YouTube', app.youtube]
+  ].filter(x => x[1]);
+
+  if (!items.length) return '<p class="small">No socials provided.</p>';
+
+  return items.map(([name, value]) => `<p><strong>${name}:</strong> ${escapeHtml(value)}</p>`).join('');
+}
+
+function statusClass(app) {
+  const status = visibleStatus(app);
+  if (status === 'approved') return 'success';
+  if (status === 'rejected') return 'error';
+  if (status === 'archived') return '';
+  return '';
+}
+
+function actions(app) {
+  if (isArchived(app)) {
+    return `
+      <button class="btn primary" onclick="reviewApp(${app.id}, 'restore')">Restore</button>
+      <button class="btn" onclick="deleteApp(${app.id})">Delete permanently</button>
+    `;
+  }
+
+  return `
+    ${app.status !== 'approved' ? `<button class="btn primary" onclick="reviewApp(${app.id}, 'approve')">Approve</button>` : ''}
+    ${app.status !== 'rejected' ? `<button class="btn" onclick="reviewApp(${app.id}, 'reject')">Reject</button>` : ''}
+    <button class="btn" onclick="reviewApp(${app.id}, 'archive')">Archive</button>
+  `;
+}
+
+function card(app) {
+  const archivedLine = app.archived_at ? `<p class="small">Archived ${escapeHtml(app.archived_at)}</p>` : '';
+  const reviewedLine = app.reviewed_at ? `<p class="small">Reviewed ${escapeHtml(app.reviewed_at)}</p>` : '';
+  const noteLine = app.review_note ? `<p><strong>Review note:</strong> ${escapeHtml(app.review_note)}</p>` : '';
+
+  return `
+    <article class="card">
+      <p class="eyebrow ${statusClass(app)}">${escapeHtml(visibleStatus(app))}</p>
+      <h2>${escapeHtml(app.full_name)}</h2>
+      <p><strong>Email:</strong> ${escapeHtml(app.email)}</p>
+      <p><strong>Discord:</strong> ${escapeHtml(app.discord_username || 'Not provided')}</p>
+      <p><strong>Experience:</strong> ${escapeHtml(app.experience || 'Not provided')}</p>
+      ${socials(app)}
+      <p><strong>Why join:</strong></p>
+      <p>${escapeHtml(app.why_join)}</p>
+      ${noteLine}
+      <p class="small">Applied ${escapeHtml(app.created_at || '')}</p>
+      ${reviewedLine}
+      ${archivedLine}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        ${actions(app)}
+      </div>
+    </article>
+  `;
+}
+
+function renderTabs() {
+  tabsEl.innerHTML = tabs.map(([key, label]) => {
+    const count = countFor(key);
+    const cls = activeTab === key ? 'btn primary' : 'btn';
+    return `<button class="${cls}" onclick="setTab('${key}')">${label} (${count})</button>`;
+  }).join('');
+}
+
+function renderSummary() {
+  const cards = [
+    ['Pending', countFor('pending')],
+    ['Approved', countFor('approved')],
+    ['Rejected', countFor('rejected')],
+    ['Archived', countFor('archived')]
+  ];
+
+  summaryEl.innerHTML = cards.map(([label, count]) => `
+    <div class="card"><h2>${count}</h2><p>${label}</p></div>
+  `).join('');
+}
+
+function renderApplications() {
+  const apps = filteredApps();
+  renderTabs();
+  renderSummary();
+
+  if (!apps.length) {
+    statusEl.className = 'notice success';
+    statusEl.textContent = `No ${activeTab === 'all' ? '' : activeTab + ' '}applications found.`;
+    appsEl.innerHTML = '';
+    return;
+  }
+
+  statusEl.className = 'notice success';
+  statusEl.textContent = `${apps.length} ${activeTab === 'all' ? '' : activeTab + ' '}application${apps.length === 1 ? '' : 's'} shown.`;
+  appsEl.innerHTML = apps.map(card).join('');
+}
+
+function setTab(tab) {
+  activeTab = tab;
+  renderApplications();
+}
+
+async function loadApps() {
+  statusEl.className = 'notice';
+  statusEl.textContent = 'Loading applications...';
+
+  const response = await fetch('/api/admin/applications');
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+  if (!response.ok) {
+    statusEl.className = 'notice error';
+    statusEl.textContent = data.error || 'Could not load applications.';
+    return;
+  }
+
+  allApplications = data.applications || [];
+  renderApplications();
+}
+
+async function reviewApp(id, action) {
+  let body = {};
+
+  if (action === 'reject') {
+    body.note = prompt('Optional rejection note:') || '';
+  }
+
+  const response = await fetch(`/api/admin/applications/${id}/${action}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+  if (!response.ok) {
+    alert(data.error || 'Action failed.');
+    return;
+  }
+
+  await loadApps();
+}
+
+async function deleteApp(id) {
+  const confirmed = confirm('Permanently delete this application? This cannot be undone.');
+  if (!confirmed) return;
+
+  const response = await fetch(`/api/admin/applications/${id}/delete`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+  if (!response.ok) {
+    alert(data.error || 'Delete failed.');
+    return;
+  }
+
+  await loadApps();
+}
+
 loadApps();
-</script></body></html>
+</script>
+</body>
+</html>
