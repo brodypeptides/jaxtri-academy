@@ -1,57 +1,33 @@
-# Jaxtri Cloudflare build fix — duplicate function cleanup
+# Jaxtri Bank Transfer Fields
 
-Your Cloudflare build failed because some function files were copied into the wrong folder.
+Adds dedicated bank transfer fields to `my-affiliate.html`:
 
-Bad paths found by Cloudflare:
+- Account holder name
+- Bank name
+- Account type
+- Routing #
+- Account #
 
-```text
-functions/api/admin/admin/affiliate-codes.js
-functions/api/admin/admin/payout-requests.js
-functions/api/admin/admin/payout-requests/[id].js
-functions/api/admin/admin/users.js
-functions/api/admin/admin/webhook-events.js
-functions/api/admin/admin/webhook-test.js
-functions/api/admin/payout-requests.js with the wrong import
-```
+The owner payout queue now shows the affiliate note/details with line breaks so bank transfer details are readable.
 
-## What this patch does
-
-- Restores the correct admin function files in `functions/api/admin/`.
-- Restores the affiliate payout API in `functions/api/payout-requests.js`.
-- Includes the latest payout-method field polish HTML.
-- Includes a cleanup script to remove the bad nested folder: `functions/api/admin/admin`.
-
-## How to install
-
-1. Copy the contents of this patch folder into the root of your repo.
-2. Replace files when prompted.
-3. Run `cleanup-bad-function-duplicates.bat` from the repo root.
-4. In GitHub Desktop, confirm `functions/api/admin/admin` is deleted.
-5. Commit and push.
-
-## Do not delete
-
-Keep these correct files:
+## Files changed
 
 ```text
-functions/api/admin/affiliate-codes.js
-functions/api/admin/users.js
-functions/api/admin/webhook-events.js
-functions/api/admin/webhook-test.js
-functions/api/admin/payout-requests.js
-functions/api/admin/payout-requests/[id].js
+my-affiliate.html
+owner-payouts.html
 functions/api/payout-requests.js
-functions/lib/auth.js
 ```
 
-## Delete only this duplicate folder
+## D1
 
-```text
-functions/api/admin/admin
-```
+No new migration required.
+
+## Important security note
+
+This patch stores bank transfer details in the payout profile/request notes in D1 so the owner can manually process payout. That is useful for manual payouts, but account and routing numbers are sensitive. For a later hardening sprint, add encryption-at-rest for bank fields and owner-only reveal controls.
 
 ## Commit message
 
 ```text
-fix cloudflare function paths
+bank transfer payout fields
 ```

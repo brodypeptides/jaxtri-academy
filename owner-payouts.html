@@ -77,7 +77,7 @@ const PAYOUT_METHOD_LABELS = {
   'PayPal': 'PayPal email',
   'Cash App': 'Cash App $Cashtag',
   'Venmo': 'Venmo username / phone / email',
-  'Bank transfer': 'Bank transfer contact/details',
+  'Bank transfer': 'Bank transfer summary',
   'Other': 'Payment details'
 };
 function payoutDetailsLabel(method){return PAYOUT_METHOD_LABELS[method] || PAYOUT_METHOD_LABELS.Other}
@@ -121,7 +121,7 @@ function renderPayouts(){
           <h2 style="margin:8px 0 4px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h2>
           <p class="small"><strong>${escapeHtml(r.affiliate_name || r.affiliate_email)}</strong> • ${escapeHtml(r.affiliate_email || '')} • ${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'}</p>
           <p class="small">Method: ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(payoutDetailsLabel(r.payout_method || 'PayPal'))}: ${escapeHtml(r.payout_email || 'Not set')}</p>
-          ${r.request_note ? `<p class="small"><strong>Affiliate note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}
+          ${r.request_note ? `<p class="small" style="white-space:pre-wrap"><strong>Affiliate note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}
           ${r.sale_ids ? `<p class="small"><strong>Sale IDs:</strong> ${escapeHtml(r.sale_ids)}</p>` : ''}
           ${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}
           ${proofHref ? `<p class="small"><a href="${escapeHtml(proofHref)}" target="_blank" rel="noreferrer">Preview payout proof</a></p>` : ''}
@@ -134,7 +134,7 @@ function renderPayouts(){
         <input id="tx-${r.id}" placeholder="${escapeHtml(payoutReferencePlaceholder(r.payout_method || 'Other'))}">
         <input id="proofUrl-${r.id}" placeholder="Proof link, optional">
         <textarea id="note-${r.id}" placeholder="Admin note, optional"></textarea>
-        <div class="payout-safe-note small"><strong>Safety:</strong> Enter the transaction/reference ID after you manually pay. For bank transfers, do not store full routing/account numbers in Jaxtri. This locks attached approved sales as paid.</div>
+        <div class="payout-safe-note small"><strong>Safety:</strong> Enter the transaction/reference ID after you manually pay. For bank transfers, verify the affiliate note/details before sending. Account and routing numbers are sensitive. This locks attached approved sales as paid.</div>
         <div class="actions"><button class="btn primary" onclick="markPaid(${r.id})">Mark paid</button><button class="btn danger" onclick="rejectPayout(${r.id})">Reject</button></div>
       </div>` : ''}
     </article>`;

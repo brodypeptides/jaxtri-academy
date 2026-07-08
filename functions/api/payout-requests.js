@@ -194,8 +194,8 @@ export async function onRequestPatch({ request, env }) {
     if (!body) return json({ error: 'Invalid request.' }, 400);
 
     const payoutMethod = clean(body.payout_method || 'PayPal').slice(0, 60) || 'PayPal';
-    const payoutEmail = clean(body.payout_email).toLowerCase().slice(0, 180) || null;
-    const payoutNotes = clean(body.payout_notes).slice(0, 800) || null;
+    const payoutEmail = clean(body.payout_email).slice(0, 240) || null;
+    const payoutNotes = clean(body.payout_notes).slice(0, 2000) || null;
 
     await env.DB.prepare(`
       INSERT INTO affiliate_payout_profiles (user_id, payout_method, payout_email, payout_notes, updated_at)
@@ -226,10 +226,10 @@ export async function onRequestPost({ request, env }) {
     const currentProfile = await getProfile(env, fullUser);
 
     const payoutMethod = clean(body.payout_method || currentProfile.payout_method || 'PayPal').slice(0, 60) || 'PayPal';
-    const payoutEmail = clean(body.payout_email || currentProfile.payout_email).toLowerCase().slice(0, 180) || null;
-    const requestNote = clean(body.request_note).slice(0, 800) || null;
+    const payoutEmail = clean(body.payout_email || currentProfile.payout_email).slice(0, 240) || null;
+    const requestNote = clean(body.request_note).slice(0, 2000) || null;
 
-    if (!payoutEmail) return json({ error: 'Add your payout email before requesting payout.' }, 400);
+    if (!payoutEmail) return json({ error: 'Add your payout details before requesting payout.' }, 400);
 
     const sales = await getSales(env, authUser.id);
     const requestable = sales.filter((sale) => sale.status === 'approved' && !['requested', 'paid'].includes(clean(sale.payout_request_status).toLowerCase()));
