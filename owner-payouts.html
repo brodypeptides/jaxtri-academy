@@ -6,7 +6,7 @@
   <title>Payouts | Jaxtri Command Center</title>
   <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
   <style>
-    .payout-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.payout-toolbar input,.payout-toolbar select{border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.86);color:var(--text);font:inherit}.payout-grid{display:grid;gap:14px}.payout-card{border:1px solid var(--line);border-radius:22px;padding:18px;background:rgba(255,255,255,.78);box-shadow:0 18px 48px rgba(15,23,42,.06)}.payout-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.payout-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.payout-actions input,.payout-actions textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.9);color:var(--text);font:inherit}.payout-actions textarea{grid-column:1/-1;min-height:72px;resize:vertical}.payout-proof-row{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.payout-status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:.76rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(5,150,105,.24);color:#065f46;background:rgba(16,185,129,.08)}.payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}.payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}@media(max-width:820px){.payout-actions,.payout-proof-row,.payout-head{grid-template-columns:1fr;display:grid}}
+    .payout-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.payout-toolbar input,.payout-toolbar select{border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.86);color:var(--text);font:inherit}.payout-grid{display:grid;gap:14px}.payout-card{border:1px solid var(--line);border-radius:22px;padding:18px;background:rgba(255,255,255,.78);box-shadow:0 18px 48px rgba(15,23,42,.06)}.payout-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.payout-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.payout-actions input,.payout-actions textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.9);color:var(--text);font:inherit}.payout-actions textarea{grid-column:1/-1;min-height:72px;resize:vertical}.payout-status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:.76rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(5,150,105,.24);color:#065f46;background:rgba(16,185,129,.08)}.payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}.payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}@media(max-width:820px){.payout-actions,.payout-head{grid-template-columns:1fr;display:grid}}
   </style>
 </head>
 <body class="dashboard-v2">
@@ -36,7 +36,7 @@
       <div>
         <p class="eyebrow">Manual payouts</p>
         <h1 class="title">Payout queue</h1>
-        <p class="lead">Review affiliate payout requests, upload proof screenshots to R2, and confirm PayPal/reference IDs.</p>
+        <p class="lead">Review affiliate payout requests, paste proof links, and confirm PayPal/reference IDs.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
@@ -87,7 +87,7 @@ function renderSummary(summary={}){
 function renderPayouts(){
   if(!requests.length){payoutList.innerHTML='<div class="notice success">No payout requests match this view.</div>';return}
   payoutList.innerHTML = requests.map(r => {
-    const proofHref = r.proof_upload_id ? `/api/uploads/${r.proof_upload_id}` : r.proof_url;
+    const proofHref = r.proof_url;
     return `<article class="payout-card">
       <div class="payout-head">
         <div>
@@ -104,9 +104,7 @@ function renderPayouts(){
       </div>
       ${r.status === 'requested' ? `<div class="payout-actions">
         <input id="tx-${r.id}" placeholder="PayPal/reference ID">
-        <input id="proofUrl-${r.id}" placeholder="Proof URL, optional">
-        <input id="proofUpload-${r.id}" type="hidden">
-        <div class="payout-proof-row"><input id="file-${r.id}" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"><button class="btn" onclick="uploadProof(${r.id})">Upload proof</button></div>
+        <input id="proofUrl-${r.id}" placeholder="Proof link, optional">
         <textarea id="note-${r.id}" placeholder="Admin note, optional"></textarea>
         <div class="actions"><button class="btn primary" onclick="markPaid(${r.id})">Mark paid</button><button class="btn danger" onclick="rejectPayout(${r.id})">Reject</button></div>
       </div>` : ''}
@@ -127,21 +125,6 @@ async function loadPayouts(){
   setNotice(`${requests.length} payout request${requests.length===1?'':'s'} loaded.`, 'success');
 }
 
-async function uploadProof(id){
-  const input = document.getElementById(`file-${id}`);
-  const file = input?.files?.[0];
-  if(!file){alert('Choose a proof screenshot or PDF first.');return}
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('purpose', 'payout_proof');
-  const r = await fetch('/api/uploads/proof',{method:'POST',body:fd});
-  const d = await r.json().catch(()=>({error:'Unknown error'}));
-  if(!r.ok){alert(d.error||'Upload failed.');return}
-  document.getElementById(`proofUpload-${id}`).value = d.upload.id || '';
-  document.getElementById(`proofUrl-${id}`).value = d.upload.view_url || '';
-  alert('Proof uploaded. You can now mark this payout paid.');
-}
-
 async function updatePayout(id, body){
   const r = await fetch(`/api/admin/payout-requests/${id}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
   const d = await r.json().catch(()=>({error:'Unknown error'}));
@@ -156,7 +139,6 @@ async function markPaid(id){
     status: 'paid',
     transaction_id: document.getElementById(`tx-${id}`).value,
     proof_url: document.getElementById(`proofUrl-${id}`).value,
-    proof_upload_id: document.getElementById(`proofUpload-${id}`).value,
     admin_note: document.getElementById(`note-${id}`).value,
   };
   await updatePayout(id, body);
