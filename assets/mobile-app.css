@@ -1,7 +1,65 @@
+/* Sprint 8.1 — desktop alert visibility */
+.jaxtri-alert-chip{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  min-height:38px;
+  padding:8px 12px !important;
+  border-color:rgba(18,169,119,.22) !important;
+  background:rgba(255,255,255,.76) !important;
+  color:#17443a !important;
+  font-weight:950;
+}
+.jaxtri-alert-count,
+.jaxtri-mobile-alert-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:22px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#e8f7f1;
+  color:#0f766e;
+  font-size:.72rem;
+  line-height:1;
+  font-weight:1000;
+  border:1px solid rgba(18,169,119,.2);
+}
+.jaxtri-alert-chip.has-alerts .jaxtri-alert-count,
+.jaxtri-mobile-nav a.has-alerts .jaxtri-mobile-alert-count{
+  background:linear-gradient(135deg,#18d978,#18c9e8);
+  color:#042d25;
+  border-color:rgba(18,169,119,.34);
+  box-shadow:0 8px 18px rgba(18,169,119,.18);
+}
+.jaxtri-alert-chip.high,
+.jaxtri-mobile-nav a.high{
+  border-color:rgba(239,68,68,.32) !important;
+  background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(255,255,255,.82)) !important;
+}
+.jaxtri-alert-chip.high .jaxtri-alert-count,
+.jaxtri-mobile-nav a.high .jaxtri-mobile-alert-count{
+  background:#fee2e2;
+  color:#991b1b;
+  border-color:rgba(239,68,68,.32);
+}
+.jaxtri-mobile-alert-count{
+  position:absolute;
+  top:4px;
+  right:6px;
+  min-width:18px;
+  height:18px;
+  font-size:.62rem;
+  padding:0 4px;
+}
+.jaxtri-mobile-nav a{position:relative}
+
 /* Sprint 9 — mobile/app polish */
 html{scroll-padding-bottom:92px}
 .jaxtri-mobile-nav{display:none}
 @media(max-width:760px){
+  .header .jaxtri-alert-chip{display:none !important}
   body.dashboard-v2,
   body.team-page-body{padding-bottom:86px}
   .jaxtri-mobile-nav{

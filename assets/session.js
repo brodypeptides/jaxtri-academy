@@ -80,7 +80,8 @@ function installPwaShell(user) {
 function bottomNavLink(href, label) {
   const path = currentPageName();
   const active = path === href;
-  return `<a${active ? ' class="active"' : ''} href="${navEscape(href)}"><span>${navEscape(label)}</span></a>`;
+  const isAlerts = href === 'notifications.html';
+  return `<a${active ? ' class="active"' : ''}${isAlerts ? ' data-jaxtri-alert-nav="1"' : ''} href="${navEscape(href)}"><span>${navEscape(label)}</span>${isAlerts ? '<b id="jaxtriMobileAlertCount" class="jaxtri-mobile-alert-count">0</b>' : ''}</a>`;
 }
 
 function installMobileBottomNav(user) {
@@ -108,6 +109,66 @@ function installMobileBottomNav(user) {
   nav.className = 'jaxtri-mobile-nav';
   nav.innerHTML = links.map(([href, label]) => bottomNavLink(href, label)).join('');
   document.body.appendChild(nav);
+}
+
+
+function isProtectedAppPage() {
+  return document.body.classList.contains('dashboard-v2') || document.body.classList.contains('team-page-body');
+}
+
+function compactCount(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return '0';
+  return number > 99 ? '99+' : String(number);
+}
+
+function updateAlertBadges(total, high = 0) {
+  const label = compactCount(total);
+  const desktop = document.getElementById('jaxtriAlertCount');
+  const mobile = document.getElementById('jaxtriMobileAlertCount');
+  const desktopChip = document.querySelector('.jaxtri-alert-chip');
+  const mobileChip = document.querySelector('[data-jaxtri-alert-nav="1"]');
+
+  if (desktop) desktop.textContent = label;
+  if (mobile) mobile.textContent = label;
+
+  [desktopChip, mobileChip].forEach((chip) => {
+    if (!chip) return;
+    chip.classList.toggle('has-alerts', Number(total || 0) > 0);
+    chip.classList.toggle('high', Number(high || 0) > 0);
+    chip.title = Number(total || 0) > 0 ? `${total} alert${Number(total) === 1 ? '' : 's'}${Number(high || 0) > 0 ? `, ${high} high priority` : ''}` : 'No current alerts';
+  });
+}
+
+async function refreshAlertBadges() {
+  try {
+    const response = await fetch('/api/notifications', { headers: { accept: 'application/json' } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Could not load alerts.');
+    const total = data.counts?.total ?? (data.notifications || []).length;
+    const high = data.counts?.high ?? (data.notifications || []).filter((item) => item.severity === 'high').length;
+    updateAlertBadges(total, high);
+  } catch {
+    const desktop = document.getElementById('jaxtriAlertCount');
+    const mobile = document.getElementById('jaxtriMobileAlertCount');
+    if (desktop) desktop.textContent = '!';
+    if (mobile) mobile.textContent = '!';
+  }
+}
+
+function installDesktopAlertChip(user) {
+  if (!isProtectedAppPage()) return;
+  const nav = document.querySelector('.header .nav');
+  if (!nav || document.querySelector('.jaxtri-alert-chip')) return;
+
+  const chip = document.createElement('a');
+  chip.className = 'btn jaxtri-alert-chip';
+  chip.href = 'notifications.html';
+  chip.innerHTML = 'Alerts <span id="jaxtriAlertCount" class="jaxtri-alert-count">0</span>';
+
+  const logout = document.getElementById('logout');
+  if (logout && logout.parentElement === nav) nav.insertBefore(chip, logout);
+  else nav.prepend(chip);
 }
 
 function installPersistentSideNav(user) {
@@ -191,6 +252,8 @@ async function loadSession(){
     window.JaxtriCurrentUser = d.user;
     installPersistentSideNav(d.user);
     installPwaShell(d.user);
+    installDesktopAlertChip(d.user);
+    refreshAlertBadges();
 
     if(target) target.textContent=`Logged in as ${d.user.full_name} — ${d.user.role}${d.user.company_title?` (${d.user.company_title})`:''}`;
     return d.user;

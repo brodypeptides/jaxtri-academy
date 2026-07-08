@@ -1,83 +1,47 @@
-# Jaxtri Mega Sprint 7.1 + 7.2 + 8 + 9
+# Jaxtri Desktop Alerts Visibility Fix
 
-This bundle combines the next four roadmap items in one Cloudflare-safe patch.
+This is a small follow-up patch for Mega Sprint 7.1–9.
 
-## What this adds
+## What it fixes
 
-### Sprint 7.1 — Profile actions + admin notes
-- Full affiliate/user profile hub at `owner-user-profile.html?id=USER_ID`
-- Quick set commission
-- Quick set affiliate code
-- Quick save role/status/title for non-owner profiles
-- Suspend/reactivate helper
-- Sign out sessions
-- Private admin notes with note types and pinned flag
+The notification system existed, but desktop users had to know to open `notifications.html` or find it in the sidebar. This patch adds a visible desktop **Alerts** button with a live count next to Logout.
 
-### Sprint 7.2 — Affiliate onboarding checklist
-- Computed onboarding checklist per affiliate/user
-- Manual checklist override controls
-- Tracks: approved application, invite sent, account created, code assigned, commission set, payout profile completed, first sale, first payout, and training started/manual review
+It also adds a badge count to the mobile Alerts tab.
 
-### Sprint 8 — Notifications
-- New `notifications.html`
-- New `/api/notifications` endpoint
-- Staff action items for applications, payout requests, feed review, pending commissions, and webhook errors
-- Affiliate action items for missing code, payout profile, available commission, requested payouts, pending commissions, and unread DMs
-- Supports stored app notifications from D1
-
-### Sprint 9 — Mobile/app polish
-- `manifest.json`
-- `service-worker.js`
-- `assets/mobile-app.css`
-- mobile bottom nav injected by `assets/session.js`
-- installable PWA basics
-
-## Files included
+## Files changed
 
 ```text
-owner-users.html
-owner-user-profile.html
-notifications.html
 assets/session.js
 assets/mobile-app.css
-manifest.json
-service-worker.js
-functions/api/admin/users/[id]/profile.js
-functions/api/admin/users/[id]/notes.js
-functions/api/notifications.js
-database/sprint7-8-9-profile-notifications-mobile.sql
 ```
 
-## Required D1 migration
+## Database
 
-Run this file in Cloudflare D1:
+No new D1 migration.
+
+This uses the existing `/api/notifications` endpoint and the existing Sprint 7–9 tables.
+
+## Test
+
+After deploy, open any internal page on desktop:
 
 ```text
-database/sprint7-8-9-profile-notifications-mobile.sql
+owner-dashboard.html
+owner-users.html
+owner-commissions.html
+academy-dashboard.html
 ```
 
-It creates:
+You should see:
 
 ```text
-admin_user_notes
-user_onboarding_items
-app_notifications
+Alerts 0
 ```
 
-Safe to run more than once.
+next to Logout. If there are active notifications, it shows the count. High-priority alerts get red styling.
 
-## Test after deploy
-
-1. Open `owner-users.html`.
-2. Click **Open full profile** on a user.
-3. Confirm profile loads at `owner-user-profile.html?id=USER_ID`.
-4. Add an admin note.
-5. Toggle an onboarding checklist item.
-6. Open `notifications.html`.
-7. Test mobile width and confirm bottom nav appears.
-
-## Commit message
+Commit message:
 
 ```text
-mega sprint 7 8 9 profile notifications mobile
+desktop alerts visibility fix
 ```
