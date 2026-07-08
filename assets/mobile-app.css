@@ -1,0 +1,47 @@
+/* Sprint 9 — mobile/app polish */
+html{scroll-padding-bottom:92px}
+.jaxtri-mobile-nav{display:none}
+@media(max-width:760px){
+  body.dashboard-v2,
+  body.team-page-body{padding-bottom:86px}
+  .jaxtri-mobile-nav{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    z-index:80;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:6px;
+    padding:8px;
+    border:1px solid rgba(18,169,119,.18);
+    border-radius:22px;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 18px 46px rgba(7,27,23,.14);
+    backdrop-filter:blur(18px) saturate(1.15);
+  }
+  .jaxtri-mobile-nav a{
+    display:flex;
+    min-height:44px;
+    align-items:center;
+    justify-content:center;
+    border-radius:15px;
+    border:1px solid transparent;
+    color:#536a64;
+    font-size:.76rem;
+    font-weight:950;
+    text-align:center;
+  }
+  .jaxtri-mobile-nav a.active,
+  .jaxtri-mobile-nav a:hover{
+    color:#063c31;
+    background:linear-gradient(135deg,rgba(24,217,120,.14),rgba(24,201,232,.09));
+    border-color:rgba(18,169,119,.24);
+  }
+  .compact-page-head{gap:12px}
+  .metric-card strong{font-size:1.35rem !important}
+}
+@media(max-width:420px){
+  .jaxtri-mobile-nav{left:8px;right:8px;padding:7px;gap:4px}
+  .jaxtri-mobile-nav a{font-size:.7rem;min-height:42px}
+}

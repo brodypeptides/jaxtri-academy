@@ -16,10 +16,8 @@ function privatePageAllowed(user) {
   if (user.status === 'pending') return path === 'pending.html';
 
   if (path === 'pending.html') return false;
-
-  // Owner/manager command-center pages. Managers can open Users + Codes in read-only/user-safe mode
-  // so they can help with affiliate-code setup without owner-level role/status edits.
-  if (path === 'owner-users.html' || path === 'owner-user-profile.html') return user.role === 'owner' || user.role === 'manager';
+  if (path === 'owner-users.html') return user.role === 'owner' || user.role === 'manager';
+  if (path === 'owner-user-profile.html') return user.role === 'owner' || user.role === 'manager';
   if (path.startsWith('owner-')) return user.role === 'owner' || user.role === 'manager';
   return true;
 }
@@ -36,9 +34,7 @@ function navEscape(value) {
 
 function navLink(href, label) {
   const path = currentPageName();
-  const active = path === href
-    || (path === 'index.html' && href === 'owner-dashboard.html')
-    || (path === 'owner-user-profile.html' && href === 'owner-users.html');
+  const active = path === href || (path === 'index.html' && href === 'owner-dashboard.html');
   return `<a${active ? ' class="active"' : ''} href="${navEscape(href)}">${navEscape(label)}</a>`;
 }
 
@@ -49,12 +45,69 @@ function navGroup(title, links) {
   `;
 }
 
-function installNavStyles() {
-  if (document.querySelector('link[href="assets/navigation-categories.css"]')) return;
+function installStylesheet(href) {
+  if (document.querySelector(`link[href="${href}"]`)) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'assets/navigation-categories.css';
+  link.href = href;
   document.head.appendChild(link);
+}
+
+function installPwaShell(user) {
+  installStylesheet('assets/mobile-app.css');
+
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = 'manifest.json';
+    document.head.appendChild(manifest);
+  }
+
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#f7fbff';
+    document.head.appendChild(meta);
+  }
+
+  if ('serviceWorker' in navigator && ['https:', 'http:'].includes(location.protocol)) {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  }
+
+  installMobileBottomNav(user);
+}
+
+function bottomNavLink(href, label) {
+  const path = currentPageName();
+  const active = path === href;
+  return `<a${active ? ' class="active"' : ''} href="${navEscape(href)}"><span>${navEscape(label)}</span></a>`;
+}
+
+function installMobileBottomNav(user) {
+  if (document.querySelector('.jaxtri-mobile-nav')) return;
+  const isProtectedApp = document.body.classList.contains('dashboard-v2') || document.body.classList.contains('team-page-body');
+  if (!isProtectedApp) return;
+
+  const links = isCommandUser(user)
+    ? [
+        ['owner-dashboard.html', 'Home'],
+        ['owner-users.html', 'People'],
+        ['owner-commissions.html', 'Money'],
+        ['notifications.html', 'Alerts'],
+        ['team.html', 'Chat'],
+      ]
+    : [
+        ['academy-dashboard.html', 'Home'],
+        ['my-affiliate.html', 'Earn'],
+        ['training.html', 'Learn'],
+        ['notifications.html', 'Alerts'],
+        ['team.html', 'Chat'],
+      ];
+
+  const nav = document.createElement('nav');
+  nav.className = 'jaxtri-mobile-nav';
+  nav.innerHTML = links.map(([href, label]) => bottomNavLink(href, label)).join('');
+  document.body.appendChild(nav);
 }
 
 function installPersistentSideNav(user) {
@@ -62,7 +115,7 @@ function installPersistentSideNav(user) {
   const nav = sidebar?.querySelector('.side-nav');
   if (!sidebar || !nav) return;
 
-  installNavStyles();
+  installStylesheet('assets/navigation-categories.css');
 
   const commandMode = isCommandUser(user);
   sidebar.dataset.navMode = commandMode ? 'command' : 'academy';
@@ -76,6 +129,7 @@ function installPersistentSideNav(user) {
     nav.innerHTML = [
       navGroup('Command', [
         ['owner-dashboard.html', 'Overview'],
+        ['notifications.html', 'Notifications'],
       ]),
       navGroup('People', [
         ['owner-recruitment.html', 'Applications'],
@@ -99,6 +153,7 @@ function installPersistentSideNav(user) {
   nav.innerHTML = [
     navGroup('Start', [
       ['academy-dashboard.html', 'Dashboard'],
+      ['notifications.html', 'Notifications'],
     ]),
     navGroup('Earn', [
       ['my-affiliate.html', 'My Affiliate'],
@@ -114,31 +169,6 @@ function installPersistentSideNav(user) {
       ['team.html', 'Team Chat'],
     ]),
   ].join('');
-}
-
-function installUserProfileLinks() {
-  if (currentPageName() !== 'owner-users.html') return;
-
-  const enhance = () => {
-    document.querySelectorAll('[data-user-card]').forEach(card => {
-      if (card.querySelector('[data-profile-link-row]')) return;
-      const id = card.getAttribute('data-user-card');
-      if (!id) return;
-      const meta = card.querySelector('.user-meta-grid');
-      if (!meta) return;
-      const row = document.createElement('div');
-      row.className = 'actions user-actions';
-      row.dataset.profileLinkRow = 'true';
-      row.style.marginTop = '0';
-      row.innerHTML = `<a class="btn" href="owner-user-profile.html?id=${encodeURIComponent(id)}">Open full profile</a>`;
-      meta.insertAdjacentElement('afterend', row);
-    });
-  };
-
-  enhance();
-  const observer = new MutationObserver(enhance);
-  const list = document.getElementById('usersList') || document.body;
-  observer.observe(list, { childList: true, subtree: true });
 }
 
 async function loadSession(){
@@ -160,7 +190,7 @@ async function loadSession(){
 
     window.JaxtriCurrentUser = d.user;
     installPersistentSideNav(d.user);
-    installUserProfileLinks();
+    installPwaShell(d.user);
 
     if(target) target.textContent=`Logged in as ${d.user.full_name} — ${d.user.role}${d.user.company_title?` (${d.user.company_title})`:''}`;
     return d.user;

@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>User Profile | Jaxtri Command Center</title>
-  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css">
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css"><link rel="stylesheet" href="assets/mobile-app.css">
   <style>
-    .profile-shell{display:grid;gap:18px}.profile-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}.profile-identity{display:flex;gap:14px;align-items:center}.profile-avatar-big{width:64px;height:64px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:1.65rem;font-weight:950;background:linear-gradient(135deg,rgba(24,217,120,.22),rgba(24,201,232,.16));border:1px solid rgba(18,169,119,.24);color:#067a59}.profile-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.profile-two{display:grid;grid-template-columns:.92fr 1.08fr;gap:16px;align-items:start}.timeline-list,.mini-list{display:grid;gap:10px}.timeline-item,.mini-row{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.72);padding:12px}.timeline-item h3,.mini-row h3{margin:3px 0 4px;font-size:1rem}.money-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.profile-code{display:inline-flex;border:1px solid rgba(24,217,120,.25);background:rgba(24,217,120,.08);color:#08784d;border-radius:10px;padding:6px 8px;font-weight:950}.profile-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.status-dot{display:inline-flex;width:9px;height:9px;border-radius:99px;background:#9aacaa;margin-right:6px}.status-dot.online{background:#18d978}.status-dot.away{background:#d6a72a}.empty-box{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.72);padding:14px;color:var(--muted);font-weight:750}@media(max-width:980px){.profile-hero,.profile-two{grid-template-columns:1fr}.profile-actions{justify-content:flex-start}}
+    .profile-layout{display:grid;grid-template-columns:minmax(300px,.78fr) minmax(0,1.22fr);gap:16px;align-items:start;margin-top:18px}.profile-panel{display:grid;gap:14px}.profile-avatar-xl{width:78px;height:78px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:2rem;background:linear-gradient(135deg,rgba(24,217,120,.18),rgba(24,201,232,.14));border:1px solid rgba(18,169,119,.22);color:#067a59}.profile-headline{display:flex;gap:14px;align-items:center}.profile-actions-grid,.note-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.profile-actions-grid input,.profile-actions-grid select,.note-grid input,.note-grid select,.note-grid textarea,.checklist-row select,.checklist-row input{width:100%;border:1px solid #cfe2dd;border-radius:12px;padding:10px 11px;background:white;color:var(--text);font:inherit}.note-grid textarea{grid-column:1/-1;min-height:96px;resize:vertical}.profile-table{display:grid;gap:9px}.profile-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(255,255,255,.76)}.profile-row h3{margin:2px 0 4px;font-size:1rem}.profile-row p{margin:0}.checklist-row{display:grid;grid-template-columns:auto minmax(0,1fr) 150px;gap:12px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(255,255,255,.78)}.check-dot{width:24px;height:24px;border-radius:999px;border:1px solid #cfe2dd;display:flex;align-items:center;justify-content:center;font-weight:950;color:#64748b;background:white}.checklist-row.completed .check-dot{color:#065f46;background:rgba(24,217,120,.12);border-color:rgba(24,217,120,.34)}.checklist-row.blocked .check-dot{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.28)}.profile-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.profile-tabs button{border:1px solid var(--line);border-radius:999px;background:white;color:#536a64;padding:8px 11px;font-weight:900;cursor:pointer}.profile-tabs button.active{background:linear-gradient(135deg,rgba(24,217,120,.14),rgba(24,201,232,.09));color:#063c31;border-color:rgba(18,169,119,.24)}.tab-pane{display:none}.tab-pane.active{display:grid;gap:12px}@media(max-width:980px){.profile-layout{grid-template-columns:1fr}.profile-actions-grid,.note-grid,.checklist-row{grid-template-columns:1fr}.profile-headline{align-items:flex-start}.profile-row{grid-template-columns:1fr}}
   </style>
 </head>
 <body class="dashboard-v2">
@@ -19,75 +19,59 @@
   <aside class="app-sidebar">
     <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
     <nav class="side-nav">
-      <div class="nav-group-label">Command</div>
       <a href="owner-dashboard.html">Overview</a>
-      <div class="nav-group-label">People</div>
-      <a href="owner-recruitment.html">Applications</a>
-      <a href="owner-admin.html">Invites</a>
       <a class="active" href="owner-users.html">Users + Codes</a>
-      <div class="nav-group-label">Money</div>
       <a href="owner-commissions.html">Commissions</a>
       <a href="owner-payouts.html">Payouts</a>
-      <a href="my-affiliate.html">My Affiliate</a>
-      <div class="nav-group-label">Community</div>
-      <a href="owner-feed-review.html">Feed Review</a>
-      <a href="team.html">Team Chat</a>
-      <a href="academy-dashboard.html">Academy View</a>
+      <a href="notifications.html">Notifications</a>
     </nav>
   </aside>
 
-  <main class="app-main dashboard dashboard-compact profile-shell">
-    <div class="page-head compact-page-head">
+  <main class="app-main dashboard dashboard-compact">
+    <div class="compact-page-head">
       <div>
-        <p class="eyebrow">Sprint 7</p>
-        <h1 class="title">Affiliate profile hub</h1>
-        <p class="lead">One place to review a user’s code, commissions, payouts, applications, feed posts, and admin timeline.</p>
+        <p class="eyebrow">Profile hub</p>
+        <h1 class="title" id="profileTitle">Loading profile...</h1>
+        <p class="lead" id="profileSubtitle">Full profile, onboarding, payouts, commissions, notes, and timeline.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
 
-    <section id="profileStatus" class="notice">Loading profile...</section>
+    <section id="profileStatus" class="notice">Loading user profile...</section>
 
-    <section id="profileHero" class="card compact-card" style="display:none"></section>
-
-    <section class="metric-grid" id="profileStats" style="display:none">
-      <div class="metric-card"><span>Total commission</span><strong id="statCommission">—</strong><p>Excludes voided</p></div>
-      <div class="metric-card"><span>Pending</span><strong id="statPending">—</strong><p>Awaiting review</p></div>
-      <div class="metric-card"><span>Approved</span><strong id="statApproved">—</strong><p>Ready for payout</p></div>
-      <div class="metric-card"><span>Paid</span><strong id="statPaid">—</strong><p>Confirmed paid</p></div>
-      <div class="metric-card"><span>Payout requests</span><strong id="statPayouts">—</strong><p>Manual payout history</p></div>
+    <section class="metric-grid" style="margin-top:16px">
+      <div class="metric-card"><span>Onboarding</span><strong id="statScore">—</strong><p>Checklist completion</p></div>
+      <div class="metric-card"><span>Sales</span><strong id="statSales">—</strong><p>Total tracked records</p></div>
+      <div class="metric-card"><span>Pending</span><strong id="statPending">—</strong><p>Commission under review</p></div>
+      <div class="metric-card"><span>Approved</span><strong id="statApproved">—</strong><p>Ready/requestable payout</p></div>
+      <div class="metric-card"><span>Paid</span><strong id="statPaid">—</strong><p>Confirmed payout records</p></div>
     </section>
 
-    <section class="profile-two">
-      <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">Money</p><h2>Recent commissions</h2></div><a class="btn" href="owner-commissions.html">Open commissions</a></div>
-        <div id="salesList" class="timeline-list" style="margin-top:12px"></div>
+    <section class="profile-layout">
+      <div class="profile-panel">
+        <div class="card compact-card" id="profileSummary"></div>
+        <div class="card compact-card" id="quickActions"></div>
+        <div class="card compact-card" id="adminNotes"></div>
       </div>
-      <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">Payouts</p><h2>Payout history</h2></div><a class="btn" href="owner-payouts.html">Open payouts</a></div>
-        <div id="payoutList" class="timeline-list" style="margin-top:12px"></div>
-      </div>
-    </section>
 
-    <section class="profile-two">
       <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">Recruiting</p><h2>Applications + invites</h2></div></div>
-        <div id="recruitingList" class="mini-list" style="margin-top:12px"></div>
-      </div>
-      <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">Content</p><h2>Feed submissions</h2></div><a class="btn" href="owner-feed-review.html">Feed review</a></div>
-        <div id="feedList" class="mini-list" style="margin-top:12px"></div>
-      </div>
-    </section>
+        <div class="section-head-row">
+          <div><p class="eyebrow">Profile detail</p><h2>Affiliate record</h2></div>
+          <button class="btn" onclick="loadProfile()">Refresh</button>
+        </div>
+        <div class="profile-tabs">
+          <button class="active" onclick="showTab('checklist', this)">Checklist</button>
+          <button onclick="showTab('sales', this)">Commissions</button>
+          <button onclick="showTab('payouts', this)">Payouts</button>
+          <button onclick="showTab('history', this)">History</button>
+          <button onclick="showTab('webhooks', this)">Webhooks</button>
+        </div>
 
-    <section class="profile-two">
-      <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">WooCommerce</p><h2>Webhook events for this code</h2></div><a class="btn" href="owner-commissions.html">Webhook panel</a></div>
-        <div id="webhookList" class="mini-list" style="margin-top:12px"></div>
-      </div>
-      <div class="card compact-card">
-        <div class="section-head-row"><div><p class="eyebrow">Admin</p><h2>Recent admin timeline</h2></div></div>
-        <div id="auditList" class="mini-list" style="margin-top:12px"></div>
+        <div id="tab-checklist" class="tab-pane active" style="margin-top:14px"></div>
+        <div id="tab-sales" class="tab-pane" style="margin-top:14px"></div>
+        <div id="tab-payouts" class="tab-pane" style="margin-top:14px"></div>
+        <div id="tab-history" class="tab-pane" style="margin-top:14px"></div>
+        <div id="tab-webhooks" class="tab-pane" style="margin-top:14px"></div>
       </div>
     </section>
   </main>
@@ -96,124 +80,212 @@
 <script src="assets/session.js"></script>
 <script src="assets/roster.js"></script>
 <script>
-const profileStatus = document.getElementById('profileStatus');
-const profileHero = document.getElementById('profileHero');
-const profileStats = document.getElementById('profileStats');
-const salesList = document.getElementById('salesList');
-const payoutList = document.getElementById('payoutList');
-const recruitingList = document.getElementById('recruitingList');
-const feedList = document.getElementById('feedList');
-const webhookList = document.getElementById('webhookList');
-const auditList = document.getElementById('auditList');
-let profileData = null;
+const params = new URLSearchParams(location.search);
+const userId = Number(params.get('id'));
+let data = null;
 
-function escapeHtml(value){return String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+const statusEl = document.getElementById('profileStatus');
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
 function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
-function pct(value){const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'Not set'}
+function pct(value){if(value===null||value===undefined||value==='')return 'Not set';const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'Not set'}
 function roleLabel(role){return role==='owner'?'Owner':role==='manager'?'Manager':'Affiliate'}
-function statusLabel(status){return status==='suspended'?'Suspended':status==='pending'?'Pending':'Active'}
-function presenceLabel(p){return p==='online'?'Online':p==='away'?'Away':'Offline'}
-function setNotice(message,type=''){profileStatus.className=`notice ${type}`;profileStatus.textContent=message}
-function empty(message){return `<div class="empty-box">${escapeHtml(message)}</div>`}
-async function copyText(text){try{await navigator.clipboard.writeText(text);alert('Copied.')}catch{prompt('Copy this:',text)}}
+function setStatus(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
+function codeValue(){return data?.code?.code || ''}
+function safeDate(v){return escapeHtml(v || '—')}
 
-function renderHero(data){
-  const u = data.user || {};
-  const code = String(u.affiliate_code || '').trim();
-  const ref = code ? `?ref=${encodeURIComponent(code)}` : '';
-  const payout = data.payout_profile || {};
-  profileHero.style.display='block';
-  profileHero.innerHTML = `<div class="profile-hero">
-    <div class="profile-identity">
-      <div class="profile-avatar-big">${escapeHtml((u.full_name || u.email || '?').slice(0,1).toUpperCase())}</div>
+function showTab(name, btn){
+  document.querySelectorAll('.tab-pane').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.profile-tabs button').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+function updateStats(){
+  const stats = data?.stats || {};
+  document.getElementById('statScore').textContent = `${stats.profile_score || 0}%`;
+  document.getElementById('statSales').textContent = stats.total_sales || 0;
+  document.getElementById('statPending').textContent = dollars(stats.totals?.pending || 0);
+  document.getElementById('statApproved').textContent = dollars(stats.totals?.approved || 0);
+  document.getElementById('statPaid').textContent = dollars(stats.totals?.paid || 0);
+}
+
+function renderSummary(){
+  const user = data.user;
+  const code = codeValue();
+  document.getElementById('profileTitle').textContent = user.full_name || user.email;
+  document.getElementById('profileSubtitle').textContent = `${roleLabel(user.role)} • ${user.email} • ${user.status}`;
+  document.getElementById('profileSummary').innerHTML = `
+    <div class="profile-headline">
+      <div class="profile-avatar-xl">${escapeHtml((user.full_name||user.email||'?').slice(0,1).toUpperCase())}</div>
       <div>
-        <p class="eyebrow">${escapeHtml(roleLabel(u.role))} • ${escapeHtml(statusLabel(u.status))}</p>
-        <h2 style="margin:4px 0 4px">${escapeHtml(u.full_name || u.username || u.email)}</h2>
-        <p class="small" style="margin:0">${escapeHtml(u.email || '')} • @${escapeHtml(u.username || 'username')}</p>
-        <div class="profile-tags">
-          <span class="pill"><span class="status-dot ${escapeHtml(u.presence)}"></span>${escapeHtml(presenceLabel(u.presence))}</span>
-          <span class="pill">${escapeHtml(u.company_title || 'No title')}</span>
-          <span class="pill">${escapeHtml(pct(u.commission_percentage))}</span>
-          ${code ? `<span class="profile-code">${escapeHtml(code)}</span>` : '<span class="pill">No code</span>'}
-        </div>
+        <p class="eyebrow">${escapeHtml(roleLabel(user.role))} • ${escapeHtml(user.status)}</p>
+        <h2 style="margin:4px 0">${escapeHtml(user.full_name || user.email)}</h2>
+        <p class="small">${escapeHtml(user.email)} • @${escapeHtml(user.username || 'username')}</p>
       </div>
     </div>
-    <div class="profile-actions">
-      <a class="btn" href="owner-users.html">Back to users</a>
-      ${code ? `<button class="btn" onclick="copyText('${escapeHtml(ref)}')">Copy ref</button>` : ''}
+    <div class="profile-table" style="margin-top:14px">
+      <div class="profile-row"><div><p class="small">Company title</p><h3>${escapeHtml(user.company_title || 'Not set')}</h3></div></div>
+      <div class="profile-row"><div><p class="small">Commission</p><h3>${escapeHtml(pct(user.commission_percentage))}</h3></div></div>
+      <div class="profile-row"><div><p class="small">Affiliate code</p><h3>${code ? `<code>${escapeHtml(code)}</code>` : 'Not set'}</h3><p class="small">${code ? `?ref=${escapeHtml(code)}` : 'Assign a code before WooCommerce coupon/link attribution.'}</p></div></div>
+      <div class="profile-row"><div><p class="small">Payout profile</p><h3>${escapeHtml(data.payout_profile?.payout_method || 'Not set')}</h3><p class="small">${escapeHtml(data.payout_profile?.payout_email || data.payout_profile?.payout_notes || 'No payout info saved')}</p></div></div>
+    </div>`;
+}
+
+function renderQuickActions(){
+  const user = data.user;
+  const isOwnerProfile = user.role === 'owner';
+  const viewerOwner = data.viewer?.is_owner;
+  const canEditMain = viewerOwner && !isOwnerProfile;
+  document.getElementById('quickActions').innerHTML = `
+    <p class="eyebrow">Quick actions</p>
+    <h2>Manage profile</h2>
+    <div class="profile-actions-grid" style="margin-top:12px">
+      <label>Role
+        <select id="qaRole" ${canEditMain?'':'disabled'}>
+          <option value="affiliate" ${user.role==='affiliate'?'selected':''}>Affiliate</option>
+          <option value="manager" ${user.role==='manager'?'selected':''}>Manager</option>
+        </select>
+      </label>
+      <label>Status
+        <select id="qaStatus" ${canEditMain?'':'disabled'}>
+          <option value="active" ${user.status==='active'?'selected':''}>Active</option>
+          <option value="pending" ${user.status==='pending'?'selected':''}>Pending</option>
+          <option value="suspended" ${user.status==='suspended'?'selected':''}>Suspended</option>
+        </select>
+      </label>
+      <label>Commission %
+        <input id="qaCommission" type="number" min="0" max="100" step="0.01" value="${escapeHtml(user.commission_percentage ?? '')}" ${viewerOwner?'':'disabled'}>
+      </label>
+      <label>Affiliate code
+        <input id="qaCode" value="${escapeHtml(codeValue())}" ${data.viewer?.is_owner || user.role !== 'owner' ? '' : 'disabled'}>
+      </label>
+      <label style="grid-column:1/-1">Company title
+        <input id="qaTitle" value="${escapeHtml(user.company_title || '')}" ${canEditMain?'':'disabled'}>
+      </label>
     </div>
-  </div>
-  <div class="user-meta-grid" style="margin-top:16px">
-    <div><span>Created</span><strong>${escapeHtml(u.created_at || '—')}</strong></div>
-    <div><span>Last seen</span><strong>${escapeHtml(u.last_seen_at || 'Never')}</strong></div>
-    <div><span>Sessions</span><strong>${escapeHtml(u.active_sessions || 0)}</strong></div>
-    <div><span>Payout method</span><strong>${escapeHtml(payout.payout_method || 'Not set')}</strong></div>
-    <div><span>Payout handle</span><strong>${escapeHtml(payout.payout_email || 'Not set')}</strong></div>
-  </div>`;
+    <div class="actions">
+      <button class="btn primary" onclick="saveQuickProfile()" ${viewerOwner?'':'disabled'}>Save profile</button>
+      <button class="btn" onclick="saveQuickCode()">Set code</button>
+      <button class="btn" onclick="signOutSessions()">Sign out sessions</button>
+      ${canEditMain ? `<button class="btn danger" onclick="toggleSuspend()">${user.status==='suspended'?'Reactivate':'Suspend'}</button>` : ''}
+    </div>
+    <p class="small">Owner role/status/title are still protected. Owner commission and code can be changed by owner accounts.</p>`;
 }
 
-function renderStats(data){
-  profileStats.style.display='grid';
-  const s = data.sales_stats || {};
-  const p = data.payout_stats || {};
-  document.getElementById('statCommission').textContent = dollars(s.commission_total || 0);
-  document.getElementById('statPending').textContent = dollars(s.pending_amount || 0);
-  document.getElementById('statApproved').textContent = dollars(s.approved_amount || 0);
-  document.getElementById('statPaid').textContent = dollars(s.paid_amount || 0);
-  document.getElementById('statPayouts').textContent = p.count || 0;
+function renderNotes(){
+  const notes = data.notes || [];
+  document.getElementById('adminNotes').innerHTML = `
+    <p class="eyebrow">Private admin notes</p>
+    <h2>Notes</h2>
+    <form id="noteForm" class="note-grid" style="margin-top:12px">
+      <select id="noteType"><option value="general">General</option><option value="onboarding">Onboarding</option><option value="commission">Commission</option><option value="payout">Payout</option><option value="risk">Risk</option><option value="success">Success</option></select>
+      <label class="check"><input id="notePinned" type="checkbox"> Pin note</label>
+      <textarea id="noteText" placeholder="Private owner/manager note..."></textarea>
+      <button class="btn primary" type="submit">Add note</button>
+    </form>
+    <div class="profile-table" style="margin-top:14px">
+      ${notes.length ? notes.map(n=>`<div class="profile-row"><div><p class="eyebrow">${escapeHtml(n.note_type)} ${n.is_pinned?'• pinned':''}</p><p>${escapeHtml(n.note)}</p><p class="small">${escapeHtml(n.author_name || n.author_email || 'Staff')} • ${safeDate(n.created_at)}</p></div></div>`).join('') : '<div class="notice success">No admin notes yet.</div>'}
+    </div>`;
+  document.getElementById('noteForm').addEventListener('submit', addNote);
 }
 
-function renderSales(sales=[]){
-  if(!sales.length){salesList.innerHTML=empty('No commission records yet.');return}
-  salesList.innerHTML=sales.slice(0,25).map(s=>`<article class="timeline-item">
-    <div class="money-row"><div><p class="eyebrow">${escapeHtml(s.status || 'pending')} • ${escapeHtml(s.source || 'manual')}</p><h3>${escapeHtml(s.external_order_id || 'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code || 'None')} • ${escapeHtml(s.created_at || '')}</p></div><div class="sale-money"><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong><span>${escapeHtml(pct(s.commission_percentage))}</span></div></div>
-    ${s.notes ? `<p class="small"><strong>Notes:</strong> ${escapeHtml(s.notes)}</p>` : ''}
-  </article>`).join('')
+function renderChecklist(){
+  const list = data.checklist || [];
+  document.getElementById('tab-checklist').innerHTML = list.map(item=>`
+    <article class="checklist-row ${escapeHtml(item.status)}">
+      <div class="check-dot">${item.status==='completed'?'✓':item.status==='blocked'?'!':'•'}</div>
+      <div>
+        <h3 style="margin:0 0 4px">${escapeHtml(item.label)}</h3>
+        <p class="small">Inferred: ${item.inferred_complete ? 'complete' : 'not complete'}${item.note ? ` • ${escapeHtml(item.note)}` : ''}</p>
+      </div>
+      <div>
+        <select onchange="updateChecklist('${escapeHtml(item.item_key)}', this.value)">
+          ${['open','completed','skipped','blocked'].map(status=>`<option value="${status}" ${item.status===status?'selected':''}>${status}</option>`).join('')}
+        </select>
+      </div>
+    </article>`).join('');
 }
 
-function renderPayouts(payouts=[]){
-  if(!payouts.length){payoutList.innerHTML=empty('No payout requests yet.');return}
-  payoutList.innerHTML=payouts.slice(0,25).map(p=>`<article class="timeline-item">
-    <div class="money-row"><div><p class="eyebrow">${escapeHtml(p.status || 'requested')} • ${escapeHtml(p.payout_method || 'PayPal')}</p><h3>${escapeHtml(dollars(p.amount_requested,p.currency))}</h3><p class="small">${escapeHtml(p.sale_count || 0)} sale${Number(p.sale_count||0)===1?'':'s'} • ${escapeHtml(p.requested_at || '')}</p></div><span class="pill ${escapeHtml(p.status || '')}">${escapeHtml(p.status || 'requested')}</span></div>
-    ${p.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(p.transaction_id)}</p>` : ''}
-    ${p.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(p.admin_note)}</p>` : ''}
-  </article>`).join('')
+function renderSales(){
+  const sales = data.sales || [];
+  document.getElementById('tab-sales').innerHTML = sales.length ? sales.map(s=>`<article class="profile-row"><div><p class="eyebrow">${escapeHtml(s.status)} • ${escapeHtml(s.source || 'manual')}</p><h3>${escapeHtml(s.external_order_id || 'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code || 'None')} • Customer: ${escapeHtml(s.customer_email || 'Not stored')} • ${safeDate(s.created_at)}</p>${s.notes?`<p class="small"><strong>Notes:</strong> ${escapeHtml(s.notes)}</p>`:''}</div><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong></article>`).join('') : '<div class="notice success">No commission records yet.</div>';
 }
-
-function renderRecruiting(applications=[], invites=[]){
-  const rows = [];
-  applications.forEach(a=>rows.push(`<article class="mini-row"><p class="eyebrow">Application • ${escapeHtml(a.status)}</p><h3>${escapeHtml(a.full_name || a.email)}</h3><p class="small">${escapeHtml(a.created_at || '')}${a.review_note ? ` • ${escapeHtml(a.review_note)}` : ''}</p></article>`));
-  invites.forEach(i=>rows.push(`<article class="mini-row"><p class="eyebrow">Invite • ${escapeHtml(i.status)}</p><h3>${escapeHtml(i.role || 'affiliate')} invite</h3><p class="small">Created ${escapeHtml(i.created_at || '')} • Expires ${escapeHtml(i.expires_at || '—')}</p></article>`));
-  recruitingList.innerHTML = rows.length ? rows.join('') : empty('No application or invite history found for this email.');
+function renderPayouts(){
+  const payouts = data.payouts || [];
+  document.getElementById('tab-payouts').innerHTML = payouts.length ? payouts.map(p=>`<article class="profile-row"><div><p class="eyebrow">${escapeHtml(p.status)}</p><h3>${escapeHtml(dollars(p.amount_requested,p.currency))}</h3><p class="small">${escapeHtml(p.sale_count||0)} sale(s) • ${escapeHtml(p.payout_method||'PayPal')} • ${safeDate(p.requested_at)}</p>${p.transaction_id?`<p class="small"><strong>Reference:</strong> ${escapeHtml(p.transaction_id)}</p>`:''}${p.admin_note?`<p class="small"><strong>Admin:</strong> ${escapeHtml(p.admin_note)}</p>`:''}</div></article>`).join('') : '<div class="notice success">No payout requests yet.</div>';
 }
-
-function renderFeed(posts=[]){
-  if(!posts.length){feedList.innerHTML=empty('No feed submissions yet.');return}
-  feedList.innerHTML=posts.slice(0,20).map(p=>`<article class="mini-row"><p class="eyebrow">${escapeHtml(p.status || 'pending')}</p><h3>${escapeHtml(p.title || 'Untitled post')}</h3><p class="small">${escapeHtml(p.created_at || '')}${p.review_note ? ` • ${escapeHtml(p.review_note)}` : ''}</p></article>`).join('')
+function renderHistory(){
+  const apps = data.applications || [], invites = data.invites || [], feed = data.feed_posts || [], audit = data.audit_log || [];
+  document.getElementById('tab-history').innerHTML = `
+    <div class="profile-table">
+      ${apps.map(a=>`<article class="profile-row"><div><p class="eyebrow">Application • ${escapeHtml(a.status)}</p><h3>${escapeHtml(a.full_name || a.email)}</h3><p class="small">${safeDate(a.created_at)} ${a.review_note?`• ${escapeHtml(a.review_note)}`:''}</p></div></article>`).join('')}
+      ${invites.map(i=>`<article class="profile-row"><div><p class="eyebrow">Invite • ${escapeHtml(i.status)}</p><h3>${escapeHtml(i.role)}</h3><p class="small">Created ${safeDate(i.created_at)} • Expires ${safeDate(i.expires_at)}</p></div></article>`).join('')}
+      ${feed.map(f=>`<article class="profile-row"><div><p class="eyebrow">Feed • ${escapeHtml(f.status)}</p><h3>${escapeHtml(f.title)}</h3><p class="small">${safeDate(f.created_at)}</p></div></article>`).join('')}
+      ${audit.map(a=>`<article class="profile-row"><div><p class="eyebrow">Audit</p><h3>${escapeHtml(a.action)}</h3><p class="small">${escapeHtml(a.actor_name || a.actor_email || 'System')} • ${safeDate(a.created_at)}</p></div></article>`).join('')}
+      ${(!apps.length&&!invites.length&&!feed.length&&!audit.length)?'<div class="notice success">No history records yet.</div>':''}
+    </div>`;
 }
-
-function renderWebhooks(events=[]){
-  if(!events.length){webhookList.innerHTML=empty('No WooCommerce webhook events found for this affiliate code yet.');return}
-  webhookList.innerHTML=events.map(e=>`<article class="mini-row"><p class="eyebrow">${escapeHtml(e.status || 'received')} • ${escapeHtml(e.event || 'event')}</p><h3>${escapeHtml(e.external_order_id || 'No order ID')}</h3><p class="small">Code: ${escapeHtml(e.affiliate_code || 'None')} • ${escapeHtml(e.created_at || '')}${e.message ? ` • ${escapeHtml(e.message)}` : ''}</p></article>`).join('')
+function renderWebhooks(){
+  const events = data.webhook_events || [];
+  document.getElementById('tab-webhooks').innerHTML = events.length ? events.map(e=>`<article class="profile-row"><div><p class="eyebrow">${escapeHtml(e.status)} • ${escapeHtml(e.event || 'event')}</p><h3>${escapeHtml(e.external_order_id || 'No order ID')}</h3><p class="small">Code: ${escapeHtml(e.affiliate_code || 'None')} • ${safeDate(e.created_at)}</p>${e.message?`<p class="small">${escapeHtml(e.message)}</p>`:''}</div></article>`).join('') : '<div class="notice success">No WooCommerce events for this code yet.</div>';
 }
-
-function renderAudit(rows=[]){
-  if(!rows.length){auditList.innerHTML=empty('No admin timeline entries yet.');return}
-  auditList.innerHTML=rows.map(a=>`<article class="mini-row"><p class="eyebrow">${escapeHtml(a.action || 'activity')}</p><h3>${escapeHtml(a.actor_name || 'System')}</h3><p class="small">${escapeHtml(a.created_at || '')}</p></article>`).join('')
-}
+function renderAll(){updateStats();renderSummary();renderQuickActions();renderNotes();renderChecklist();renderSales();renderPayouts();renderHistory();renderWebhooks();}
 
 async function loadProfile(){
-  const id = new URLSearchParams(location.search).get('id');
-  if(!id){setNotice('Missing user ID in the URL. Open a profile from Users + Codes.', 'error');return}
-  setNotice('Loading profile...');
-  const response = await fetch(`/api/admin/users/${encodeURIComponent(id)}/profile`);
-  const data = await response.json().catch(()=>({error:'Unknown error'}));
-  if(!response.ok){setNotice(data.error || 'Could not load profile.', 'error');return}
-  profileData = data;
-  renderHero(data); renderStats(data); renderSales(data.sales || []); renderPayouts(data.payouts || []); renderRecruiting(data.applications || [], data.invites || []); renderFeed(data.feed_posts || []); renderWebhooks(data.webhook_events || []); renderAudit(data.audit || []);
-  setNotice('Profile loaded.', 'success');
+  if(!userId){setStatus('Missing user ID in URL.','error');return}
+  setStatus('Loading profile...');
+  const r = await fetch(`/api/admin/users/${userId}/profile`);
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setStatus(d.error||'Could not load profile.','error');return}
+  data = d; renderAll(); setStatus('Profile loaded.','success');
 }
-
+async function addNote(e){
+  e.preventDefault();
+  const body={note_type:document.getElementById('noteType').value,note:document.getElementById('noteText').value,is_pinned:document.getElementById('notePinned').checked};
+  const r=await fetch(`/api/admin/users/${userId}/notes`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not add note.');return}
+  await loadProfile();
+}
+async function updateChecklist(key,status){
+  const r=await fetch(`/api/admin/users/${userId}/profile`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({item_key:key,status})});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not update checklist.');return}
+  await loadProfile();
+}
+async function saveQuickProfile(){
+  const body={commission_percentage:document.getElementById('qaCommission').value};
+  if(data.viewer?.is_owner && data.user.role !== 'owner'){
+    body.role=document.getElementById('qaRole').value; body.status=document.getElementById('qaStatus').value; body.company_title=document.getElementById('qaTitle').value;
+  }
+  const r=await fetch(`/api/admin/users/${userId}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not save profile.');return}
+  await loadProfile();
+}
+async function saveQuickCode(){
+  const code=document.getElementById('qaCode').value.trim();
+  if(!code){alert('Enter a code first.');return}
+  const r=await fetch('/api/admin/affiliate-codes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user_id:userId,code})});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not save code.');return}
+  await loadProfile();
+}
+async function signOutSessions(){
+  if(!confirm('Sign this user out of all active sessions?'))return;
+  const r=await fetch(`/api/admin/users/${userId}/sessions`,{method:'POST'});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not revoke sessions.');return}
+  alert(`${d.deleted_sessions||0} sessions revoked.`); await loadProfile();
+}
+async function toggleSuspend(){
+  const next=data.user.status==='suspended'?'active':'suspended';
+  if(!confirm(`Set this user to ${next}?`))return;
+  const r=await fetch(`/api/admin/users/${userId}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({status:next})});
+  const d=await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not update status.');return}
+  await loadProfile();
+}
 loadProfile();
 </script>
 </body>
