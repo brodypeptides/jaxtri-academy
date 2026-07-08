@@ -215,15 +215,15 @@
     }
   }
 
-  async function sendTestPush() {
+  async function sendVerificationPush() {
     try {
-      setPushStatus('Sending test notification...');
-      const response = await fetch('/api/push/test', { method: 'POST' });
+      setPushStatus('Sending verification notification...');
+      const response = await fetch('/api/push/verification', { method: 'POST' });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not send test push.');
-      setPushStatus(`Test sent to ${data.sent} device${data.sent === 1 ? '' : 's'}.`, 'success');
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not send push verification.');
+      setPushStatus(`Verification sent to ${data.sent} device${data.sent === 1 ? '' : 's'}.`, 'success');
     } catch (error) {
-      setPushStatus(error.message || 'Could not send test notification.', 'error');
+      setPushStatus(error.message || 'Could not send verification notification.', 'error');
     }
   }
 
@@ -269,7 +269,7 @@
             <div class="actions" style="margin-top:12px">
               <button class="btn primary" type="button" id="jaxtriEnablePushBtn">Enable notifications</button>
               <button class="btn" type="button" id="jaxtriDisablePushBtn">Disable</button>
-              <button class="btn" type="button" id="jaxtriTestPushBtn">Send test</button>
+              <button class="btn" type="button" id="jaxtriVerificationPushBtn">Send verification</button>
             </div>
             <div id="jaxtriPushStatus" class="notice jaxtri-pwa-status">Checking push status...</div>
             <div id="jaxtriDeviceList" class="jaxtri-device-list"></div>
@@ -287,7 +287,7 @@
     document.getElementById('jaxtriPanelResetInstallBtn')?.addEventListener('click', () => { resetInstallPrompt(); alert('Install banner can show again when this browser supports it.'); });
     document.getElementById('jaxtriEnablePushBtn')?.addEventListener('click', enablePush);
     document.getElementById('jaxtriDisablePushBtn')?.addEventListener('click', disablePush);
-    document.getElementById('jaxtriTestPushBtn')?.addEventListener('click', sendTestPush);
+    document.getElementById('jaxtriVerificationPushBtn')?.addEventListener('click', sendVerificationPush);
 
     const installState = document.getElementById('jaxtriPwaInstallState');
     if (installState) {
@@ -298,7 +298,7 @@
     const state = await loadPushState();
     const enableBtn = document.getElementById('jaxtriEnablePushBtn');
     const disableBtn = document.getElementById('jaxtriDisablePushBtn');
-    const testBtn = document.getElementById('jaxtriTestPushBtn');
+    const verificationBtn = document.getElementById('jaxtriVerificationPushBtn');
     const list = document.getElementById('jaxtriDeviceList');
 
     const activeDevices = (state.server?.subscriptions || []).filter((sub) => sub.status === 'active');
@@ -308,13 +308,13 @@
       setPushStatus('This browser does not support web push notifications.', 'error');
       if (enableBtn) enableBtn.disabled = true;
       if (disableBtn) disableBtn.disabled = true;
-      if (testBtn) testBtn.disabled = true;
+      if (verificationBtn) verificationBtn.disabled = true;
     } else if (state.error) {
       setPushStatus(state.error, 'error');
-      if (testBtn) testBtn.disabled = true;
+      if (verificationBtn) verificationBtn.disabled = true;
     } else {
       setPushStatus(enabled ? `Push is enabled. Permission: ${state.permission}.` : `Push is off. Permission: ${state.permission}.`, enabled ? 'success' : '');
-      if (testBtn) testBtn.disabled = !enabled;
+      if (verificationBtn) verificationBtn.disabled = !enabled;
     }
 
     if (list) {
@@ -352,7 +352,7 @@
     renderPwaPanel();
   });
 
-  window.JaxtriPwa = { boot, enablePush, disablePush, sendTestPush, renderPwaPanel, resetInstallPrompt };
+  window.JaxtriPwa = { boot, enablePush, disablePush, sendVerificationPush, renderPwaPanel, resetInstallPrompt };
 
   if (window.JaxtriCurrentUser) boot(window.JaxtriCurrentUser);
 })();

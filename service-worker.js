@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jaxtri-academy-production-logo-v1';
+const CACHE_NAME = 'jaxtri-academy-production-hard-cleanup-v2';
 const NAV_FALLBACK = '/login.html';
 
 self.addEventListener('install', (event) => {

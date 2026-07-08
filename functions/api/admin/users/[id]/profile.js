@@ -239,7 +239,7 @@ export async function onRequestPatch({ request, env, params }) {
     if (user.role === 'owner' && !isOwner(actor)) return json({ error: 'Only owners can edit owner checklist items.' }, 403);
 
     if (!(await tableExists(env, 'user_onboarding_items'))) {
-      return json({ error: 'Onboarding checklist table missing. Run the Sprint 7-9 migration first.' }, 400);
+      return json({ error: 'Onboarding checklist table missing. Run the production database migration first.' }, 400);
     }
 
     const body = await request.json().catch(() => null);

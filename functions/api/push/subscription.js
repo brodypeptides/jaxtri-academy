@@ -20,7 +20,7 @@ function deviceLabel(userAgent) {
 
 async function ensureReady(env) {
   if (!(await tableExists(env, 'push_subscriptions'))) {
-    return 'Push table missing. Run database/sprint9-1-pwa-push.sql in D1 first.';
+    return 'Push table missing. Run the production database migration first.';
   }
   return null;
 }

@@ -165,7 +165,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (!(await tableExists(env, 'affiliate_sales')) || !(await tableExists(env, 'affiliate_codes'))) {
-      return json({ error: 'Sprint 6A commission tables are missing. Run Sprint 6A migration first.' }, 400);
+      return json({ error: 'Commission tables are missing. Run the production database migration first.' }, 400);
     }
 
     payload = await request.json().catch(() => null);
@@ -177,9 +177,9 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true, ignored: true, reason: 'Unsupported provider.' });
     }
 
-    if (clean(payload.event).toLowerCase() === 'test') {
-      await logEvent(env, { ...payload, status: 'processed', message: 'Test webhook received.', payload });
-      return json({ ok: true, test: true, message: 'Jaxtri WooCommerce webhook is reachable.' });
+    if (clean(payload.event).toLowerCase() === 'verification') {
+      await logEvent(env, { ...payload, status: 'processed', message: 'Verification webhook received.', payload });
+      return json({ ok: true, verification: true, message: 'Jaxtri WooCommerce webhook is reachable.' });
     }
 
     const candidateCodes = getCandidateCodes(payload);

@@ -1,42 +1,44 @@
-# Jaxtri Production Hard Cleanup
+# Jaxtri Production Hard Cleanup — Fixed Windows Apply
 
-This patch removes remaining visible version/build language from production pages and switches verification actions to production wording.
+This fixed patch replaces the broken PowerShell helper with a Node.js helper.
 
-## Files added/replaced
+## What to do
 
-- `assets/production-mode.js` — simplified production mode helper, no text-rewrite bandaid.
-- `functions/api/admin/webhook-verification.js` — production-named WooCommerce verification endpoint.
-- `functions/api/push/verification.js` — production-named push verification endpoint.
-- `database/production-final-missing-tables.sql` — current production DB repair script.
-- `database/production-final-command-list.sql` — current production verification commands.
-- `tools/apply-production-hard-cleanup.ps1` — Windows-safe text cleanup script.
-- `apply-production-hard-cleanup.bat` — double-click/run helper.
-- `cleanup-production-old-routes.bat` — removes old hidden route files.
+1. Copy this ZIP's contents into the root of your `jaxtri-academy` repo.
+2. Double-click:
 
-## Install steps
+```text
+apply-production-hard-cleanup-fixed.bat
+```
 
-1. Copy everything in this folder into the root of your `jaxtri-academy` repo.
-2. Replace files when asked.
-3. Double-click `apply-production-hard-cleanup.bat` from the repo root.
-4. Review changes in GitHub Desktop.
-5. Commit message: `production hard cleanup`
-6. Push.
-7. Wait for Cloudflare deploy success.
+3. In GitHub Desktop, confirm these deletes are expected if they appear:
 
-## Database
+```text
+functions/api/admin/webhook-test.js
+functions/api/push/test.js
+```
 
-You already fixed `push_subscriptions` and `notification_preferences`, but the clean production SQL is included in:
+4. Before committing, delete these helper files/folders from the repo:
 
-`database/production-final-missing-tables.sql`
+```text
+apply-production-hard-cleanup-fixed.bat
+tools/
+```
 
-Use `database/production-final-command-list.sql` to verify everything in D1.
+5. Commit:
 
-## After deploy
+```text
+production hard cleanup fixed
+```
 
-Open:
+6. Push and wait for Cloudflare deploy success.
 
-- `https://jaxtrilabsacademy.com/owner-commissions.html`
-- `https://jaxtrilabsacademy.com/notifications.html`
-- `https://jaxtrilabsacademy.com/production-ready.html`
+## Notes
 
-Confirm there is no visible version/build wording and the production checker is green except optional app subscriptions.
+- This patch hard-removes visible Sprint/test wording from source files.
+- It adds production-named routes:
+  - `/api/admin/webhook-verification`
+  - `/api/push/verification`
+- It safely removes old route files if present:
+  - `/api/admin/webhook-test`
+  - `/api/push/test`

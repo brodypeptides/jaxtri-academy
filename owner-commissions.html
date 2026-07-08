@@ -30,7 +30,7 @@
   <main class="app-main dashboard dashboard-compact">
     <div class="page-head compact-page-head">
       <div>
-        <p class="eyebrow">Sprint 6A</p>
+        <p class="eyebrow">Production</p>
         <h1 class="title">Commission center</h1>
         <p class="lead">Manual sales tracking, affiliate codes, WooCommerce referral links, coupon-code attribution, and commission status management.</p>
       </div>
@@ -51,7 +51,7 @@
       <div class="card compact-card">
         <p class="eyebrow">Manual entry</p>
         <h2>Add a sale</h2>
-        <p class="small">Use this for testing, private tracking, or manually entered orders until the WordPress connector is ready.</p>
+        <p class="small">Use this for verified private tracking or manually entered orders.</p>
         <form id="saleForm" class="form compact-form" style="margin-top:14px">
           <div class="field"><label>Affiliate</label><select id="saleAffiliate" required></select></div>
           <div class="split">
@@ -77,7 +77,7 @@
           <div><p class="eyebrow">Affiliate codes</p><h2>Referral code prep</h2></div>
           <button class="btn" onclick="loadAll()">Refresh</button>
         </div>
-        <p class="small">These codes can later power WordPress links like <code>?ref=CODE</code>. For now they are useful for planning, manual tracking, and testing.</p>
+        <p class="small">These codes power live referral links, coupon matching, planning, and manual tracking.</p>
         <div class="field" style="margin-top:12px"><label>Optional store URL preview</label><input id="storeUrl" placeholder="https://store.com" oninput="renderCodes()"></div>
         <div id="codesList" class="commission-code-list"></div>
       </div>
@@ -88,7 +88,7 @@
     <section class="card compact-card" style="margin-top:18px">
       <div class="section-head-row">
         <div>
-          <p class="eyebrow">Sprint 6B</p>
+          <p class="eyebrow">WooCommerce</p>
           <h2>WooCommerce connector</h2>
         </div>
         <button class="btn" onclick="copyText(location.origin + '/api/webhooks/woocommerce')">Copy webhook URL</button>
@@ -98,22 +98,22 @@
         Webhook URL: <code id="wcWebhookUrl"></code><br>
         Cloudflare env var needed: <code>JAXTRI_WC_WEBHOOK_SECRET</code>
       </div>
-      <p class="small" style="margin-top:10px">Workflow: generate affiliate code → use store link preview and/or matching coupon code → install updated WordPress plugin → set matching secret → test webhook → place test WooCommerce order.</p>
+      <p class="small" style="margin-top:10px">Workflow: generate affiliate code → use store link preview and/or matching coupon code → install or update the WordPress plugin → set matching secret → place a WooCommerce verification order.</p>
     </section>
 
     <section class="card compact-card" style="margin-top:18px">
       <div class="section-head-row">
         <div>
-          <p class="eyebrow">Sprint 6G</p>
-          <h2>WooCommerce production check</h2>
+          <p class="eyebrow">WooCommerce</p>
+          <h2>WooCommerce verification</h2>
         </div>
         <div class="actions" style="margin-top:0">
           <button class="btn" onclick="loadWebhookSetup()">Check setup</button>
-          <button class="btn primary" onclick="sendTestWebhook()">Send test webhook</button>
+          <button class="btn primary" onclick="sendVerificationWebhook()">Send verification webhook</button>
           <button class="btn" onclick="loadWebhookEvents()">Refresh logs</button>
         </div>
       </div>
-      <p class="small">This is the Jaxtri-side testing center. It does not require the store owner to be online. It checks your Cloudflare secret, D1 tables, webhook event log table, and sends a safe test event through the live webhook endpoint.</p>
+      <p class="small">This is the Jaxtri-side verification center. It does not require the store owner to be online. It checks your Cloudflare secret, D1 tables, and webhook event log table, then sends a safe verification request through the live webhook endpoint.</p>
       <div id="wcSetupBox" class="notice" style="margin-top:12px">Checking WooCommerce setup...</div>
       <div class="commission-filters" style="margin-top:14px">
         <input id="webhookSearch" placeholder="Search webhook logs...">
@@ -240,7 +240,7 @@ function renderWebhookSetup(data={}){
   const ready = checks.ready;
   wcSetupBox.className = `notice ${ready?'success':'error'}`;
   wcSetupBox.innerHTML = `
-    <strong>${ready ? 'Jaxtri side is ready for WooCommerce testing.' : 'Jaxtri side needs setup before live store testing.'}</strong>
+    <strong>${ready ? 'Jaxtri side is ready for WooCommerce verification.' : 'Jaxtri side needs setup before live store verification.'}</strong>
     <div class="actions" style="margin-top:10px">
       ${checkPill(checks.secret_configured,'Secret')}
       ${checkPill(checks.affiliate_sales_table,'Sales table')}
@@ -248,7 +248,7 @@ function renderWebhookSetup(data={}){
       ${checkPill(checks.webhook_events_table,'Event logs')}
     </div>
     <p class="small" style="margin-top:10px">Webhook URL: <code>${escapeHtml(data.webhook_url || (location.origin + '/api/webhooks/woocommerce'))}</code></p>
-    ${checks.webhook_events_table ? '' : '<p class="small"><strong>Needed:</strong> run <code>database/sprint6g-webhook-events.sql</code> in D1.</p>'}
+    ${checks.webhook_events_table ? '' : '<p class="small"><strong>Needed:</strong> run <code>database/production-final-missing-tables.sql</code> in D1.</p>'}
     ${checks.secret_configured ? '' : '<p class="small"><strong>Needed:</strong> set Cloudflare env var <code>JAXTRI_WC_WEBHOOK_SECRET</code>.</p>'}
   `;
 }
@@ -269,21 +269,21 @@ function renderWebhookEvents(events=[]){
 async function loadWebhookSetup(){
   try{
     wcSetupBox.className='notice'; wcSetupBox.textContent='Checking WooCommerce setup...';
-    const r = await fetch('/api/admin/webhook-test');
+    const r = await fetch('/api/admin/webhook-verification');
     const d = await r.json().catch(()=>({error:'Unknown error'}));
     if(!r.ok){wcSetupBox.className='notice error';wcSetupBox.textContent=d.error||'Could not check WooCommerce setup.';return}
     renderWebhookSetup(d);
   }catch(e){wcSetupBox.className='notice error';wcSetupBox.textContent='Could not check WooCommerce setup.'}
 }
 
-async function sendTestWebhook(){
-  if(!confirm('Send a safe test webhook through the live Jaxtri endpoint?')) return;
-  wcSetupBox.className='notice'; wcSetupBox.textContent='Sending test webhook...';
-  const r = await fetch('/api/admin/webhook-test',{method:'POST'});
+async function sendVerificationWebhook(){
+  if(!confirm('Send a safe verification webhook through the live Jaxtri endpoint?')) return;
+  wcSetupBox.className='notice'; wcSetupBox.textContent='Sending verification webhook...';
+  const r = await fetch('/api/admin/webhook-verification',{method:'POST'});
   const d = await r.json().catch(()=>({error:'Unknown error'}));
-  if(!r.ok){wcSetupBox.className='notice error';wcSetupBox.textContent=d.error||'Test webhook failed.'; if(d.checks) renderWebhookSetup(d); return}
+  if(!r.ok){wcSetupBox.className='notice error';wcSetupBox.textContent=d.error||'Verification webhook failed.'; if(d.checks) renderWebhookSetup(d); return}
   renderWebhookSetup(d);
-  alert('Test webhook reached the live endpoint. Check the logs below.');
+  alert('Verification webhook reached the live endpoint. Check the logs below.');
   await loadWebhookEvents();
 }
 
@@ -329,7 +329,7 @@ async function updateSaleStatus(id){
   await loadCommissions();
 }
 async function deleteSale(id){
-  if(!confirm('Delete this test/manual sale? Paid sales cannot be deleted.'))return;
+  if(!confirm('Delete this manual sale? Paid sales cannot be deleted.'))return;
   const r = await fetch(`/api/admin/commissions/${id}`,{method:'DELETE'});
   const d = await r.json().catch(()=>({error:'Unknown error'}));
   if(!r.ok){alert(d.error||'Could not delete sale.');return}
