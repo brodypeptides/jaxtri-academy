@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env }) {
       ok: true,
       checks: await getChecks(env),
       webhook_url: `${new URL(request.url).origin}/api/webhooks/woocommerce`,
-      message: 'Use POST to send a test WooCommerce webhook through the live endpoint.',
+      message: 'Use POST to send a WooCommerce verification request through the live endpoint.',
     });
   } catch (error) {
     return json({ error: error?.message || 'Could not check webhook setup.' }, 500);
@@ -52,22 +52,22 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'JAXTRI_WC_WEBHOOK_SECRET is not configured in Cloudflare Pages.', checks }, 400);
     }
     if (!checks.affiliate_sales_table || !checks.affiliate_codes_table) {
-      return json({ error: 'Sprint 6A commission tables are missing.', checks }, 400);
+      return json({ error: 'Commission tables are missing. Run the production database migration first.', checks }, 400);
     }
     if (!checks.webhook_events_table) {
-      return json({ error: 'Webhook event table is missing. Run database/sprint6g-webhook-events.sql in D1 first.', checks }, 400);
+      return json({ error: 'Webhook event table is missing. Run the production database migration first.', checks }, 400);
     }
 
     const origin = new URL(request.url).origin;
     const payload = {
       provider: 'woocommerce',
-      event: 'test',
-      order_id: `jaxtri-test-${Date.now()}`,
-      order_status: 'test',
+      event: 'verification',
+      order_id: `jaxtri-verification-${Date.now()}`,
+      order_status: 'verification',
       gross_amount: 0,
       currency: 'USD',
       affiliate_code_candidates: [],
-      source_detail: 'dashboard_test',
+      source_detail: 'dashboard_verification',
     };
 
     const response = await fetch(`${origin}/api/webhooks/woocommerce`, {
@@ -81,11 +81,11 @@ export async function onRequestPost({ request, env }) {
 
     const data = await response.json().catch(() => ({ error: 'Webhook returned a non-JSON response.' }));
     if (!response.ok) {
-      return json({ error: data.error || 'Test webhook failed.', webhook_status: response.status, webhook_response: data, checks }, 400);
+      return json({ error: data.error || 'Verification webhook failed.', webhook_status: response.status, webhook_response: data, checks }, 400);
     }
 
-    return json({ ok: true, webhook_status: response.status, webhook_response: data, checks, message: 'Test webhook reached the live WooCommerce endpoint.' });
+    return json({ ok: true, webhook_status: response.status, webhook_response: data, checks, message: 'Verification webhook reached the live WooCommerce endpoint.' });
   } catch (error) {
-    return json({ error: error?.message || 'Could not send test webhook.' }, 500);
+    return json({ error: error?.message || 'Could not send verification webhook.' }, 500);
   }
 }

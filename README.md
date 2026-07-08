@@ -1,76 +1,42 @@
-# Jaxtri Production Final Patch
+# Jaxtri Production Hard Cleanup
 
-This patch makes the site look and behave more production-ready:
+This patch removes remaining visible version/build language from production pages and switches verification actions to production wording.
 
-- Keeps the new Jaxtri logo and app icons in place.
-- Removes visible Sprint/version labels from app pages.
-- Replaces visible testing language with production/verification language.
-- Refreshes the service worker cache so browsers and mobile installs pick up the final assets.
-- Updates the production readiness checker so optional push subscriptions do not block launch.
-- Adds the missing production database migration for profile notes, onboarding, stored notifications, and push subscriptions.
-- Adds a full D1 verification command list.
+## Files added/replaced
 
-## 1. Apply patch
+- `assets/production-mode.js` — simplified production mode helper, no text-rewrite bandaid.
+- `functions/api/admin/webhook-verification.js` — production-named WooCommerce verification endpoint.
+- `functions/api/push/verification.js` — production-named push verification endpoint.
+- `database/production-final-missing-tables.sql` — current production DB repair script.
+- `database/production-final-command-list.sql` — current production verification commands.
+- `tools/apply-production-hard-cleanup.ps1` — Windows-safe text cleanup script.
+- `apply-production-hard-cleanup.bat` — double-click/run helper.
+- `cleanup-production-old-routes.bat` — removes old hidden route files.
 
-Copy this ZIP into your repo root and replace files.
+## Install steps
 
-Commit message:
+1. Copy everything in this folder into the root of your `jaxtri-academy` repo.
+2. Replace files when asked.
+3. Double-click `apply-production-hard-cleanup.bat` from the repo root.
+4. Review changes in GitHub Desktop.
+5. Commit message: `production hard cleanup`
+6. Push.
+7. Wait for Cloudflare deploy success.
 
-```bash
-git add .
-git commit -m "production final cleanup"
-git push
-```
+## Database
 
-## 2. Run required D1 migration
+You already fixed `push_subscriptions` and `notification_preferences`, but the clean production SQL is included in:
 
-In Cloudflare:
+`database/production-final-missing-tables.sql`
 
-`D1 -> jaxtri_academy -> Console`
+Use `database/production-final-command-list.sql` to verify everything in D1.
 
-Run:
-
-```text
-database/production-final-missing-tables.sql
-```
-
-This creates:
-
-- `admin_user_notes`
-- `user_onboarding_items`
-- `app_notifications`
-- `push_subscriptions`
-
-## 3. Run verification commands
-
-After the migration, run:
-
-```text
-database/production-final-command-list.sql
-```
-
-The important missing-table query should return zero rows.
-
-## 4. Push notification env vars
-
-The production checker will keep showing push key review until these are added in Cloudflare Pages:
-
-- `WEB_PUSH_PUBLIC_KEY`
-- `WEB_PUSH_PRIVATE_KEY`
-- `WEB_PUSH_SUBJECT`
-
-Generate them with:
-
-```bash
-node scripts/generate-vapid-keys.mjs
-```
-
-## 5. Recheck launch page
+## After deploy
 
 Open:
 
-```text
-https://jaxtrilabsacademy.com/production-ready.html
-```
+- `https://jaxtrilabsacademy.com/owner-commissions.html`
+- `https://jaxtrilabsacademy.com/notifications.html`
+- `https://jaxtrilabsacademy.com/production-ready.html`
 
-The database table issue should clear after running the migration.
+Confirm there is no visible version/build wording and the production checker is green except optional app subscriptions.

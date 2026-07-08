@@ -1,5 +1,5 @@
--- Jaxtri production final migration: missing profile, onboarding, stored notification, and push tables.
--- Run this in Cloudflare D1 -> jaxtri_academy -> Console.
+-- Jaxtri production final database repair.
+-- Run in Cloudflare D1 -> jaxtri_academy -> Console.
 
 CREATE TABLE IF NOT EXISTS admin_user_notes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,11 +15,8 @@ CREATE TABLE IF NOT EXISTS admin_user_notes (
   FOREIGN KEY(author_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_admin_user_notes_target
-ON admin_user_notes(target_user_id);
-
-CREATE INDEX IF NOT EXISTS idx_admin_user_notes_created
-ON admin_user_notes(created_at);
+CREATE INDEX IF NOT EXISTS idx_admin_user_notes_target ON admin_user_notes(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_user_notes_created ON admin_user_notes(created_at);
 
 CREATE TABLE IF NOT EXISTS user_onboarding_items (
   user_id INTEGER NOT NULL,
@@ -33,8 +30,7 @@ CREATE TABLE IF NOT EXISTS user_onboarding_items (
   FOREIGN KEY(updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_onboarding_items_status
-ON user_onboarding_items(status);
+CREATE INDEX IF NOT EXISTS idx_user_onboarding_items_status ON user_onboarding_items(status);
 
 CREATE TABLE IF NOT EXISTS app_notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,14 +48,9 @@ CREATE TABLE IF NOT EXISTS app_notifications (
   FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_app_notifications_user
-ON app_notifications(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_app_notifications_audience
-ON app_notifications(audience_type);
-
-CREATE INDEX IF NOT EXISTS idx_app_notifications_status
-ON app_notifications(status);
+CREATE INDEX IF NOT EXISTS idx_app_notifications_user ON app_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_app_notifications_audience ON app_notifications(audience_type);
+CREATE INDEX IF NOT EXISTS idx_app_notifications_status ON app_notifications(status);
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,14 +59,25 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   p256dh TEXT NOT NULL,
   auth TEXT NOT NULL,
   user_agent TEXT,
+  device_label TEXT,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  last_seen_at TEXT,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_status ON push_subscriptions(status);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id INTEGER PRIMARY KEY,
+  push_enabled INTEGER NOT NULL DEFAULT 0,
+  quiet_hours_start TEXT,
+  quiet_hours_end TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user
-ON push_subscriptions(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_push_subscriptions_status
-ON push_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_notification_preferences_push ON notification_preferences(push_enabled);
