@@ -65,18 +65,26 @@ export async function onRequestPatch({ request, env, params }) {
     const target = await getTarget(env, id, hasCommission);
     if (!target) return json({ error: 'User not found.' }, 404);
 
-    if (target.role === 'owner') {
-      return json({ error: 'Owner accounts are protected from web-panel changes. Use D1 command-line SQL for owner changes.' }, 403);
-    }
-
     const body = await request.json().catch(() => null);
     if (!body) return json({ error: 'Invalid request.' }, 400);
 
     const updates = [];
     const binds = [];
     const changes = {};
+    const targetIsOwner = target.role === 'owner';
 
-    if (Object.prototype.hasOwnProperty.call(body, 'role')) {
+    if (targetIsOwner) {
+      const protectedFields = ['role', 'status', 'company_title'].filter((field) =>
+        Object.prototype.hasOwnProperty.call(body, field)
+      );
+      if (protectedFields.length) {
+        return json({
+          error: 'Owner role, status, and title are protected from web-panel changes. You can only update owner commission here.',
+        }, 403);
+      }
+    }
+
+    if (!targetIsOwner && Object.prototype.hasOwnProperty.call(body, 'role')) {
       const role = clean(body.role).toLowerCase();
       if (!['affiliate', 'manager'].includes(role)) {
         return json({ error: 'Role can only be changed to affiliate or manager in the panel. Owner changes are command-line only.' }, 400);
@@ -88,7 +96,7 @@ export async function onRequestPatch({ request, env, params }) {
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, 'status')) {
+    if (!targetIsOwner && Object.prototype.hasOwnProperty.call(body, 'status')) {
       const status = clean(body.status).toLowerCase();
       if (!['active', 'pending', 'suspended'].includes(status)) {
         return json({ error: 'Invalid user status.' }, 400);
@@ -103,7 +111,7 @@ export async function onRequestPatch({ request, env, params }) {
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, 'company_title')) {
+    if (!targetIsOwner && Object.prototype.hasOwnProperty.call(body, 'company_title')) {
       const title = clean(body.company_title).slice(0, 90);
       const nextTitle = title || null;
       if ((target.company_title || null) !== nextTitle) {
@@ -141,7 +149,7 @@ export async function onRequestPatch({ request, env, params }) {
 
     updates.push("updated_at = datetime('now')");
     await env.DB.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...binds, id).run();
-    await logAudit(env, actor.id, id, 'update_user', changes);
+    await logAudit(env, actor.id, id, targetIsOwner ? 'update_owner_commission' : 'update_user', changes);
 
     const updated = await getTarget(env, id, hasCommission);
     return json({ ok: true, user: updated, changed: true, changes });

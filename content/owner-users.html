@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Users + Affiliate Codes | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css">
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <div class="nav-group-label">Command</div>
+      <a href="owner-dashboard.html">Overview</a>
+      <div class="nav-group-label">People</div>
+      <a href="owner-recruitment.html">Applications</a>
+      <a href="owner-admin.html">Invites</a>
+      <a class="active" href="owner-users.html">Users + Codes</a>
+      <div class="nav-group-label">Money</div>
+      <a href="owner-commissions.html">Commissions</a>
+      <a href="owner-payouts.html">Payouts</a>
+      <a href="my-affiliate.html">My Affiliate</a>
+      <div class="nav-group-label">Community</div>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">People</p>
+        <h1 class="title">Users + affiliate codes</h1>
+        <p class="lead">Manage users, set commission percentages, and attach read-only affiliate codes to profiles.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section class="metric-grid user-stat-grid">
+      <div class="metric-card"><span>Total users</span><strong id="statTotal">—</strong><p>All matching records</p></div>
+      <div class="metric-card"><span>Active</span><strong id="statActive">—</strong><p>Ready to access</p></div>
+      <div class="metric-card"><span>Staff</span><strong id="statStaff">—</strong><p>Owners + managers</p></div>
+      <div class="metric-card"><span>Affiliate codes</span><strong id="statCodes">—</strong><p>Profiles with active code</p></div>
+      <div class="metric-card"><span>Commission set</span><strong id="statCommission">—</strong><p>Profiles with payout rate</p></div>
+    </section>
+
+    <section class="card compact-card user-toolbar">
+      <div>
+        <p class="eyebrow">Directory</p>
+        <h2>Search and filter</h2>
+      </div>
+      <div class="user-filter-grid">
+        <input id="searchInput" placeholder="Search name, email, username, code...">
+        <select id="roleFilter">
+          <option value="all">All roles</option>
+          <option value="owner">Owners</option>
+          <option value="manager">Managers</option>
+          <option value="affiliate">Affiliates</option>
+        </select>
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="suspended">Suspended</option>
+        </select>
+        <button class="btn primary" id="refreshUsers" type="button">Refresh</button>
+      </div>
+      <p class="small">Affiliates cannot change their own code or commission rate. Staff sets codes here. Owners can set commission rates here, while owner role/status/title stay protected.</p>
+    </section>
+
+    <section id="usersStatus" class="notice" style="margin-top:16px">Loading users...</section>
+    <section id="usersList" class="user-list"></section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const usersList = document.getElementById('usersList');
+const usersStatus = document.getElementById('usersStatus');
+const searchInput = document.getElementById('searchInput');
+const roleFilter = document.getElementById('roleFilter');
+const statusFilter = document.getElementById('statusFilter');
+const refreshUsers = document.getElementById('refreshUsers');
+let users = [];
+let viewer = { can_edit_users: false, can_edit_commission: false, can_edit_affiliate_codes: false, can_edit_owner_codes: false, commission_ready: false, role: "" };
+
+function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'}[c])); }
+function presenceLabel(user) { if (user.presence === 'online') return 'Online'; if (user.presence === 'away') return 'Away'; return 'Offline'; }
+function roleLabel(role) { return role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Affiliate'; }
+function statusLabel(status) { return status === 'suspended' ? 'Suspended' : status === 'pending' ? 'Pending' : 'Active'; }
+function formatCommission(value) { if (value === null || value === undefined || value === '') return 'Not set'; const number = Number(value); if (!Number.isFinite(number)) return 'Not set'; const label = Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); return `${label}%`; }
+function commissionInputValue(value) { if (value === null || value === undefined || value === '') return ''; const number = Number(value); if (!Number.isFinite(number)) return ''; return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); }
+function codeValue(value){ return String(value || '').trim(); }
+function referralPreview(code){ return code ? `?ref=${encodeURIComponent(code)}` : 'No code'; }
+async function copyText(text){ try { await navigator.clipboard.writeText(text); alert('Copied.'); } catch { prompt('Copy this:', text); } }
+
+function updateStats(stats = {}) {
+  document.getElementById('statTotal').textContent = stats.total ?? '0';
+  document.getElementById('statActive').textContent = stats.active ?? '0';
+  document.getElementById('statStaff').textContent = Number(stats.owners || 0) + Number(stats.managers || 0);
+  document.getElementById('statCodes').textContent = stats.code_set ?? '0';
+  document.getElementById('statCommission').textContent = stats.commission_set ?? '0';
+}
+
+function commissionControls(user) {
+  const canEdit = viewer.can_edit_commission && viewer.can_edit_users;
+  const disabled = canEdit && viewer.commission_ready ? '' : 'disabled';
+  const placeholder = viewer.commission_ready ? '30' : 'Run migration first';
+  if (!canEdit) {
+    return `<div class="user-code-box user-commission-box"><p class="eyebrow">Commission</p><h3>${escapeHtml(formatCommission(user.commission_percentage))}</h3><p class="small">Only owners can change commission percentages.</p></div>`;
+  }
+  return `<div class="user-code-box user-commission-box">
+    <p class="eyebrow">Commission rate</p>
+    <div class="user-code-grid">
+      <label>Commission %
+        <input data-field="commission_percentage" data-user-id="${user.id}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(commissionInputValue(user.commission_percentage))}" placeholder="${placeholder}" ${disabled}>
+      </label>
+      <button class="btn primary" onclick="saveCommission(${user.id})" ${disabled}>Set commission</button>
+    </div>
+    <p class="small">This rate is private to owner/manager views and is used when WooCommerce/manual commissions are calculated.</p>
+  </div>`;
+}
+
+function affiliateCodeControls(user) {
+  const canEdit = viewer.can_edit_affiliate_codes && (user.role !== 'owner' || viewer.can_edit_owner_codes);
+  const code = codeValue(user.affiliate_code);
+  if (!canEdit) {
+    return `<div class="user-code-box"><p class="eyebrow">Affiliate code</p><h3>${code ? `<code>${escapeHtml(code)}</code>` : 'No code set'}</h3><p class="small">${code ? escapeHtml(referralPreview(code)) : 'Staff sets this code. It is read-only for the affiliate.'}</p></div>`;
+  }
+  return `<div class="user-code-box">
+    <p class="eyebrow">Affiliate code</p>
+    <div class="user-code-grid">
+      <label>Code
+        <input data-field="affiliate_code" data-user-id="${user.id}" value="${escapeHtml(code)}" placeholder="brody, jackson, etc.">
+      </label>
+      <button class="btn primary" onclick="saveAffiliateCode(${user.id})">Set code</button>
+      ${code ? `<button class="btn" onclick="copyText('${escapeHtml(referralPreview(code))}')">Copy ref</button>` : ''}
+    </div>
+    <p class="small">This becomes the user's read-only code and WooCommerce coupon/referral match. Use lowercase if the coupon is lowercase.</p>
+  </div>`;
+}
+
+function editableControls(user) {
+  if (!viewer.can_edit_users) {
+    return `${affiliateCodeControls(user)}<div class="notice user-lock-note">Read-only profile. Managers can set affiliate codes, but only owners can edit role/status/commission.</div>`;
+  }
+
+  if (user.role === 'owner') {
+    return `${commissionControls(user)}${affiliateCodeControls(user)}<div class="notice user-lock-note">Owner protected. Role, status, and title stay D1-only. Commission and affiliate code can be updated here by an owner.</div>`;
+  }
+
+  const commissionDisabled = viewer.commission_ready ? '' : 'disabled';
+  const commissionPlaceholder = viewer.commission_ready ? '15' : 'Run migration first';
+
+  return `
+    <div class="user-edit-grid user-edit-grid-commission">
+      <label>Role
+        <select data-field="role" data-user-id="${user.id}">
+          <option value="affiliate" ${user.role === 'affiliate' ? 'selected' : ''}>Affiliate</option>
+          <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+        </select>
+      </label>
+      <label>Status
+        <select data-field="status" data-user-id="${user.id}">
+          <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+          <option value="pending" ${user.status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="suspended" ${user.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+        </select>
+      </label>
+      <label>Commission %
+        <input data-field="commission_percentage" data-user-id="${user.id}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(commissionInputValue(user.commission_percentage))}" placeholder="${commissionPlaceholder}" ${commissionDisabled}>
+      </label>
+      <label>Company title
+        <input data-field="company_title" data-user-id="${user.id}" value="${escapeHtml(user.company_title || '')}" placeholder="Affiliate, Manager, etc.">
+      </label>
+    </div>
+    ${affiliateCodeControls(user)}
+    <div class="actions user-actions">
+      <button class="btn primary" onclick="saveUser(${user.id})">Save profile</button>
+      <button class="btn" onclick="revokeSessions(${user.id})">Sign out sessions</button>
+      <button class="btn danger" onclick="deleteUser(${user.id}, '${escapeHtml(user.email)}')">Delete test user</button>
+    </div>
+    ${viewer.commission_ready ? '' : '<p class="small">Commission editing is disabled until the Sprint 5.1 D1 migration is run.</p>'}
+  `;
+}
+
+function userCard(user) {
+  const code = codeValue(user.affiliate_code);
+  return `
+    <article class="card compact-card user-card" data-user-card="${user.id}">
+      <div class="user-card-top">
+        <div class="user-avatar">${escapeHtml((user.full_name || user.email || '?').slice(0,1).toUpperCase())}</div>
+        <div class="user-main">
+          <p class="eyebrow ${user.status === 'suspended' ? 'error' : user.presence === 'online' ? 'success' : ''}">${escapeHtml(roleLabel(user.role))} • ${escapeHtml(statusLabel(user.status))}</p>
+          <h2>${escapeHtml(user.full_name || user.username || user.email)}</h2>
+          <p class="small">${escapeHtml(user.email)} • @${escapeHtml(user.username || 'username')}</p>
+        </div>
+        <div class="user-presence ${escapeHtml(user.presence)}">${escapeHtml(presenceLabel(user))}</div>
+      </div>
+
+      <div class="user-meta-grid">
+        <div><span>Title</span><strong>${escapeHtml(user.company_title || 'Not set')}</strong></div>
+        <div><span>Commission</span><strong>${escapeHtml(formatCommission(user.commission_percentage))}</strong></div>
+        <div><span>Affiliate code</span><strong>${code ? escapeHtml(code) : 'Not set'}</strong></div>
+        <div><span>Last seen</span><strong>${escapeHtml(user.last_seen_at || 'Never')}</strong></div>
+        <div><span>Sessions</span><strong>${escapeHtml(user.active_sessions || 0)}</strong></div>
+        <div><span>Invites</span><strong>${escapeHtml(user.active_invites || 0)} active / ${escapeHtml(user.used_invites || 0)} used</strong></div>
+      </div>
+
+      ${editableControls(user)}
+      <div class="notice user-row-status" id="userStatus-${user.id}" style="display:none"></div>
+    </article>`;
+}
+
+function renderUsers() { if (!users.length) { usersList.innerHTML = '<div class="notice success">No users match that filter.</div>'; return; } usersList.innerHTML = users.map(userCard).join(''); }
+function setCardStatus(id, message, type = '') { const el = document.getElementById(`userStatus-${id}`); if (!el) return; el.style.display = 'block'; el.className = `notice user-row-status ${type}`.trim(); el.textContent = message; }
+function getControlValue(id, field) { const el = document.querySelector(`[data-user-id="${id}"][data-field="${field}"]`); return el ? el.value : ''; }
+
+async function loadUsers() {
+  usersStatus.className = 'notice'; usersStatus.textContent = 'Loading users...';
+  const params = new URLSearchParams({ q: searchInput.value.trim(), role: roleFilter.value, status: statusFilter.value });
+  const response = await fetch(`/api/admin/users?${params.toString()}`);
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { usersStatus.className = 'notice error'; usersStatus.textContent = data.error || 'Could not load users.'; usersList.innerHTML = ''; updateStats({}); return; }
+  users = data.users || []; viewer = data.viewer || viewer; updateStats(data.stats || {});
+  usersStatus.className = 'notice success'; usersStatus.textContent = `${users.length} user${users.length === 1 ? '' : 's'} loaded.`;
+  renderUsers();
+}
+
+async function saveUser(id) {
+  const user = users.find(u => Number(u.id) === Number(id)); if (!user) return;
+  setCardStatus(id, 'Saving profile changes...');
+  const payload = { role: getControlValue(id, 'role'), status: getControlValue(id, 'status'), company_title: getControlValue(id, 'company_title'), commission_percentage: getControlValue(id, 'commission_percentage') };
+  const response = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not save user.', 'error'); return; }
+  setCardStatus(id, data.changed ? 'Profile updated.' : 'No profile changes to save.', 'success'); await loadUsers();
+}
+
+async function saveCommission(id) {
+  const user = users.find(u => Number(u.id) === Number(id)); if (!user) return;
+  const commission = getControlValue(id, 'commission_percentage').trim();
+  setCardStatus(id, 'Saving commission rate...');
+  const response = await fetch(`/api/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ commission_percentage: commission })
+  });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not save commission.', 'error'); return; }
+  setCardStatus(id, data.changed ? 'Commission updated.' : 'No commission change to save.', 'success');
+  await loadUsers();
+}
+
+async function saveAffiliateCode(id) {
+  const user = users.find(u => Number(u.id) === Number(id)); if (!user) return;
+  const code = getControlValue(id, 'affiliate_code').trim();
+  if (!code) { setCardStatus(id, 'Enter an affiliate code first.', 'error'); return; }
+  setCardStatus(id, 'Saving affiliate code...');
+  const response = await fetch('/api/admin/affiliate-codes', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ user_id: id, code }) });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not save affiliate code.', 'error'); return; }
+  setCardStatus(id, `Affiliate code saved: ${data.code}`, 'success'); await loadUsers();
+}
+
+async function revokeSessions(id) {
+  const user = users.find(u => Number(u.id) === Number(id)); if (!user) return;
+  if (!confirm(`Sign ${user.email} out of all active sessions?`)) return;
+  setCardStatus(id, 'Revoking sessions...');
+  const response = await fetch(`/api/admin/users/${id}/sessions`, { method: 'POST' });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not revoke sessions.', 'error'); return; }
+  setCardStatus(id, `${data.deleted_sessions || 0} session${data.deleted_sessions === 1 ? '' : 's'} revoked.`, 'success'); await loadUsers();
+}
+
+async function deleteUser(id, email) {
+  const typed = prompt(`Permanent delete is only for test users. Type this email exactly to continue:\n\n${email}`);
+  if (typed === null) return;
+  if (typed.trim().toLowerCase() !== String(email).toLowerCase()) { alert('Email did not match. User was not deleted.'); return; }
+  if (!confirm(`Permanently delete ${email}? This cannot be undone.`)) return;
+  setCardStatus(id, 'Deleting user...');
+  const response = await fetch(`/api/admin/users/${id}/delete`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ confirm_email: typed }) });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not delete user.', 'error'); return; }
+  await loadUsers();
+}
+
+let searchTimer;
+searchInput.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadUsers, 250); });
+roleFilter.addEventListener('change', loadUsers);
+statusFilter.addEventListener('change', loadUsers);
+refreshUsers.addEventListener('click', loadUsers);
+loadUsers();
+</script>
+</body>
+</html>
