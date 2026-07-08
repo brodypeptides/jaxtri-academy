@@ -1,102 +1,103 @@
-# Sprint 9.1 — Optional Mobile App + Push Notifications
 
-This sprint turns Jaxtri Academy into an optional PWA-style mobile app and adds opt-in push notifications.
+# Jaxtri Production Logo + Launch Hardening Patch
 
-## What this adds
+This patch implements the new Jaxtri Labs Academy logo across the public site, protected dashboards, PWA app icons, browser favicon, and push notification icons.
 
-- Optional Add to Home Screen banner
-- Android/Chrome install prompt support
-- iPhone install instructions: Safari → Share → Add to Home Screen
-- Service worker for app mode and push handling
-- Push subscription save/disable APIs
-- Push notification test button
-- Notifications page install + push control panel
-- Device subscription table in D1
-- VAPID key generator script
+## Files included
 
-## Files
+### Branding + app icons
+- `assets/branding/logo-main.png`
+- `assets/branding/logo-square.png`
+- `assets/branding/icon-192.png`
+- `assets/branding/icon-512.png`
+- `assets/branding/icon-192-maskable.png`
+- `assets/branding/icon-512-maskable.png`
+- `assets/branding/apple-touch-icon.png`
+- `assets/branding/favicon-32x32.png`
+- `assets/branding/favicon-16x16.png`
+- `assets/branding/favicon.ico`
+- `assets/icon-192.png`
+- `assets/icon-512.png`
+- `favicon.ico`
+- `favicon-32x32.png`
+- `favicon-16x16.png`
 
-```text
-assets/session.js
-assets/pwa-install.css
-assets/pwa-install.js
-manifest.json
-service-worker.js
-notifications.html
-functions/lib/webpush.js
-functions/api/push/public-key.js
-functions/api/push/subscription.js
-functions/api/push/test.js
-database/sprint9-1-pwa-push.sql
-scripts/generate-vapid-keys.mjs
-```
+### Branding CSS/JS
+- `assets/logo-branding.css`
+- `assets/logo-branding.js`
+- `assets/production-mode.js`
 
-## Required D1 migration
+### Updated production/PWA files
+- `manifest.json`
+- `service-worker.js`
+- `assets/session.js`
 
-Run this in Cloudflare D1:
+### Updated public pages
+- `index.html`
+- `login.html`
+- `apply.html`
+- `application-submitted.html`
+- `invite.html`
 
-```text
-database/sprint9-1-pwa-push.sql
-```
+### Production launch checker
+- `production-ready.html`
+- `functions/api/admin/production-check.js`
 
-It creates:
+### Database verification command list
+- `database/production-db-verification.sql`
 
-```text
-push_subscriptions
-notification_preferences
-```
+## What this patch does
 
-## Required Cloudflare environment variables
+- Adds the new logo to browser tabs, website header, sidebar, public pages, mobile homescreen app, and push notifications.
+- Replaces the old letter-style sidebar mark with the new image logo.
+- Updates the PWA manifest to use the new app icons.
+- Updates the service worker cache so mobile users receive the new logo/icon files.
+- Adds production language cleanup for protected pages.
+- Adds an owner-only production launch checker at:
+  `/production-ready.html`
+- Adds a SQL verification file you can run in D1.
 
-Generate keys locally from your repo root after applying this patch:
+## Install
+
+1. Copy all files from this patch into the repository root.
+2. Replace files when prompted.
+3. Commit and push:
 
 ```bash
-node scripts/generate-vapid-keys.mjs
+git add .
+git commit -m "production logo and launch readiness"
+git push
 ```
 
-Add the printed values in Cloudflare Pages:
-
-```text
-Workers & Pages → jaxtri-academy → Settings → Environment variables
-```
-
-Add:
-
-```text
-WEB_PUSH_PUBLIC_KEY=<generated value>
-WEB_PUSH_PRIVATE_KEY=<generated value>
-WEB_PUSH_SUBJECT=mailto:support@jaxtrilabsacademy.com
-```
-
-Use the same values for Production. Preview can be left blank if you only care about live production push.
-
-## Important behavior
-
-- Install is optional.
-- Push notifications are off by default.
-- Users must tap Enable notifications.
-- iPhone users must install the site to Home Screen first, then open the installed app and enable notifications.
-- This version sends a generic push notification that opens `notifications.html`.
-- Detailed notification payloads can be added in the production-hardening sprint.
-
-## Testing
-
-1. Apply patch.
-2. Run the D1 migration.
-3. Add the Cloudflare environment variables.
-4. Deploy successfully.
+4. Wait for Cloudflare deploy success.
 5. Open:
 
 ```text
-https://jaxtrilabsacademy.com/notifications.html
+https://jaxtrilabsacademy.com/production-ready.html
 ```
 
-6. Click **Enable notifications**.
-7. Click **Send test**.
-8. You should get an app-style notification that opens the notifications page.
+## D1 verification
 
-## Commit message
+Open:
 
 ```text
-sprint 9.1 pwa install push notifications
+Cloudflare → D1 → jaxtri_academy → Console
 ```
+
+Then run commands from:
+
+```text
+database/production-db-verification.sql
+```
+
+## Mobile app icon note
+
+Phones often cache old Home Screen icons. After deploy:
+- Remove the old Home Screen app.
+- Open Safari/Chrome.
+- Visit `https://jaxtrilabsacademy.com`.
+- Add to Home Screen again.
+
+## No new migration
+
+This patch does not create new database tables. It verifies existing production tables only.

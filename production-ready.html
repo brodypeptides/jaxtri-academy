@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Production Launch Check | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/logo-branding.css"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="/assets/branding/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/branding/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/branding/favicon-16x16.png"><meta name="theme-color" content="#13d6b3"><link rel="stylesheet" href="assets/navigation-categories.css"><link rel="stylesheet" href="assets/mobile-app.css">
+  <style>
+    .launch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+    .launch-card{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.86);padding:16px;display:grid;gap:8px}
+    .launch-card.ok{border-color:rgba(18,169,119,.24);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(236,253,245,.7))}
+    .launch-card.warn{border-color:rgba(245,158,11,.28);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,251,235,.7))}
+    .launch-card.error{border-color:rgba(239,68,68,.28);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(254,242,242,.7))}
+    .status-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:5px 10px;font-size:.75rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase;width:max-content}
+    .ok .status-pill{background:rgba(16,185,129,.1);color:#047857;border:1px solid rgba(16,185,129,.2)}
+    .warn .status-pill{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.22)}
+    .error .status-pill{background:rgba(239,68,68,.1);color:#991b1b;border:1px solid rgba(239,68,68,.22)}
+    .launch-table{width:100%;border-collapse:collapse;margin-top:14px}
+    .launch-table th,.launch-table td{text-align:left;border-bottom:1px solid var(--line);padding:10px;vertical-align:top}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem}
+    @media(max-width:980px){.launch-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav"><a href="owner-dashboard.html">Overview</a><a class="active" href="production-ready.html">Launch Check</a></nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Production phase</p>
+        <h1 class="title">Production launch check</h1>
+        <p class="lead">Owner-only verification for database readiness, environment variables, WooCommerce tracking, app install support, and launch cleanup.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section id="status" class="notice" style="margin-top:16px">Loading production checks...</section>
+    <section class="metric-grid" style="margin-top:16px">
+      <div class="metric-card"><span>Checks</span><strong id="statChecks">—</strong><p>Total checks reviewed</p></div>
+      <div class="metric-card"><span>Ready</span><strong id="statOk">—</strong><p>Good for launch</p></div>
+      <div class="metric-card"><span>Review</span><strong id="statWarn">—</strong><p>Needs review</p></div>
+      <div class="metric-card"><span>Fix now</span><strong id="statError">—</strong><p>Must fix before launch</p></div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div><p class="eyebrow">Launch center</p><h2>Production readiness</h2></div>
+        <button class="btn primary" onclick="loadChecks()">Refresh checks</button>
+      </div>
+      <div id="cards" class="launch-grid"></div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div><p class="eyebrow">Database</p><h2>Table + column results</h2></div>
+        <a class="btn" href="database/production-db-verification.sql">Open SQL command list</a>
+      </div>
+      <table class="launch-table">
+        <thead><tr><th>Item</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody id="dbRows"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const statusEl = document.getElementById('status');
+const cardsEl = document.getElementById('cards');
+const dbRowsEl = document.getElementById('dbRows');
+
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function setStatus(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
+function cls(status){return status === 'ok' ? 'ok' : status === 'warn' ? 'warn' : 'error'}
+function label(status){return status === 'ok' ? 'Ready' : status === 'warn' ? 'Review' : 'Fix now'}
+
+function render(data){
+  const checks = data.checks || [];
+  const ok = checks.filter(x=>x.status==='ok').length;
+  const warn = checks.filter(x=>x.status==='warn').length;
+  const error = checks.filter(x=>x.status==='error').length;
+  document.getElementById('statChecks').textContent = checks.length;
+  document.getElementById('statOk').textContent = ok;
+  document.getElementById('statWarn').textContent = warn;
+  document.getElementById('statError').textContent = error;
+
+  cardsEl.innerHTML = checks.map(item => `<article class="launch-card ${cls(item.status)}"><span class="status-pill">${label(item.status)}</span><h3>${escapeHtml(item.title)}</h3><p class="small">${escapeHtml(item.message)}</p>${item.detail?`<p class="small mono">${escapeHtml(item.detail)}</p>`:''}</article>`).join('');
+
+  const db = data.database || [];
+  dbRowsEl.innerHTML = db.map(row => `<tr><td class="mono">${escapeHtml(row.item)}</td><td><span class="status-pill ${cls(row.status)}">${label(row.status)}</span></td><td>${escapeHtml(row.message||'')}</td></tr>`).join('');
+  setStatus(error ? `${error} production issue${error===1?'':'s'} need attention.` : warn ? `${warn} item${warn===1?'':'s'} need review before launch.` : 'All core launch checks are ready.', error ? 'error' : warn ? '' : 'success');
+}
+
+async function loadChecks(){
+  setStatus('Loading production checks...');
+  const response = await fetch('/api/admin/production-check');
+  const data = await response.json().catch(()=>({error:'Unknown error'}));
+  if(!response.ok){setStatus(data.error||'Could not load production checks.','error');return}
+  render(data);
+}
+
+loadChecks();
+</script>
+</body>
+</html>

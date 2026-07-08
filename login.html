@@ -1,1 +1,37 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login | Jaxtri Academy</title><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"></head><body><header class="header"><a class="brand" href="index.html">Jaxtri Academy</a><nav class="nav"><a href="apply.html">Apply</a><a href="index.html">Public Site</a></nav></header><main class="hero"><section class="wrap grid"><div><p class="eyebrow">Member login</p><h1 class="title">One login. Right dashboard.</h1><p class="lead">Owners, managers, and affiliates all log in here. Your role decides where you go.</p><div id="status" class="notice">Use your Academy credentials.</div></div><form id="loginForm" class="card form"><div class="field"><label>Email or username</label><input name="identifier" required autocomplete="username"></div><div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div><label class="check"><input name="remember" type="checkbox"><span>Remember me</span></label><button class="btn primary" type="submit">Login</button></form></section></main><script>const form=document.getElementById('loginForm');const statusEl=document.getElementById('status');form.addEventListener('submit',async(e)=>{e.preventDefault();statusEl.className='notice';statusEl.textContent='Logging in...';const data=Object.fromEntries(new FormData(form));data.remember=form.elements.remember.checked;const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const d=await r.json().catch(()=>({error:'Unknown error'}));if(!r.ok){statusEl.className='notice error';statusEl.textContent=d.error||'Login failed.';return}location.href=d.redirect||'/academy-dashboard.html'});</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/logo-branding.css"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="/assets/branding/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/branding/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/branding/favicon-16x16.png"><meta name="theme-color" content="#13d6b3">
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="index.html">Jaxtri Academy</a>
+  <nav class="nav"><a href="apply.html">Apply</a><a href="index.html">Public Site</a></nav>
+</header>
+<main class="hero">
+  <section class="wrap grid">
+    <div>
+      <div class="public-logo-card" data-jaxtri-logo-slot></div>
+      <p class="eyebrow">Member login</p>
+      <h1 class="title">One login. Right dashboard.</h1>
+      <p class="lead">Owners, managers, and affiliates all log in here. Your role decides where you go.</p>
+      <div id="status" class="notice">Use your Academy credentials.</div>
+    </div>
+    <form id="loginForm" class="card form">
+      <div class="field"><label>Email or username</label><input name="identifier" required autocomplete="username"></div>
+      <div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
+      <label class="check"><input name="remember" type="checkbox"><span>Remember me</span></label>
+      <button class="btn primary" type="submit">Login</button>
+    </form>
+  </section>
+</main>
+<script src="assets/logo-branding.js"></script>
+<script>
+const form=document.getElementById('loginForm');const statusEl=document.getElementById('status');
+form.addEventListener('submit',async(e)=>{e.preventDefault();statusEl.className='notice';statusEl.textContent='Logging in...';const data=Object.fromEntries(new FormData(form));data.remember=form.elements.remember.checked;const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const d=await r.json().catch(()=>({error:'Unknown error'}));if(!r.ok){statusEl.className='notice error';statusEl.textContent=d.error||'Login failed.';return}location.href=d.redirect||'/academy-dashboard.html'});
+</script>
+</body>
+</html>

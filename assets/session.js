@@ -16,6 +16,7 @@ function privatePageAllowed(user) {
   if (user.status === 'pending') return path === 'pending.html';
 
   if (path === 'pending.html') return false;
+  if (path === 'production-ready.html') return user.role === 'owner';
   if (path === 'owner-users.html') return user.role === 'owner' || user.role === 'manager';
   if (path === 'owner-user-profile.html') return user.role === 'owner' || user.role === 'manager';
   if (path.startsWith('owner-')) return user.role === 'owner' || user.role === 'manager';
@@ -46,30 +47,61 @@ function navGroup(title, links) {
 }
 
 function installStylesheet(href) {
-  if (document.querySelector(`link[href="${href}"]`)) return;
+  if (document.querySelector(`link[href="${href}"],link[href="/${href}"]`)) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = href;
   document.head.appendChild(link);
 }
 
-function installScript(src, onload) {
-  const existing = document.querySelector(`script[src="${src}"]`);
-  if (existing) {
-    existing.addEventListener('load', () => onload?.(), { once: true });
-    onload?.();
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = src;
-  script.defer = true;
-  script.onload = () => onload?.();
-  document.body.appendChild(script);
+function installScript(src) {
+  return new Promise((resolve) => {
+    if (document.querySelector(`script[src="${src}"],script[src="/${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => resolve();
+    document.head.appendChild(script);
+  });
+}
+
+function installBranding(user) {
+  installStylesheet('assets/logo-branding.css');
+
+  document.querySelectorAll('.brand').forEach((brand) => {
+    if (brand.querySelector('.jaxtri-brand-logo')) return;
+    const img = document.createElement('img');
+    img.src = '/assets/branding/icon-192.png';
+    img.alt = 'Jaxtri Labs Academy';
+    img.className = 'jaxtri-brand-logo';
+    img.loading = 'eager';
+    brand.prepend(img);
+  });
+
+  document.querySelectorAll('.side-brand').forEach((brand) => {
+    if (brand.querySelector('.jaxtri-side-logo')) return;
+    const old = brand.querySelector('.side-mark');
+    if (old) old.remove();
+    const img = document.createElement('img');
+    img.src = '/assets/branding/icon-192.png';
+    img.alt = 'Jaxtri Labs Academy';
+    img.className = 'jaxtri-side-logo';
+    img.loading = 'eager';
+    brand.prepend(img);
+  });
+}
+
+function installProductionMode() {
+  installScript('assets/production-mode.js');
 }
 
 function installPwaShell(user) {
   installStylesheet('assets/mobile-app.css');
-  installStylesheet('assets/pwa-install.css');
+  installStylesheet('assets/logo-branding.css');
 
   if (!document.querySelector('link[rel="manifest"]')) {
     const manifest = document.createElement('link');
@@ -78,10 +110,35 @@ function installPwaShell(user) {
     document.head.appendChild(manifest);
   }
 
+  if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+    const apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon';
+    apple.href = '/assets/branding/apple-touch-icon.png';
+    document.head.appendChild(apple);
+  }
+
+  if (!document.querySelector('link[rel="icon"][sizes="32x32"]')) {
+    const icon32 = document.createElement('link');
+    icon32.rel = 'icon';
+    icon32.type = 'image/png';
+    icon32.sizes = '32x32';
+    icon32.href = '/assets/branding/favicon-32x32.png';
+    document.head.appendChild(icon32);
+  }
+
+  if (!document.querySelector('link[rel="icon"][sizes="16x16"]')) {
+    const icon16 = document.createElement('link');
+    icon16.rel = 'icon';
+    icon16.type = 'image/png';
+    icon16.sizes = '16x16';
+    icon16.href = '/assets/branding/favicon-16x16.png';
+    document.head.appendChild(icon16);
+  }
+
   if (!document.querySelector('meta[name="theme-color"]')) {
     const meta = document.createElement('meta');
     meta.name = 'theme-color';
-    meta.content = '#18d978';
+    meta.content = '#13d6b3';
     document.head.appendChild(meta);
   }
 
@@ -90,7 +147,6 @@ function installPwaShell(user) {
   }
 
   installMobileBottomNav(user);
-  installScript('assets/pwa-install.js', () => window.JaxtriPwa?.boot?.(user));
 }
 
 function bottomNavLink(href, label) {
@@ -126,6 +182,7 @@ function installMobileBottomNav(user) {
   nav.innerHTML = links.map(([href, label]) => bottomNavLink(href, label)).join('');
   document.body.appendChild(nav);
 }
+
 
 function isProtectedAppPage() {
   return document.body.classList.contains('dashboard-v2') || document.body.classList.contains('team-page-body');
@@ -202,11 +259,14 @@ function installPersistentSideNav(user) {
   if (brandSmall) brandSmall.textContent = commandMode ? 'Command Center' : 'Affiliate Portal';
 
   if (commandMode) {
+    const commandLinks = [
+      ['owner-dashboard.html', 'Overview'],
+      ['notifications.html', 'Notifications'],
+    ];
+    if (user.role === 'owner') commandLinks.push(['production-ready.html', 'Launch Check']);
+
     nav.innerHTML = [
-      navGroup('Command', [
-        ['owner-dashboard.html', 'Overview'],
-        ['notifications.html', 'Notifications'],
-      ]),
+      navGroup('Command', commandLinks),
       navGroup('People', [
         ['owner-recruitment.html', 'Applications'],
         ['owner-admin.html', 'Invites'],
@@ -223,6 +283,7 @@ function installPersistentSideNav(user) {
         ['academy-dashboard.html', 'Academy View'],
       ]),
     ].join('');
+    installBranding(user);
     return;
   }
 
@@ -245,6 +306,7 @@ function installPersistentSideNav(user) {
       ['team.html', 'Team Chat'],
     ]),
   ].join('');
+  installBranding(user);
 }
 
 async function loadSession(){
@@ -268,6 +330,8 @@ async function loadSession(){
     installPersistentSideNav(d.user);
     installPwaShell(d.user);
     installDesktopAlertChip(d.user);
+    installBranding(d.user);
+    installProductionMode();
     refreshAlertBadges();
 
     if(target) target.textContent=`Logged in as ${d.user.full_name} — ${d.user.role}${d.user.company_title?` (${d.user.company_title})`:''}`;

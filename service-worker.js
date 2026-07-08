@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jaxtri-academy-pwa-v9-1';
+const CACHE_NAME = 'jaxtri-academy-production-logo-v1';
 const NAV_FALLBACK = '/login.html';
 
 self.addEventListener('install', (event) => {
@@ -8,12 +8,19 @@ self.addEventListener('install', (event) => {
         '/',
         '/login.html',
         '/notifications.html',
+        '/production-ready.html',
         '/manifest.json',
         '/assets/styles.css',
         '/assets/frost-theme.css',
         '/assets/mobile-app.css',
         '/assets/pwa-install.css',
         '/assets/pwa-install.js',
+        '/assets/logo-branding.css',
+        '/assets/logo-branding.js',
+        '/assets/production-mode.js',
+        '/assets/branding/icon-192.png',
+        '/assets/branding/icon-512.png',
+        '/assets/branding/apple-touch-icon.png'
       ]).catch(() => null))
       .then(() => self.skipWaiting())
   );
@@ -41,9 +48,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname === '/manifest.json') {
+  if (url.pathname.startsWith('/assets/') || url.pathname === '/manifest.json' || url.pathname === '/favicon.ico') {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+      caches.match(request).then((cached) => fetch(request).then((response) => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => null);
         return response;
@@ -67,8 +74,8 @@ self.addEventListener('push', (event) => {
 
     await self.registration.showNotification(title, {
       body,
-      icon: data.icon || '/assets/icon-192.png',
-      badge: data.badge || '/assets/icon-192.png',
+      icon: data.icon || '/assets/branding/icon-192.png',
+      badge: data.badge || '/assets/branding/icon-192.png',
       tag: data.tag || 'jaxtri-alert',
       renotify: true,
       data: { url },
