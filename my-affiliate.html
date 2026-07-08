@@ -13,6 +13,8 @@
     .payout-status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:.76rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(5,150,105,.24);color:#065f46;background:rgba(16,185,129,.08)}
     .payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}
     .payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}
+    .payout-timeline{display:grid;gap:6px;margin-top:10px;padding-left:0}.payout-timeline span{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted)}.payout-timeline span:before{content:'';width:8px;height:8px;border-radius:999px;background:#18d978;box-shadow:0 0 0 4px rgba(24,217,120,.10)}.payout-timeline span.pending-step:before{background:#94a3b8;box-shadow:0 0 0 4px rgba(148,163,184,.12)}
+    .request-note-box{margin-top:12px;display:grid;gap:8px}.request-note-box textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;color:var(--text);font:inherit;min-height:72px;resize:vertical}
     @media(max-width:920px){.affiliate-hero-grid,.payout-request-row{grid-template-columns:1fr}}
   </style>
 </head>
@@ -83,6 +85,10 @@
         <button id="requestPayoutBtn" class="btn primary" onclick="requestPayout()" disabled>Request payout</button>
       </div>
       <p id="requestHelp" class="small">Approved unpaid commissions will appear here when they are available to request.</p>
+      <div class="request-note-box">
+        <label class="small"><strong>Optional request note</strong></label>
+        <textarea id="requestNote" maxlength="800" placeholder="Example: Please send to my PayPal today if possible."></textarea>
+      </div>
       <div id="requestableList" class="sales-list"></div>
     </section>
 
@@ -148,9 +154,18 @@ function renderRequestable(sales=[], stats={}){
   requestableList.innerHTML = sales.length ? sales.map(s => `<article class="sale-row sale-row-readonly"><div class="sale-main"><p class="eyebrow">approved • ${escapeHtml(s.source||'manual')}</p><h3>${escapeHtml(s.external_order_id || 'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code || 'None')} • ${escapeHtml(s.created_at || '')}</p></div><div class="sale-money"><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong><span>${escapeHtml(pct(s.commission_percentage))} of ${escapeHtml(dollars(s.gross_amount,s.currency))}</span></div></article>`).join('') : '';
 }
 
+function timeline(r){
+  const requested = r.requested_at ? `<span>Requested ${escapeHtml(r.requested_at)}</span>` : '<span class="pending-step">Requested</span>';
+  const reviewed = r.reviewed_at ? `<span>Reviewed ${escapeHtml(r.reviewed_at)}${r.reviewed_by_name?` by ${escapeHtml(r.reviewed_by_name)}`:''}</span>` : '<span class="pending-step">Review pending</span>';
+  const paid = r.paid_at ? `<span>Paid ${escapeHtml(r.paid_at)}${r.paid_by_name?` by ${escapeHtml(r.paid_by_name)}`:''}</span>` : '<span class="pending-step">Payment pending</span>';
+  if(r.status === 'paid') return `<div class="payout-timeline">${requested}${reviewed}${paid}</div>`;
+  if(r.status === 'rejected') return `<div class="payout-timeline">${requested}${reviewed}<span class="pending-step">Rejected / sales unlocked</span></div>`;
+  return `<div class="payout-timeline">${requested}<span class="pending-step">Waiting for owner/manager payout</span></div>`;
+}
+
 function renderRequests(requests=[]){
   if(!requests.length){requestList.innerHTML='<div class="notice success">No payout requests yet.</div>';return}
-  requestList.innerHTML = requests.map(r => `<article class="payout-request-row"><div><span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span><h3 style="margin:8px 0 2px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h3><p class="small">${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'} • ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(r.payout_email || 'No payout email')}</p>${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}${r.proof_upload_id ? `<p class="small"><a href="/api/uploads/${r.proof_upload_id}" target="_blank">View proof</a></p>` : r.proof_url ? `<p class="small"><a href="${escapeHtml(r.proof_url)}" target="_blank">View proof</a></p>` : ''}${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}</div><small>${escapeHtml(r.requested_at || '')}</small></article>`).join('');
+  requestList.innerHTML = requests.map(r => `<article class="payout-request-row"><div><span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span><h3 style="margin:8px 0 2px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h3><p class="small">${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'} • ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(r.payout_email || 'No payout email')}</p>${r.request_note ? `<p class="small"><strong>Your note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}${r.proof_url ? `<p class="small"><a href="${escapeHtml(r.proof_url)}" target="_blank" rel="noreferrer">View payout proof</a></p>` : ''}${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}${timeline(r)}</div><small>${escapeHtml(r.requested_at || '')}</small></article>`).join('');
 }
 
 function renderSales(sales=[]){
@@ -179,11 +194,12 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
 async function requestPayout(){
   if(!confirm('Request payout for all approved unpaid sales shown here?')) return;
   setNotice('Creating payout request...');
-  const body = { payout_method: document.getElementById('payoutMethod').value, payout_email: document.getElementById('payoutEmail').value };
+  const body = { payout_method: document.getElementById('payoutMethod').value, payout_email: document.getElementById('payoutEmail').value, request_note: document.getElementById('requestNote').value };
   const r = await fetch('/api/payout-requests',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
   const d = await r.json().catch(()=>({error:'Unknown error'}));
   if(!r.ok){setNotice(d.error||'Could not request payout.','error');return}
   setNotice(`Payout requested: ${d.sale_count} sale${d.sale_count===1?'':'s'} totaling $${Number(d.amount_requested||0).toFixed(2)}.`, 'success');
+  document.getElementById('requestNote').value = '';
   await loadMine();
 }
 

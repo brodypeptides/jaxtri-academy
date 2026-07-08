@@ -72,7 +72,7 @@
         </select>
         <button class="btn primary" id="refreshUsers" type="button">Refresh</button>
       </div>
-      <p class="small">Affiliates cannot change their own code or commission rate. Staff sets codes here. Owner role/status/commission changes stay protected.</p>
+      <p class="small">Affiliates cannot change their own code or commission rate. Staff sets codes here. Owners can set commission rates here, while owner role/status/title stay protected.</p>
     </section>
 
     <section id="usersStatus" class="notice" style="margin-top:16px">Loading users...</section>
@@ -110,6 +110,25 @@ function updateStats(stats = {}) {
   document.getElementById('statCommission').textContent = stats.commission_set ?? '0';
 }
 
+function commissionControls(user) {
+  const canEdit = viewer.can_edit_commission && viewer.can_edit_users;
+  const disabled = canEdit && viewer.commission_ready ? '' : 'disabled';
+  const placeholder = viewer.commission_ready ? '30' : 'Run migration first';
+  if (!canEdit) {
+    return `<div class="user-code-box user-commission-box"><p class="eyebrow">Commission</p><h3>${escapeHtml(formatCommission(user.commission_percentage))}</h3><p class="small">Only owners can change commission percentages.</p></div>`;
+  }
+  return `<div class="user-code-box user-commission-box">
+    <p class="eyebrow">Commission rate</p>
+    <div class="user-code-grid">
+      <label>Commission %
+        <input data-field="commission_percentage" data-user-id="${user.id}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(commissionInputValue(user.commission_percentage))}" placeholder="${placeholder}" ${disabled}>
+      </label>
+      <button class="btn primary" onclick="saveCommission(${user.id})" ${disabled}>Set commission</button>
+    </div>
+    <p class="small">This rate is private to owner/manager views and is used when WooCommerce/manual commissions are calculated.</p>
+  </div>`;
+}
+
 function affiliateCodeControls(user) {
   const canEdit = viewer.can_edit_affiliate_codes && (user.role !== 'owner' || viewer.can_edit_owner_codes);
   const code = codeValue(user.affiliate_code);
@@ -135,7 +154,7 @@ function editableControls(user) {
   }
 
   if (user.role === 'owner') {
-    return `${affiliateCodeControls(user)}<div class="notice user-lock-note">Owner protected. Role, status, title, and commission changes stay D1-only. Affiliate code can be attached here by an owner.</div>`;
+    return `${commissionControls(user)}${affiliateCodeControls(user)}<div class="notice user-lock-note">Owner protected. Role, status, and title stay D1-only. Commission and affiliate code can be updated here by an owner.</div>`;
   }
 
   const commissionDisabled = viewer.commission_ready ? '' : 'disabled';
@@ -224,6 +243,21 @@ async function saveUser(id) {
   const data = await response.json().catch(() => ({ error: 'Unknown error' }));
   if (!response.ok) { setCardStatus(id, data.error || 'Could not save user.', 'error'); return; }
   setCardStatus(id, data.changed ? 'Profile updated.' : 'No profile changes to save.', 'success'); await loadUsers();
+}
+
+async function saveCommission(id) {
+  const user = users.find(u => Number(u.id) === Number(id)); if (!user) return;
+  const commission = getControlValue(id, 'commission_percentage').trim();
+  setCardStatus(id, 'Saving commission rate...');
+  const response = await fetch(`/api/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ commission_percentage: commission })
+  });
+  const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+  if (!response.ok) { setCardStatus(id, data.error || 'Could not save commission.', 'error'); return; }
+  setCardStatus(id, data.changed ? 'Commission updated.' : 'No commission change to save.', 'success');
+  await loadUsers();
 }
 
 async function saveAffiliateCode(id) {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Commissions | Jaxtri Command Center</title>
-  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body class="dashboard-v2">
 <header class="header compact-header">
@@ -103,6 +103,28 @@
 
     <section class="card compact-card" style="margin-top:18px">
       <div class="section-head-row">
+        <div>
+          <p class="eyebrow">Sprint 6G</p>
+          <h2>WooCommerce production check</h2>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" onclick="loadWebhookSetup()">Check setup</button>
+          <button class="btn primary" onclick="sendTestWebhook()">Send test webhook</button>
+          <button class="btn" onclick="loadWebhookEvents()">Refresh logs</button>
+        </div>
+      </div>
+      <p class="small">This is the Jaxtri-side testing center. It does not require the store owner to be online. It checks your Cloudflare secret, D1 tables, webhook event log table, and sends a safe test event through the live webhook endpoint.</p>
+      <div id="wcSetupBox" class="notice" style="margin-top:12px">Checking WooCommerce setup...</div>
+      <div class="commission-filters" style="margin-top:14px">
+        <input id="webhookSearch" placeholder="Search webhook logs...">
+        <select id="webhookStatusFilter"><option value="all">All logs</option><option value="processed">Processed</option><option value="ignored">Ignored</option><option value="error">Errors</option><option value="received">Received</option></select>
+        <button class="btn" onclick="loadWebhookEvents()">Apply</button>
+      </div>
+      <div id="wcEventsList" class="sales-list" style="margin-top:14px"></div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
         <div><p class="eyebrow">Sales ledger</p><h2>Tracked commissions</h2></div>
         <div class="commission-filters">
           <input id="saleSearch" placeholder="Search affiliate, order, customer...">
@@ -126,6 +148,10 @@ const saleAffiliate = document.getElementById('saleAffiliate');
 const saleSearch = document.getElementById('saleSearch');
 const saleStatusFilter = document.getElementById('saleStatusFilter');
 document.getElementById('wcWebhookUrl')?.append(location.origin + '/api/webhooks/woocommerce');
+const wcSetupBox = document.getElementById('wcSetupBox');
+const wcEventsList = document.getElementById('wcEventsList');
+const webhookSearch = document.getElementById('webhookSearch');
+const webhookStatusFilter = document.getElementById('webhookStatusFilter');
 let affiliates = [];
 let sales = [];
 let viewer = { is_owner:false };
@@ -206,13 +232,80 @@ async function loadCommissions(){
   setNotice(statusEl,`${sales.length} sale record${sales.length===1?'':'s'} loaded.`,'success');
 }
 
+
+function checkPill(ok,label){return `<span class="pill ${ok?'approved':'rejected'}">${escapeHtml(label)}: ${ok?'ready':'missing'}</span>`}
+
+function renderWebhookSetup(data={}){
+  const checks = data.checks || {};
+  const ready = checks.ready;
+  wcSetupBox.className = `notice ${ready?'success':'error'}`;
+  wcSetupBox.innerHTML = `
+    <strong>${ready ? 'Jaxtri side is ready for WooCommerce testing.' : 'Jaxtri side needs setup before live store testing.'}</strong>
+    <div class="actions" style="margin-top:10px">
+      ${checkPill(checks.secret_configured,'Secret')}
+      ${checkPill(checks.affiliate_sales_table,'Sales table')}
+      ${checkPill(checks.affiliate_codes_table,'Codes table')}
+      ${checkPill(checks.webhook_events_table,'Event logs')}
+    </div>
+    <p class="small" style="margin-top:10px">Webhook URL: <code>${escapeHtml(data.webhook_url || (location.origin + '/api/webhooks/woocommerce'))}</code></p>
+    ${checks.webhook_events_table ? '' : '<p class="small"><strong>Needed:</strong> run <code>database/sprint6g-webhook-events.sql</code> in D1.</p>'}
+    ${checks.secret_configured ? '' : '<p class="small"><strong>Needed:</strong> set Cloudflare env var <code>JAXTRI_WC_WEBHOOK_SECRET</code>.</p>'}
+  `;
+}
+
+function renderWebhookEvents(events=[]){
+  if(!events.length){wcEventsList.innerHTML='<div class="notice success">No webhook logs match this view yet.</div>';return}
+  wcEventsList.innerHTML = events.map(e => `<article class="sale-row sale-row-readonly">
+    <div class="sale-main">
+      <p class="eyebrow ${e.status==='processed'?'success':e.status==='error'?'error':''}">${escapeHtml(e.status || 'received')} • ${escapeHtml(e.provider || 'woocommerce')}</p>
+      <h3>${escapeHtml(e.event || 'Webhook event')}</h3>
+      <p class="small">Order: ${escapeHtml(e.external_order_id || 'none')} • Code: ${escapeHtml(e.affiliate_code || 'none')} • ${escapeHtml(e.created_at || '')}</p>
+      ${e.message ? `<p class="small"><strong>Message:</strong> ${escapeHtml(e.message)}</p>` : ''}
+    </div>
+    <div class="sale-money"><strong>${escapeHtml(e.status || '')}</strong><span>${escapeHtml(e.event || '')}</span></div>
+  </article>`).join('');
+}
+
+async function loadWebhookSetup(){
+  try{
+    wcSetupBox.className='notice'; wcSetupBox.textContent='Checking WooCommerce setup...';
+    const r = await fetch('/api/admin/webhook-test');
+    const d = await r.json().catch(()=>({error:'Unknown error'}));
+    if(!r.ok){wcSetupBox.className='notice error';wcSetupBox.textContent=d.error||'Could not check WooCommerce setup.';return}
+    renderWebhookSetup(d);
+  }catch(e){wcSetupBox.className='notice error';wcSetupBox.textContent='Could not check WooCommerce setup.'}
+}
+
+async function sendTestWebhook(){
+  if(!confirm('Send a safe test webhook through the live Jaxtri endpoint?')) return;
+  wcSetupBox.className='notice'; wcSetupBox.textContent='Sending test webhook...';
+  const r = await fetch('/api/admin/webhook-test',{method:'POST'});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){wcSetupBox.className='notice error';wcSetupBox.textContent=d.error||'Test webhook failed.'; if(d.checks) renderWebhookSetup(d); return}
+  renderWebhookSetup(d);
+  alert('Test webhook reached the live endpoint. Check the logs below.');
+  await loadWebhookEvents();
+}
+
+async function loadWebhookEvents(){
+  if(!wcEventsList) return;
+  wcEventsList.innerHTML='<div class="notice">Loading webhook logs...</div>';
+  const params = new URLSearchParams();
+  params.set('status', webhookStatusFilter.value || 'all');
+  if(webhookSearch.value.trim()) params.set('q', webhookSearch.value.trim());
+  const r = await fetch('/api/admin/webhook-events?' + params.toString());
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){wcEventsList.innerHTML = `<div class="notice error">${escapeHtml(d.error || 'Could not load webhook logs.')}</div>`;return}
+  renderWebhookEvents(d.events || []);
+}
+
 async function loadCodes(){
   const r = await fetch('/api/admin/affiliate-codes');
   const d = await r.json().catch(()=>({error:'Unknown error'}));
   if(!r.ok){codesList.innerHTML = `<div class="notice error" style="margin-top:12px">${escapeHtml(d.error || 'Could not load affiliate codes.')}</div>`;return}
   codes = d.codes || []; renderCodes();
 }
-async function loadAll(){await Promise.all([loadCommissions(),loadCodes()])}
+async function loadAll(){await Promise.all([loadCommissions(),loadCodes(),loadWebhookSetup(),loadWebhookEvents()])}
 
 async function generateCode(userId){
   const custom = prompt('Optional custom code. Leave blank to auto-generate:') || '';
