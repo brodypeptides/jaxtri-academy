@@ -1,92 +1,57 @@
-# Jaxtri Sprint 6F + 6G — Money Polish + WooCommerce Testing
+# Jaxtri Cloudflare build fix — duplicate function cleanup
 
-This patch does what can be done on the Jaxtri/Cloudflare side while the store owner installs the WordPress plugin.
+Your Cloudflare build failed because some function files were copied into the wrong folder.
 
-## What this adds
-
-### Sprint 6F — Commission + payout polish
-
-- Cleaner My Affiliate payout request flow
-- Optional affiliate payout request note
-- Payout timeline on affiliate side
-- Better owner payout queue
-- PayPal/reference transaction ID required before marking paid
-- Optional proof link preview
-- Admin note and affiliate note visibility
-- Summary counts across requested/paid/rejected/cancelled payout requests
-- Keeps rejected payout sales requestable again
-
-### Sprint 6G — WooCommerce production testing, Jaxtri side only
-
-- WooCommerce production check panel inside `owner-commissions.html`
-- Checks if `JAXTRI_WC_WEBHOOK_SECRET` exists
-- Checks if commission tables exist
-- Checks if webhook event log table exists
-- Sends a safe test webhook through the live endpoint
-- Recent webhook event viewer
-- Search/filter webhook logs
-
-This does **not** require R2.
-
-## Files included
+Bad paths found by Cloudflare:
 
 ```text
-assets/session.js
-assets/navigation-categories.css
-owner-commissions.html
-owner-payouts.html
-my-affiliate.html
-owner-users.html
-functions/api/payout-requests.js
-functions/api/admin/payout-requests.js
-functions/api/admin/payout-requests/[id].js
-functions/api/admin/webhook-events.js
-functions/api/admin/webhook-test.js
+functions/api/admin/admin/affiliate-codes.js
+functions/api/admin/admin/payout-requests.js
+functions/api/admin/admin/payout-requests/[id].js
+functions/api/admin/admin/users.js
+functions/api/admin/admin/webhook-events.js
+functions/api/admin/admin/webhook-test.js
+functions/api/admin/payout-requests.js with the wrong import
+```
+
+## What this patch does
+
+- Restores the correct admin function files in `functions/api/admin/`.
+- Restores the affiliate payout API in `functions/api/payout-requests.js`.
+- Includes the latest payout-method field polish HTML.
+- Includes a cleanup script to remove the bad nested folder: `functions/api/admin/admin`.
+
+## How to install
+
+1. Copy the contents of this patch folder into the root of your repo.
+2. Replace files when prompted.
+3. Run `cleanup-bad-function-duplicates.bat` from the repo root.
+4. In GitHub Desktop, confirm `functions/api/admin/admin` is deleted.
+5. Commit and push.
+
+## Do not delete
+
+Keep these correct files:
+
+```text
 functions/api/admin/affiliate-codes.js
 functions/api/admin/users.js
-database/sprint6g-webhook-events.sql
+functions/api/admin/webhook-events.js
+functions/api/admin/webhook-test.js
+functions/api/admin/payout-requests.js
+functions/api/admin/payout-requests/[id].js
+functions/api/payout-requests.js
+functions/lib/auth.js
 ```
 
-`owner-users.html`, `assets/session.js`, and `navigation-categories.css` are included so the recent sidebar/category + website commission/code controls stay intact.
-
-## Required D1 migration
-
-Run this new migration in Cloudflare D1 Console:
+## Delete only this duplicate folder
 
 ```text
-database/sprint6g-webhook-events.sql
+functions/api/admin/admin
 ```
-
-This creates:
-
-```text
-affiliate_webhook_events
-```
-
-It is safe to run more than once.
-
-## Cloudflare secret
-
-The WooCommerce test panel checks for:
-
-```text
-JAXTRI_WC_WEBHOOK_SECRET
-```
-
-This should match the secret entered in the WordPress plugin.
-
-## Test after deploy
-
-1. Open `owner-commissions.html`.
-2. Scroll to **WooCommerce production check**.
-3. Click **Check setup**.
-4. If the D1 migration and secret are ready, click **Send test webhook**.
-5. Refresh logs and confirm a processed test event appears.
-6. Open `my-affiliate.html` and confirm payout request note/timeline works.
-7. Open `owner-payouts.html`, request a payout, then mark paid only after entering a PayPal/reference ID.
 
 ## Commit message
 
 ```text
-sprint 6f 6g money webhook polish
+fix cloudflare function paths
 ```

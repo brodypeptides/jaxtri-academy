@@ -50,8 +50,8 @@ export async function onRequestPatch({ request, env, params }) {
     const adminNote = clean(body.admin_note).slice(0, 1000) || null;
     const proofUrl = clean(body.proof_url).slice(0, 1000) || null;
 
-    if (nextStatus === 'paid' && !transactionId && !proofUrl) {
-      return json({ error: 'Add a PayPal/reference ID or proof link before marking paid.' }, 400);
+    if (nextStatus === 'paid' && !transactionId) {
+      return json({ error: 'Add the PayPal/reference transaction ID before marking this payout paid.' }, 400);
     }
 
     if (nextStatus === 'paid') {

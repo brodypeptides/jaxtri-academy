@@ -138,8 +138,11 @@ function summarize(sales, requests) {
     }
   }
 
+  const requestCounts = { requested: 0, paid: 0, rejected: 0, cancelled: 0 };
   for (const request of requests) {
-    if (request.status === 'requested') totals.requested_commission = money(totals.requested_commission + Number(request.amount_requested || 0));
+    const requestStatus = clean(request.status).toLowerCase() || 'requested';
+    requestCounts[requestStatus] = Number(requestCounts[requestStatus] || 0) + 1;
+    if (requestStatus === 'requested') totals.requested_commission = money(totals.requested_commission + Number(request.amount_requested || 0));
   }
 
   return {
@@ -147,6 +150,7 @@ function summarize(sales, requests) {
     unpaid_commission: money(totals.pending_commission + totals.approved_commission),
     total_sales: sales.length,
     counts,
+    request_counts: requestCounts,
     requestable_sale_count: requestableSales.length,
   };
 }

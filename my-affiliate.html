@@ -14,7 +14,7 @@
     .payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}
     .payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}
     .payout-timeline{display:grid;gap:6px;margin-top:10px;padding-left:0}.payout-timeline span{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted)}.payout-timeline span:before{content:'';width:8px;height:8px;border-radius:999px;background:#18d978;box-shadow:0 0 0 4px rgba(24,217,120,.10)}.payout-timeline span.pending-step:before{background:#94a3b8;box-shadow:0 0 0 4px rgba(148,163,184,.12)}
-    .request-note-box{margin-top:12px;display:grid;gap:8px}.request-note-box textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;color:var(--text);font:inherit;min-height:72px;resize:vertical}
+    .request-note-box{margin-top:12px;display:grid;gap:8px}.request-note-box textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;color:var(--text);font:inherit;min-height:72px;resize:vertical}.payout-method-help{margin-top:7px}.payout-sensitive-note{border:1px solid rgba(24,201,232,.22);border-radius:14px;padding:10px 12px;background:rgba(24,201,232,.06);margin-top:10px}
     @media(max-width:920px){.affiliate-hero-grid,.payout-request-row{grid-template-columns:1fr}}
   </style>
 </head>
@@ -71,9 +71,10 @@
         <p class="eyebrow">Payout profile</p>
         <h2>Where should payouts go?</h2>
         <form id="profileForm" class="form compact-form" style="margin-top:12px">
-          <div class="field"><label>Payout method</label><select id="payoutMethod"><option>PayPal</option><option>Cash App</option><option>Venmo</option><option>Bank transfer</option><option>Other</option></select></div>
-          <div class="field"><label>Payout email / handle</label><input id="payoutEmail" placeholder="paypal@email.com or $cashtag"></div>
-          <div class="field"><label>Notes</label><textarea id="payoutNotes" maxlength="800" placeholder="Optional payout instructions"></textarea></div>
+          <div class="field"><label>Payout method</label><select id="payoutMethod" onchange="updatePaymentFields()"><option>PayPal</option><option>Cash App</option><option>Venmo</option><option>Bank transfer</option><option>Other</option></select></div>
+          <div class="field"><label id="payoutDetailsLabel">PayPal email</label><input id="payoutEmail" placeholder="paypal@email.com"><p id="payoutDetailsHelp" class="small payout-method-help">Enter the email connected to your PayPal account.</p></div>
+          <div class="field"><label id="payoutNotesLabel">Notes</label><textarea id="payoutNotes" maxlength="800" placeholder="Optional payout instructions"></textarea></div>
+          <div id="payoutSensitiveNote" class="small payout-sensitive-note" hidden></div>
           <button class="btn" type="submit">Save payout info</button>
         </form>
       </div>
@@ -117,6 +118,73 @@ const requestHelp = document.getElementById('requestHelp');
 const codeBox = document.getElementById('codeBox');
 let lastData = null;
 
+const PAYOUT_METHODS = {
+  'PayPal': {
+    label: 'PayPal email',
+    placeholder: 'paypal@email.com',
+    help: 'Enter the email connected to your PayPal account.',
+    notes: 'Optional payout instructions',
+    sensitive: ''
+  },
+  'Cash App': {
+    label: 'Cash App $Cashtag',
+    placeholder: '$cashtag',
+    help: 'Enter the exact $Cashtag the payout should be sent to.',
+    notes: 'Optional Cash App notes',
+    sensitive: ''
+  },
+  'Venmo': {
+    label: 'Venmo username / phone / email',
+    placeholder: '@username, phone number, or email',
+    help: 'Enter the Venmo username, phone number, or email that should receive payout.',
+    notes: 'Optional Venmo notes',
+    sensitive: ''
+  },
+  'Bank transfer': {
+    label: 'Bank transfer contact/details',
+    placeholder: 'Bank name + account holder + last 4 only',
+    help: 'Use this for safe bank transfer identifiers. Do not store full routing or account numbers here.',
+    notes: 'Bank transfer instructions',
+    sensitive: 'Security note: do not enter full bank routing/account numbers in Jaxtri. Put safe identifiers here, then exchange full banking details securely outside the app if needed.'
+  },
+  'Other': {
+    label: 'Payment details',
+    placeholder: 'How should we pay you?',
+    help: 'Enter the handle, email, or instructions for this payout method.',
+    notes: 'Other payout instructions',
+    sensitive: ''
+  }
+};
+
+function payoutMeta(method){
+  return PAYOUT_METHODS[method] || PAYOUT_METHODS.Other;
+}
+
+function payoutDetailsLabel(method){
+  return payoutMeta(method).label;
+}
+
+function updatePaymentFields(){
+  const method = document.getElementById('payoutMethod')?.value || 'PayPal';
+  const meta = payoutMeta(method);
+  const detailLabel = document.getElementById('payoutDetailsLabel');
+  const detailInput = document.getElementById('payoutEmail');
+  const detailHelp = document.getElementById('payoutDetailsHelp');
+  const notesLabel = document.getElementById('payoutNotesLabel');
+  const notesInput = document.getElementById('payoutNotes');
+  const sensitiveNote = document.getElementById('payoutSensitiveNote');
+  if(detailLabel) detailLabel.textContent = meta.label;
+  if(detailInput) detailInput.placeholder = meta.placeholder;
+  if(detailHelp) detailHelp.textContent = meta.help;
+  if(notesLabel) notesLabel.textContent = meta.notes;
+  if(notesInput) notesInput.placeholder = meta.notes;
+  if(sensitiveNote){
+    sensitiveNote.hidden = !meta.sensitive;
+    sensitiveNote.textContent = meta.sensitive || '';
+  }
+}
+
+
 function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
 function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
 function pct(value){const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'—'}
@@ -142,6 +210,7 @@ function renderCode(code){
 
 function renderProfile(profile={}){
   document.getElementById('payoutMethod').value = profile.payout_method || 'PayPal';
+  updatePaymentFields();
   document.getElementById('payoutEmail').value = profile.payout_email || '';
   document.getElementById('payoutNotes').value = profile.payout_notes || '';
 }
@@ -165,7 +234,7 @@ function timeline(r){
 
 function renderRequests(requests=[]){
   if(!requests.length){requestList.innerHTML='<div class="notice success">No payout requests yet.</div>';return}
-  requestList.innerHTML = requests.map(r => `<article class="payout-request-row"><div><span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span><h3 style="margin:8px 0 2px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h3><p class="small">${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'} • ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(r.payout_email || 'No payout email')}</p>${r.request_note ? `<p class="small"><strong>Your note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}${r.proof_url ? `<p class="small"><a href="${escapeHtml(r.proof_url)}" target="_blank" rel="noreferrer">View payout proof</a></p>` : ''}${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}${timeline(r)}</div><small>${escapeHtml(r.requested_at || '')}</small></article>`).join('');
+  requestList.innerHTML = requests.map(r => `<article class="payout-request-row"><div><span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span><h3 style="margin:8px 0 2px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h3><p class="small">${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'} • ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(payoutDetailsLabel(r.payout_method || 'PayPal'))}: ${escapeHtml(r.payout_email || 'Not set')}</p>${r.request_note ? `<p class="small"><strong>Your note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}${r.proof_url ? `<p class="small"><a href="${escapeHtml(r.proof_url)}" target="_blank" rel="noreferrer">View payout proof</a></p>` : ''}${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}${timeline(r)}</div><small>${escapeHtml(r.requested_at || '')}</small></article>`).join('');
 }
 
 function renderSales(sales=[]){
@@ -203,6 +272,7 @@ async function requestPayout(){
   await loadMine();
 }
 
+updatePaymentFields();
 loadMine();
 </script>
 </body>

@@ -73,6 +73,23 @@ const payoutStatusFilter = document.getElementById('payoutStatusFilter');
 const payoutSearch = document.getElementById('payoutSearch');
 let requests = [];
 
+const PAYOUT_METHOD_LABELS = {
+  'PayPal': 'PayPal email',
+  'Cash App': 'Cash App $Cashtag',
+  'Venmo': 'Venmo username / phone / email',
+  'Bank transfer': 'Bank transfer contact/details',
+  'Other': 'Payment details'
+};
+function payoutDetailsLabel(method){return PAYOUT_METHOD_LABELS[method] || PAYOUT_METHOD_LABELS.Other}
+function payoutReferencePlaceholder(method){
+  if(method === 'Bank transfer') return 'Bank transfer confirmation/reference ID required';
+  if(method === 'Cash App') return 'Cash App transaction/reference ID required';
+  if(method === 'Venmo') return 'Venmo transaction/reference ID required';
+  if(method === 'PayPal') return 'PayPal transaction/reference ID required';
+  return 'Payment/reference ID required';
+}
+
+
 function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
 function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
 function setNotice(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
@@ -103,7 +120,7 @@ function renderPayouts(){
           <span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
           <h2 style="margin:8px 0 4px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h2>
           <p class="small"><strong>${escapeHtml(r.affiliate_name || r.affiliate_email)}</strong> • ${escapeHtml(r.affiliate_email || '')} • ${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'}</p>
-          <p class="small">Method: ${escapeHtml(r.payout_method || 'PayPal')} • Pay to: ${escapeHtml(r.payout_email || 'Not set')}</p>
+          <p class="small">Method: ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(payoutDetailsLabel(r.payout_method || 'PayPal'))}: ${escapeHtml(r.payout_email || 'Not set')}</p>
           ${r.request_note ? `<p class="small"><strong>Affiliate note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}
           ${r.sale_ids ? `<p class="small"><strong>Sale IDs:</strong> ${escapeHtml(r.sale_ids)}</p>` : ''}
           ${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}
@@ -114,10 +131,10 @@ function renderPayouts(){
         <small>${escapeHtml(r.requested_at || '')}</small>
       </div>
       ${r.status === 'requested' ? `<div class="payout-actions">
-        <input id="tx-${r.id}" placeholder="PayPal/reference ID required">
+        <input id="tx-${r.id}" placeholder="${escapeHtml(payoutReferencePlaceholder(r.payout_method || 'Other'))}">
         <input id="proofUrl-${r.id}" placeholder="Proof link, optional">
         <textarea id="note-${r.id}" placeholder="Admin note, optional"></textarea>
-        <div class="payout-safe-note small"><strong>Safety:</strong> Enter the transaction/reference ID after you manually pay. This locks attached approved sales as paid.</div>
+        <div class="payout-safe-note small"><strong>Safety:</strong> Enter the transaction/reference ID after you manually pay. For bank transfers, do not store full routing/account numbers in Jaxtri. This locks attached approved sales as paid.</div>
         <div class="actions"><button class="btn primary" onclick="markPaid(${r.id})">Mark paid</button><button class="btn danger" onclick="rejectPayout(${r.id})">Reject</button></div>
       </div>` : ''}
     </article>`;
@@ -147,7 +164,7 @@ async function updatePayout(id, body){
 
 async function markPaid(id){
   const tx = document.getElementById(`tx-${id}`).value.trim();
-  if(!tx){alert('Add the PayPal/reference transaction ID first.');return}
+  if(!tx){alert('Add the transaction/reference ID first.');return}
   if(!confirm('Confirm this payout was paid manually? This will mark the attached approved sales as paid.')) return;
   const body = {
     status: 'paid',
