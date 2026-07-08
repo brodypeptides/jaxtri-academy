@@ -1,39 +1,43 @@
-# Sprint 6B.2 — WooCommerce Webhook Health Check
+# Quick Public Soft Theme
 
-This patch updates:
+This is a small owner-requested public website style patch.
 
-- `functions/api/webhooks/woocommerce.js`
+## What it changes
 
-## What it fixes
+- Public-facing pages get a warm off-white background, not harsh pure white.
+- Green/teal Jaxtri-style accents.
+- Softer cards and smaller rounded buttons.
+- Internal dashboards keep the existing darker operator-app style.
 
-Opening `/api/webhooks/woocommerce` in a browser now returns a clean JSON health-check instead of falling back to the public homepage.
+## Files changed
 
-The real WooCommerce connector still uses `POST` requests with the `x-jaxtri-secret` header. This patch does not change sale tracking logic, coupon tracking, or commission calculations.
+- `index.html`
+- `apply.html`
+- `application-submitted.html`
+- `login.html`
+- `invite.html`
+- `assets/public-soft-theme.css`
 
 ## Install
 
-1. Copy this patch into the repo.
-2. Commit and push.
-3. Wait for Cloudflare Pages to redeploy.
-4. Visit:
+Copy this package into the repo without deleting existing files.
+
+Commit message:
 
 ```text
-https://YOUR-SITE.pages.dev/api/webhooks/woocommerce
+quick public soft theme
 ```
 
-Expected response:
+Then push and wait for Cloudflare Pages to redeploy.
 
-```json
-{
-  "ok": true,
-  "endpoint": "Jaxtri WooCommerce webhook",
-  "status": "active",
-  "method": "POST required"
-}
-```
+## Test
 
-## Commit message
+Visit:
 
-```text
-sprint 6b.2 webhook healthcheck
-```
+- `/`
+- `/apply.html`
+- `/login.html`
+- `/application-submitted.html`
+- `/invite.html`
+
+The background should feel light/white, but still blended with green/teal branding.

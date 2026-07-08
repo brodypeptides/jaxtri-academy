@@ -1,0 +1,69 @@
+/* Quick Public Soft Theme — warm white/green public website polish.
+   Scoped to body.public-soft so internal dashboards keep their existing app styling. */
+
+body.public-soft{
+  --bg:#f3f7f1;
+  --panel:#ffffff;
+  --panel2:#eef7f0;
+  --text:#10231d;
+  --muted:#53665d;
+  --line:#d8e6dc;
+  --cyan:#1aa58c;
+  --purple:#297a5a;
+  --green:#1f8f54;
+  --red:#b64150;
+  --yellow:#9f7914;
+  background:
+    radial-gradient(circle at 12% 6%, rgba(31,143,84,.12), transparent 34%),
+    radial-gradient(circle at 88% 14%, rgba(26,165,140,.10), transparent 32%),
+    linear-gradient(135deg, #f8faf5 0%, #eef7f0 48%, #f5f8f2 100%);
+  color:var(--text);
+}
+
+body.public-soft::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg, rgba(31,143,84,.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(31,143,84,.045) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.55), transparent 72%);
+}
+
+body.public-soft .header{
+  background:rgba(250,252,248,.88);
+  border-bottom:1px solid rgba(31,143,84,.14);
+  box-shadow:0 12px 42px rgba(25,63,46,.07);
+  backdrop-filter:blur(18px);
+}
+
+body.public-soft .brand{color:#0d261d;letter-spacing:-.045em}
+body.public-soft .brand::before{content:"";width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:10px;background:linear-gradient(135deg,#1f8f54,#1aa58c);box-shadow:0 0 0 4px rgba(31,143,84,.12)}
+body.public-soft .nav{color:#53665d}
+body.public-soft .nav a{padding:8px 11px;border-radius:999px}
+body.public-soft .nav a:hover{color:#0d261d;background:rgba(31,143,84,.08)}
+body.public-soft .hero{padding:72px 0}
+body.public-soft .grid{align-items:center}
+body.public-soft .eyebrow{color:#1f8f54;letter-spacing:.24em}
+body.public-soft .title{color:#0d261d;text-shadow:none}
+body.public-soft .lead,body.public-soft p,body.public-soft .small,body.public-soft .check{color:#53665d}
+body.public-soft .card{background:rgba(255,255,255,.78);border:1px solid rgba(31,143,84,.16);box-shadow:0 24px 70px rgba(35,75,52,.12);backdrop-filter:blur(18px)}
+body.public-soft .card h2{color:#10231d}
+body.public-soft .btn{background:#ffffff;color:#10231d;border:1px solid rgba(31,143,84,.22);border-radius:999px;padding:11px 17px;box-shadow:0 10px 28px rgba(25,63,46,.08)}
+body.public-soft .btn:hover{border-color:rgba(31,143,84,.48);background:#f7fbf6;transform:translateY(-1px)}
+body.public-soft .btn.primary{background:linear-gradient(135deg,#1f8f54,#1aa58c);color:#ffffff;border:0;box-shadow:0 16px 36px rgba(31,143,84,.24)}
+body.public-soft .btn.primary:hover{filter:saturate(1.05) brightness(.98)}
+body.public-soft .notice{background:rgba(255,255,255,.74);border-color:rgba(31,143,84,.2);color:#234235}
+body.public-soft .notice.success{background:rgba(31,143,84,.08);border-color:rgba(31,143,84,.28);color:#145936}
+body.public-soft .notice.error{background:rgba(182,65,80,.08);border-color:rgba(182,65,80,.24);color:#8d2a38}
+body.public-soft .pill{background:rgba(31,143,84,.07);border-color:rgba(31,143,84,.2);color:#1f6f48}
+body.public-soft .pill.pending{color:#1f6f48;border-color:rgba(31,143,84,.24)}
+body.public-soft .field label{color:#10231d}
+body.public-soft .field input,body.public-soft .field textarea,body.public-soft .field select{background:#fbfdf9;color:#10231d;border-color:#d8e6dc;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+body.public-soft .field input::placeholder,body.public-soft .field textarea::placeholder{color:#8a9b92}
+body.public-soft .field input:focus,body.public-soft .field textarea:focus,body.public-soft .field select:focus{outline:none;border-color:rgba(31,143,84,.55);box-shadow:0 0 0 4px rgba(31,143,84,.10)}
+body.public-soft .actions{gap:12px}
+
+@media(max-width:840px){body.public-soft .hero{padding:46px 0}body.public-soft .title{font-size:3.05rem}body.public-soft .header{height:68px}}
