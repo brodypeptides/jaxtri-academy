@@ -130,7 +130,7 @@ export async function onRequestGet({ request, env }) {
     const pushMissing = ['WEB_PUSH_PUBLIC_KEY', 'WEB_PUSH_PRIVATE_KEY', 'WEB_PUSH_SUBJECT'].filter((key) => !envOk(env, key));
     checks.push(
       pushMissing.length
-        ? check('warn', 'Push notification keys', `Missing ${pushMissing.length} push environment variable${pushMissing.length === 1 ? '' : 's'}.`, pushMissing.join(', '))
+        ? check('warn', 'Push notification keys', `Missing ${pushMissing.length} push environment variable${pushMissing.length === 1 ? '' : 's'}. Add these to enable app-style push notifications.`, pushMissing.join(', '))
         : check('ok', 'Push notification keys', 'Web push environment variables are set.')
     );
 
@@ -207,7 +207,7 @@ export async function onRequestGet({ request, env }) {
     checks.push(
       Number(pushSubs?.count || 0) > 0
         ? check('ok', 'Push subscriptions', `${pushSubs.count} active push subscription${Number(pushSubs.count) === 1 ? '' : 's'} saved.`)
-        : check('warn', 'Push subscriptions', 'No active push subscriptions yet. Users can enable notifications after launch.')
+        : check('ok', 'Push subscriptions', 'Push notifications are optional. No active subscriptions are required before launch.')
     );
 
     return json({ ok: true, checks, database });

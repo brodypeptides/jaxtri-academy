@@ -1,103 +1,76 @@
+# Jaxtri Production Final Patch
 
-# Jaxtri Production Logo + Launch Hardening Patch
+This patch makes the site look and behave more production-ready:
 
-This patch implements the new Jaxtri Labs Academy logo across the public site, protected dashboards, PWA app icons, browser favicon, and push notification icons.
+- Keeps the new Jaxtri logo and app icons in place.
+- Removes visible Sprint/version labels from app pages.
+- Replaces visible testing language with production/verification language.
+- Refreshes the service worker cache so browsers and mobile installs pick up the final assets.
+- Updates the production readiness checker so optional push subscriptions do not block launch.
+- Adds the missing production database migration for profile notes, onboarding, stored notifications, and push subscriptions.
+- Adds a full D1 verification command list.
 
-## Files included
+## 1. Apply patch
 
-### Branding + app icons
-- `assets/branding/logo-main.png`
-- `assets/branding/logo-square.png`
-- `assets/branding/icon-192.png`
-- `assets/branding/icon-512.png`
-- `assets/branding/icon-192-maskable.png`
-- `assets/branding/icon-512-maskable.png`
-- `assets/branding/apple-touch-icon.png`
-- `assets/branding/favicon-32x32.png`
-- `assets/branding/favicon-16x16.png`
-- `assets/branding/favicon.ico`
-- `assets/icon-192.png`
-- `assets/icon-512.png`
-- `favicon.ico`
-- `favicon-32x32.png`
-- `favicon-16x16.png`
+Copy this ZIP into your repo root and replace files.
 
-### Branding CSS/JS
-- `assets/logo-branding.css`
-- `assets/logo-branding.js`
-- `assets/production-mode.js`
-
-### Updated production/PWA files
-- `manifest.json`
-- `service-worker.js`
-- `assets/session.js`
-
-### Updated public pages
-- `index.html`
-- `login.html`
-- `apply.html`
-- `application-submitted.html`
-- `invite.html`
-
-### Production launch checker
-- `production-ready.html`
-- `functions/api/admin/production-check.js`
-
-### Database verification command list
-- `database/production-db-verification.sql`
-
-## What this patch does
-
-- Adds the new logo to browser tabs, website header, sidebar, public pages, mobile homescreen app, and push notifications.
-- Replaces the old letter-style sidebar mark with the new image logo.
-- Updates the PWA manifest to use the new app icons.
-- Updates the service worker cache so mobile users receive the new logo/icon files.
-- Adds production language cleanup for protected pages.
-- Adds an owner-only production launch checker at:
-  `/production-ready.html`
-- Adds a SQL verification file you can run in D1.
-
-## Install
-
-1. Copy all files from this patch into the repository root.
-2. Replace files when prompted.
-3. Commit and push:
+Commit message:
 
 ```bash
 git add .
-git commit -m "production logo and launch readiness"
+git commit -m "production final cleanup"
 git push
 ```
 
-4. Wait for Cloudflare deploy success.
-5. Open:
+## 2. Run required D1 migration
+
+In Cloudflare:
+
+`D1 -> jaxtri_academy -> Console`
+
+Run:
+
+```text
+database/production-final-missing-tables.sql
+```
+
+This creates:
+
+- `admin_user_notes`
+- `user_onboarding_items`
+- `app_notifications`
+- `push_subscriptions`
+
+## 3. Run verification commands
+
+After the migration, run:
+
+```text
+database/production-final-command-list.sql
+```
+
+The important missing-table query should return zero rows.
+
+## 4. Push notification env vars
+
+The production checker will keep showing push key review until these are added in Cloudflare Pages:
+
+- `WEB_PUSH_PUBLIC_KEY`
+- `WEB_PUSH_PRIVATE_KEY`
+- `WEB_PUSH_SUBJECT`
+
+Generate them with:
+
+```bash
+node scripts/generate-vapid-keys.mjs
+```
+
+## 5. Recheck launch page
+
+Open:
 
 ```text
 https://jaxtrilabsacademy.com/production-ready.html
 ```
 
-## D1 verification
-
-Open:
-
-```text
-Cloudflare → D1 → jaxtri_academy → Console
-```
-
-Then run commands from:
-
-```text
-database/production-db-verification.sql
-```
-
-## Mobile app icon note
-
-Phones often cache old Home Screen icons. After deploy:
-- Remove the old Home Screen app.
-- Open Safari/Chrome.
-- Visit `https://jaxtrilabsacademy.com`.
-- Add to Home Screen again.
-
-## No new migration
-
-This patch does not create new database tables. It verifies existing production tables only.
+The database table issue should clear after running the migration.
