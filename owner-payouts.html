@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payouts | Jaxtri Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
+  <style>
+    .payout-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.payout-toolbar input,.payout-toolbar select{border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.86);color:var(--text);font:inherit}.payout-grid{display:grid;gap:14px}.payout-card{border:1px solid var(--line);border-radius:22px;padding:18px;background:rgba(255,255,255,.78);box-shadow:0 18px 48px rgba(15,23,42,.06)}.payout-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.payout-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.payout-actions input,.payout-actions textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:rgba(255,255,255,.9);color:var(--text);font:inherit}.payout-actions textarea{grid-column:1/-1;min-height:72px;resize:vertical}.payout-proof-row{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.payout-status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:.76rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(5,150,105,.24);color:#065f46;background:rgba(16,185,129,.08)}.payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}.payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}@media(max-width:820px){.payout-actions,.payout-proof-row,.payout-head{grid-template-columns:1fr;display:grid}}
+  </style>
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="owner-dashboard.html">Jaxtri Command Center</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
+    <nav class="side-nav">
+      <a href="owner-dashboard.html">Overview</a>
+      <a href="owner-recruitment.html">Recruitment</a>
+      <a href="owner-feed-review.html">Feed Review</a>
+      <a href="owner-admin.html">Admin + Invites</a>
+      <a href="owner-users.html">Users</a>
+      <a href="owner-commissions.html">Commissions</a>
+      <a class="active" href="owner-payouts.html">Payouts</a>
+      <a href="team.html">Team Chat</a>
+      <a href="academy-dashboard.html">Academy View</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Manual payouts</p>
+        <h1 class="title">Payout queue</h1>
+        <p class="lead">Review affiliate payout requests, upload proof screenshots to R2, and confirm PayPal/reference IDs.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section class="metric-grid" style="margin-top:16px">
+      <div class="metric-card"><span>Requested</span><strong id="statRequested">—</strong><p>Waiting for payment</p></div>
+      <div class="metric-card"><span>Requested amount</span><strong id="statRequestedAmount">—</strong><p>Total open request value</p></div>
+      <div class="metric-card"><span>Paid requests</span><strong id="statPaid">—</strong><p>Marked paid</p></div>
+      <div class="metric-card"><span>Paid amount</span><strong id="statPaidAmount">—</strong><p>Confirmed payout value</p></div>
+    </section>
+
+    <section id="payoutStatus" class="notice" style="margin-top:16px">Loading payout requests...</section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div><p class="eyebrow">Queue</p><h2>Affiliate payout requests</h2></div>
+        <div class="payout-toolbar">
+          <input id="payoutSearch" placeholder="Search affiliate, email, reference...">
+          <select id="payoutStatusFilter"><option value="requested">Requested</option><option value="all">All statuses</option><option value="paid">Paid</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select>
+          <button class="btn" onclick="loadPayouts()">Apply</button>
+        </div>
+      </div>
+      <div id="payoutList" class="payout-grid" style="margin-top:16px"></div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const statusEl = document.getElementById('payoutStatus');
+const payoutList = document.getElementById('payoutList');
+const payoutStatusFilter = document.getElementById('payoutStatusFilter');
+const payoutSearch = document.getElementById('payoutSearch');
+let requests = [];
+
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
+function setNotice(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
+
+function renderSummary(summary={}){
+  document.getElementById('statRequested').textContent = summary.requested || 0;
+  document.getElementById('statRequestedAmount').textContent = dollars(summary.requested_amount || 0);
+  document.getElementById('statPaid').textContent = summary.paid || 0;
+  document.getElementById('statPaidAmount').textContent = dollars(summary.paid_amount || 0);
+}
+
+function renderPayouts(){
+  if(!requests.length){payoutList.innerHTML='<div class="notice success">No payout requests match this view.</div>';return}
+  payoutList.innerHTML = requests.map(r => {
+    const proofHref = r.proof_upload_id ? `/api/uploads/${r.proof_upload_id}` : r.proof_url;
+    return `<article class="payout-card">
+      <div class="payout-head">
+        <div>
+          <span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+          <h2 style="margin:8px 0 4px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h2>
+          <p class="small"><strong>${escapeHtml(r.affiliate_name || r.affiliate_email)}</strong> • ${escapeHtml(r.affiliate_email || '')} • ${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'}</p>
+          <p class="small">Method: ${escapeHtml(r.payout_method || 'PayPal')} • Pay to: ${escapeHtml(r.payout_email || 'Not set')}</p>
+          ${r.request_note ? `<p class="small"><strong>Affiliate note:</strong> ${escapeHtml(r.request_note)}</p>` : ''}
+          ${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}
+          ${proofHref ? `<p class="small"><a href="${escapeHtml(proofHref)}" target="_blank">View payout proof</a></p>` : ''}
+          ${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}
+        </div>
+        <small>${escapeHtml(r.requested_at || '')}</small>
+      </div>
+      ${r.status === 'requested' ? `<div class="payout-actions">
+        <input id="tx-${r.id}" placeholder="PayPal/reference ID">
+        <input id="proofUrl-${r.id}" placeholder="Proof URL, optional">
+        <input id="proofUpload-${r.id}" type="hidden">
+        <div class="payout-proof-row"><input id="file-${r.id}" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"><button class="btn" onclick="uploadProof(${r.id})">Upload proof</button></div>
+        <textarea id="note-${r.id}" placeholder="Admin note, optional"></textarea>
+        <div class="actions"><button class="btn primary" onclick="markPaid(${r.id})">Mark paid</button><button class="btn danger" onclick="rejectPayout(${r.id})">Reject</button></div>
+      </div>` : ''}
+    </article>`;
+  }).join('');
+}
+
+async function loadPayouts(){
+  setNotice('Loading payout requests...');
+  const params = new URLSearchParams();
+  params.set('status', payoutStatusFilter.value || 'requested');
+  if(payoutSearch.value.trim()) params.set('q', payoutSearch.value.trim());
+  const r = await fetch('/api/admin/payout-requests?' + params.toString());
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(d.error||'Could not load payout requests.','error');return}
+  requests = d.requests || [];
+  renderSummary(d.summary || {}); renderPayouts();
+  setNotice(`${requests.length} payout request${requests.length===1?'':'s'} loaded.`, 'success');
+}
+
+async function uploadProof(id){
+  const input = document.getElementById(`file-${id}`);
+  const file = input?.files?.[0];
+  if(!file){alert('Choose a proof screenshot or PDF first.');return}
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('purpose', 'payout_proof');
+  const r = await fetch('/api/uploads/proof',{method:'POST',body:fd});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Upload failed.');return}
+  document.getElementById(`proofUpload-${id}`).value = d.upload.id || '';
+  document.getElementById(`proofUrl-${id}`).value = d.upload.view_url || '';
+  alert('Proof uploaded. You can now mark this payout paid.');
+}
+
+async function updatePayout(id, body){
+  const r = await fetch(`/api/admin/payout-requests/${id}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){alert(d.error||'Could not update payout.');return false}
+  await loadPayouts();
+  return true;
+}
+
+async function markPaid(id){
+  if(!confirm('Confirm this payout was paid manually? This will mark the attached approved sales as paid.')) return;
+  const body = {
+    status: 'paid',
+    transaction_id: document.getElementById(`tx-${id}`).value,
+    proof_url: document.getElementById(`proofUrl-${id}`).value,
+    proof_upload_id: document.getElementById(`proofUpload-${id}`).value,
+    admin_note: document.getElementById(`note-${id}`).value,
+  };
+  await updatePayout(id, body);
+}
+
+async function rejectPayout(id){
+  const note = prompt('Why reject this payout request? Sales will become requestable again.') || '';
+  await updatePayout(id, { status:'rejected', admin_note: note });
+}
+
+loadPayouts();
+</script>
+</body>
+</html>

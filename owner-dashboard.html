@@ -22,6 +22,7 @@
       <a href="owner-admin.html">Admin + Invites</a>
       <a href="owner-users.html">Users</a>
       <a href="owner-commissions.html">Commissions</a>
+      <a href="owner-payouts.html">Payouts</a>
       <a href="team.html">Team Chat</a>
       <a href="academy-dashboard.html">Academy View</a>
     </nav>
@@ -32,7 +33,7 @@
       <div>
         <p class="eyebrow">Owner access</p>
         <h1 class="title">Command center</h1>
-        <p class="lead">A cleaner operator dashboard for recruitment, invites, feed review, and team activity.</p>
+        <p class="lead">A cleaner operator dashboard for recruitment, invites, feed review, payouts, and team activity.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
@@ -58,15 +59,20 @@
         <strong id="totalUsers">—</strong>
         <p id="userCount">Loading user directory...</p>
       </a>
-      <a class="metric-card" href="team.html">
-        <span>Team</span>
-        <strong>Chat</strong>
-        <p>Open the full messaging workspace.</p>
-      </a>
       <a class="metric-card" href="owner-commissions.html">
         <span>Commissions</span>
         <strong id="pendingCommission">—</strong>
         <p id="commissionCount">Loading commission dashboard...</p>
+      </a>
+      <a class="metric-card" href="owner-payouts.html">
+        <span>Payouts</span>
+        <strong id="pendingPayouts">—</strong>
+        <p id="payoutCount">Loading payout requests...</p>
+      </a>
+      <a class="metric-card" href="team.html">
+        <span>Team</span>
+        <strong>Chat</strong>
+        <p>Open the full messaging workspace.</p>
       </a>
     </section>
 
@@ -85,6 +91,7 @@
           <a href="owner-admin.html">Create direct invite links</a>
           <a href="owner-users.html">Manage users and access</a>
           <a href="owner-commissions.html">Open commission center</a>
+          <a href="owner-payouts.html">Review payout requests</a>
           <a href="team.html">Open team chat</a>
         </div>
       </div>
@@ -128,8 +135,6 @@ async function loadCounts() {
     }
   } catch { document.getElementById('feedReviewCount').textContent = 'Run the feed migration to enable review.'; }
 
-
-
   try {
     const r = await fetch('/api/admin/commissions');
     const d = await r.json();
@@ -141,6 +146,18 @@ async function loadCounts() {
       document.getElementById('commissionCount').textContent = 'Run Sprint 6A migration.';
     }
   } catch { document.getElementById('commissionCount').textContent = 'Open commission center.'; }
+
+  try {
+    const r = await fetch('/api/admin/payout-requests?status=requested');
+    const d = await r.json();
+    if (r.ok) {
+      document.getElementById('pendingPayouts').textContent = d.summary?.requested || 0;
+      document.getElementById('payoutCount').textContent = `$${Number(d.summary?.requested_amount || 0).toFixed(2)} requested`;
+    } else {
+      document.getElementById('pendingPayouts').textContent = 'Setup';
+      document.getElementById('payoutCount').textContent = 'Run Sprint 6D migration.';
+    }
+  } catch { document.getElementById('payoutCount').textContent = 'Review payout requests.'; }
 
   try {
     const r = await fetch('/api/admin/users');

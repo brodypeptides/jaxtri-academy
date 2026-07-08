@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Affiliate | Jaxtri Academy</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
+  <style>
+    .affiliate-hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:18px}
+    .affiliate-code-big{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:20px;padding:16px;background:rgba(255,255,255,.72);box-shadow:0 16px 44px rgba(16,185,129,.08)}
+    .affiliate-code-big code{font-size:1.6rem;font-weight:950;color:#062d2d;letter-spacing:.06em}
+    .payout-request-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;border:1px solid var(--line);border-radius:20px;padding:16px;background:rgba(255,255,255,.72);margin-top:12px}
+    .payout-status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:.76rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(5,150,105,.24);color:#065f46;background:rgba(16,185,129,.08)}
+    .payout-status.paid{color:#0f766e;background:rgba(20,184,166,.1)}
+    .payout-status.rejected{color:#991b1b;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}
+    @media(max-width:920px){.affiliate-hero-grid,.payout-request-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body class="dashboard-v2">
+<header class="header compact-header">
+  <a class="brand" href="academy-dashboard.html">Jaxtri Academy</a>
+  <nav class="nav"><button id="logout" class="btn">Logout</button></nav>
+</header>
+
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="side-brand"><span class="side-mark">J</span><div><strong>Academy</strong><small>Affiliate Portal</small></div></div>
+    <nav class="side-nav">
+      <a href="academy-dashboard.html">Dashboard</a>
+      <a href="feed.html">Feed</a>
+      <a class="active" href="my-affiliate.html">My Affiliate</a>
+      <a href="commissions.html">Commissions</a>
+      <a href="training.html">Training</a>
+      <a href="content-vault.html">Content Vault</a>
+      <a href="resources.html">Resources</a>
+      <a href="team.html">Team Chat</a>
+    </nav>
+  </aside>
+
+  <main class="app-main dashboard dashboard-compact">
+    <div class="page-head compact-page-head">
+      <div>
+        <p class="eyebrow">Affiliate earnings</p>
+        <h1 class="title">My Affiliate</h1>
+        <p class="lead">Track your code, unpaid commission, payout requests, and total paid records.</p>
+      </div>
+      <div id="me" class="notice account-chip">Loading account...</div>
+    </div>
+
+    <section id="pageStatus" class="notice">Loading affiliate data...</section>
+
+    <section class="metric-grid" style="margin-top:16px">
+      <div class="metric-card"><span>Pending</span><strong id="statPending">—</strong><p>Tracked, awaiting review</p></div>
+      <div class="metric-card"><span>Available</span><strong id="statAvailable">—</strong><p>Approved and requestable</p></div>
+      <div class="metric-card"><span>Requested</span><strong id="statRequested">—</strong><p>Waiting on payout</p></div>
+      <div class="metric-card"><span>Total paid</span><strong id="statPaid">—</strong><p>Marked paid</p></div>
+      <div class="metric-card"><span>All unpaid</span><strong id="statUnpaid">—</strong><p>Pending + approved</p></div>
+    </section>
+
+    <section class="affiliate-hero-grid">
+      <div class="card compact-card">
+        <div class="section-head-row"><div><p class="eyebrow">Your code</p><h2>Referral setup</h2></div><button class="btn" onclick="loadMine()">Refresh</button></div>
+        <div id="codeBox" style="margin-top:12px"></div>
+        <div class="field" style="margin-top:14px"><label>Store URL preview</label><input id="storeUrl" placeholder="https://jaxtri.com" oninput="renderCode(lastData?.code)"></div>
+        <p class="small">Coupon-code attribution works when your WooCommerce coupon matches your active Jaxtri affiliate code.</p>
+      </div>
+
+      <div class="card compact-card">
+        <p class="eyebrow">Payout profile</p>
+        <h2>Where should payouts go?</h2>
+        <form id="profileForm" class="form compact-form" style="margin-top:12px">
+          <div class="field"><label>Payout method</label><select id="payoutMethod"><option>PayPal</option><option>Cash App</option><option>Venmo</option><option>Bank transfer</option><option>Other</option></select></div>
+          <div class="field"><label>Payout email / handle</label><input id="payoutEmail" placeholder="paypal@email.com or $cashtag"></div>
+          <div class="field"><label>Notes</label><textarea id="payoutNotes" maxlength="800" placeholder="Optional payout instructions"></textarea></div>
+          <button class="btn" type="submit">Save payout info</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div><p class="eyebrow">Manual payout</p><h2>Request payout</h2></div>
+        <button id="requestPayoutBtn" class="btn primary" onclick="requestPayout()" disabled>Request payout</button>
+      </div>
+      <p id="requestHelp" class="small">Approved unpaid commissions will appear here when they are available to request.</p>
+      <div id="requestableList" class="sales-list"></div>
+    </section>
+
+    <section class="dashboard-two-col" style="margin-top:18px">
+      <div class="card compact-card">
+        <div class="section-head-row"><div><p class="eyebrow">Requests</p><h2>Payout history</h2></div></div>
+        <div id="requestList"></div>
+      </div>
+      <div class="card compact-card">
+        <div class="section-head-row"><div><p class="eyebrow">Ledger</p><h2>Recent sales</h2></div></div>
+        <div id="salesList" class="sales-list"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/session.js"></script>
+<script src="assets/roster.js"></script>
+<script>
+const statusEl = document.getElementById('pageStatus');
+const salesList = document.getElementById('salesList');
+const requestList = document.getElementById('requestList');
+const requestableList = document.getElementById('requestableList');
+const requestPayoutBtn = document.getElementById('requestPayoutBtn');
+const requestHelp = document.getElementById('requestHelp');
+const codeBox = document.getElementById('codeBox');
+let lastData = null;
+
+function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function dollars(value,currency='USD'){const n=Number(value||0);return `${currency || 'USD'} $${n.toFixed(2)}`}
+function pct(value){const n=Number(value);return Number.isFinite(n)?`${Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}%`:'—'}
+function setNotice(msg,type=''){statusEl.className=`notice ${type}`;statusEl.textContent=msg}
+async function copyText(text){try{await navigator.clipboard.writeText(text);alert('Copied.')}catch{prompt('Copy this:',text)}}
+function codeLink(code){const base=(document.getElementById('storeUrl').value||'').trim().replace(/\/$/,'');return base?`${base}/?ref=${encodeURIComponent(code)}`:`?ref=${encodeURIComponent(code)}`}
+
+function renderStats(stats={}){
+  document.getElementById('statPending').textContent = dollars(stats.pending_commission || 0);
+  document.getElementById('statAvailable').textContent = dollars(stats.approved_available_commission || 0);
+  document.getElementById('statRequested').textContent = dollars(stats.requested_commission || 0);
+  document.getElementById('statPaid').textContent = dollars(stats.paid_commission || 0);
+  document.getElementById('statUnpaid').textContent = dollars(stats.unpaid_commission || 0);
+}
+
+function renderCode(code){
+  if(!code || !code.code){codeBox.innerHTML='<div class="notice">No active affiliate code assigned yet.</div>';return}
+  const link = codeLink(code.code);
+  codeBox.innerHTML = `<div class="affiliate-code-big"><code>${escapeHtml(code.code)}</code><button class="btn" onclick="copyText('${escapeHtml(code.code)}')">Copy code</button></div>
+  <div class="actions" style="margin-top:12px"><button class="btn" onclick="copyText('${escapeHtml(link)}')">Copy referral link</button></div>
+  <p class="small" style="margin-top:10px">${escapeHtml(link)}</p>`;
+}
+
+function renderProfile(profile={}){
+  document.getElementById('payoutMethod').value = profile.payout_method || 'PayPal';
+  document.getElementById('payoutEmail').value = profile.payout_email || '';
+  document.getElementById('payoutNotes').value = profile.payout_notes || '';
+}
+
+function renderRequestable(sales=[], stats={}){
+  requestPayoutBtn.disabled = !sales.length;
+  requestHelp.textContent = sales.length
+    ? `${sales.length} approved sale${sales.length===1?'':'s'} available for payout: ${dollars(stats.approved_available_commission || 0)}.`
+    : 'No approved unpaid commissions are available to request yet.';
+  requestableList.innerHTML = sales.length ? sales.map(s => `<article class="sale-row sale-row-readonly"><div class="sale-main"><p class="eyebrow">approved • ${escapeHtml(s.source||'manual')}</p><h3>${escapeHtml(s.external_order_id || 'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code || 'None')} • ${escapeHtml(s.created_at || '')}</p></div><div class="sale-money"><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong><span>${escapeHtml(pct(s.commission_percentage))} of ${escapeHtml(dollars(s.gross_amount,s.currency))}</span></div></article>`).join('') : '';
+}
+
+function renderRequests(requests=[]){
+  if(!requests.length){requestList.innerHTML='<div class="notice success">No payout requests yet.</div>';return}
+  requestList.innerHTML = requests.map(r => `<article class="payout-request-row"><div><span class="payout-status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span><h3 style="margin:8px 0 2px">${escapeHtml(dollars(r.amount_requested,r.currency))}</h3><p class="small">${escapeHtml(r.sale_count || 0)} sale${Number(r.sale_count||0)===1?'':'s'} • ${escapeHtml(r.payout_method || 'PayPal')} • ${escapeHtml(r.payout_email || 'No payout email')}</p>${r.transaction_id ? `<p class="small"><strong>Reference:</strong> ${escapeHtml(r.transaction_id)}</p>` : ''}${r.proof_upload_id ? `<p class="small"><a href="/api/uploads/${r.proof_upload_id}" target="_blank">View proof</a></p>` : r.proof_url ? `<p class="small"><a href="${escapeHtml(r.proof_url)}" target="_blank">View proof</a></p>` : ''}${r.admin_note ? `<p class="small"><strong>Admin note:</strong> ${escapeHtml(r.admin_note)}</p>` : ''}</div><small>${escapeHtml(r.requested_at || '')}</small></article>`).join('');
+}
+
+function renderSales(sales=[]){
+  if(!sales.length){salesList.innerHTML='<div class="notice success">No commission records yet.</div>';return}
+  salesList.innerHTML = sales.slice(0,60).map(s => `<article class="sale-row sale-row-readonly"><div class="sale-main"><p class="eyebrow ${s.status==='paid'?'success':s.status==='voided'?'error':''}">${escapeHtml(s.status)} • ${escapeHtml(s.source||'manual')}</p><h3>${escapeHtml(s.external_order_id||'Tracked sale')}</h3><p class="small">Code: ${escapeHtml(s.affiliate_code||'None')} • ${escapeHtml(s.created_at||'')}${s.payout_request_status ? ` • payout ${escapeHtml(s.payout_request_status)}` : ''}</p></div><div class="sale-money"><strong>${escapeHtml(dollars(s.commission_amount,s.currency))}</strong><span>${escapeHtml(pct(s.commission_percentage))} of ${escapeHtml(dollars(s.gross_amount,s.currency))}</span></div></article>`).join('')}
+
+async function loadMine(){
+  setNotice('Loading affiliate data...');
+  const r = await fetch('/api/payout-requests');
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(d.error||'Could not load affiliate data.','error');return}
+  lastData = d;
+  renderStats(d.stats||{}); renderProfile(d.profile||{}); renderCode(d.code); renderRequestable(d.requestable_sales||[], d.stats||{}); renderRequests(d.requests||[]); renderSales(d.sales||[]);
+  setNotice('Affiliate data loaded.','success');
+}
+
+document.getElementById('profileForm').addEventListener('submit', async e => {
+  e.preventDefault(); setNotice('Saving payout profile...');
+  const body = { payout_method: document.getElementById('payoutMethod').value, payout_email: document.getElementById('payoutEmail').value, payout_notes: document.getElementById('payoutNotes').value };
+  const r = await fetch('/api/payout-requests',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(d.error||'Could not save payout profile.','error');return}
+  setNotice('Payout profile saved.','success'); await loadMine();
+});
+
+async function requestPayout(){
+  if(!confirm('Request payout for all approved unpaid sales shown here?')) return;
+  setNotice('Creating payout request...');
+  const body = { payout_method: document.getElementById('payoutMethod').value, payout_email: document.getElementById('payoutEmail').value };
+  const r = await fetch('/api/payout-requests',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json().catch(()=>({error:'Unknown error'}));
+  if(!r.ok){setNotice(d.error||'Could not request payout.','error');return}
+  setNotice(`Payout requested: ${d.sale_count} sale${d.sale_count===1?'':'s'} totaling $${Number(d.amount_requested||0).toFixed(2)}.`, 'success');
+  await loadMine();
+}
+
+loadMine();
+</script>
+</body>
+</html>
