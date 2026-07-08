@@ -358,3 +358,67 @@ body:not(.dashboard-v2):not(.team-page-body) .grid{
   .btn{width:auto;min-height:40px}
   .card,.compact-card,.metric-card{padding:14px !important}
 }
+
+/* Sprint 6E.1 — sticky/sidebar scroll fix
+   Keeps the left sidebar visible while the page content scrolls.
+   The sidebar navigation scrolls inside its own box when there are many links. */
+@media (min-width: 981px) {
+  .dashboard-v2 .app-shell {
+    align-items: start !important;
+  }
+
+  .dashboard-v2 .app-sidebar {
+    position: sticky !important;
+    top: 76px !important;
+    align-self: start !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 92px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .dashboard-v2 .side-brand {
+    flex: 0 0 auto !important;
+  }
+
+  .dashboard-v2 .side-nav {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 176px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(18,169,119,.34) transparent;
+  }
+
+  .dashboard-v2 .side-nav::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  .dashboard-v2 .side-nav::-webkit-scrollbar-thumb {
+    background: rgba(18,169,119,.28);
+    border-radius: 999px;
+  }
+
+  .dashboard-v2 .side-nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-v2 .app-sidebar {
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .dashboard-v2 .side-nav {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+}
