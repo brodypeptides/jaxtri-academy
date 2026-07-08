@@ -133,9 +133,20 @@ export async function onRequestOptions() {
     status: 204,
     headers: {
       'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'POST, OPTIONS',
+      'access-control-allow-methods': 'GET, POST, OPTIONS',
       'access-control-allow-headers': 'content-type, x-jaxtri-secret',
     },
+  });
+}
+
+
+export async function onRequestGet() {
+  return json({
+    ok: true,
+    endpoint: 'Jaxtri WooCommerce webhook',
+    status: 'active',
+    method: 'POST required',
+    message: 'This endpoint is active. WooCommerce should send POST requests here. Opening this URL in a browser only runs this health check.',
   });
 }
 
