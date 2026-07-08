@@ -1,33 +1,35 @@
-# Jaxtri Bank Transfer Fields
+# Jaxtri Owner Commissions Theme Fix
 
-Adds dedicated bank transfer fields to `my-affiliate.html`:
+This patch fixes `owner-commissions.html` falling back to the old dark theme.
 
-- Account holder name
-- Bank name
-- Account type
-- Routing #
-- Account #
+## Cause
 
-The owner payout queue now shows the affiliate note/details with line breaks so bank transfer details are readable.
+The page was only loading:
+
+```html
+<link rel="stylesheet" href="assets/styles.css">
+```
+
+So the frost-white/logo-color override was not being applied.
 
 ## Files changed
 
-```text
-my-affiliate.html
-owner-payouts.html
-functions/api/payout-requests.js
+- `owner-commissions.html`
+
+## What changed
+
+The page now loads:
+
+```html
+<link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css">
 ```
 
 ## D1
 
-No new migration required.
-
-## Important security note
-
-This patch stores bank transfer details in the payout profile/request notes in D1 so the owner can manually process payout. That is useful for manual payouts, but account and routing numbers are sensitive. For a later hardening sprint, add encryption-at-rest for bank fields and owner-only reveal controls.
+No database migration needed.
 
 ## Commit message
 
 ```text
-bank transfer payout fields
+owner commissions frost theme fix
 ```
