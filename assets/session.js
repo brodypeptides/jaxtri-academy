@@ -19,7 +19,7 @@ function privatePageAllowed(user) {
 
   // Owner/manager command-center pages. Managers can open Users + Codes in read-only/user-safe mode
   // so they can help with affiliate-code setup without owner-level role/status edits.
-  if (path === 'owner-users.html') return user.role === 'owner' || user.role === 'manager';
+  if (path === 'owner-users.html' || path === 'owner-user-profile.html') return user.role === 'owner' || user.role === 'manager';
   if (path.startsWith('owner-')) return user.role === 'owner' || user.role === 'manager';
   return true;
 }
@@ -36,7 +36,9 @@ function navEscape(value) {
 
 function navLink(href, label) {
   const path = currentPageName();
-  const active = path === href || (path === 'index.html' && href === 'owner-dashboard.html');
+  const active = path === href
+    || (path === 'index.html' && href === 'owner-dashboard.html')
+    || (path === 'owner-user-profile.html' && href === 'owner-users.html');
   return `<a${active ? ' class="active"' : ''} href="${navEscape(href)}">${navEscape(label)}</a>`;
 }
 
@@ -114,6 +116,31 @@ function installPersistentSideNav(user) {
   ].join('');
 }
 
+function installUserProfileLinks() {
+  if (currentPageName() !== 'owner-users.html') return;
+
+  const enhance = () => {
+    document.querySelectorAll('[data-user-card]').forEach(card => {
+      if (card.querySelector('[data-profile-link-row]')) return;
+      const id = card.getAttribute('data-user-card');
+      if (!id) return;
+      const meta = card.querySelector('.user-meta-grid');
+      if (!meta) return;
+      const row = document.createElement('div');
+      row.className = 'actions user-actions';
+      row.dataset.profileLinkRow = 'true';
+      row.style.marginTop = '0';
+      row.innerHTML = `<a class="btn" href="owner-user-profile.html?id=${encodeURIComponent(id)}">Open full profile</a>`;
+      meta.insertAdjacentElement('afterend', row);
+    });
+  };
+
+  enhance();
+  const observer = new MutationObserver(enhance);
+  const list = document.getElementById('usersList') || document.body;
+  observer.observe(list, { childList: true, subtree: true });
+}
+
 async function loadSession(){
   const target=document.getElementById('me');
   try{
@@ -133,6 +160,7 @@ async function loadSession(){
 
     window.JaxtriCurrentUser = d.user;
     installPersistentSideNav(d.user);
+    installUserProfileLinks();
 
     if(target) target.textContent=`Logged in as ${d.user.full_name} — ${d.user.role}${d.user.company_title?` (${d.user.company_title})`:''}`;
     return d.user;
