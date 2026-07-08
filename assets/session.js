@@ -53,8 +53,23 @@ function installStylesheet(href) {
   document.head.appendChild(link);
 }
 
+function installScript(src, onload) {
+  const existing = document.querySelector(`script[src="${src}"]`);
+  if (existing) {
+    existing.addEventListener('load', () => onload?.(), { once: true });
+    onload?.();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = src;
+  script.defer = true;
+  script.onload = () => onload?.();
+  document.body.appendChild(script);
+}
+
 function installPwaShell(user) {
   installStylesheet('assets/mobile-app.css');
+  installStylesheet('assets/pwa-install.css');
 
   if (!document.querySelector('link[rel="manifest"]')) {
     const manifest = document.createElement('link');
@@ -66,7 +81,7 @@ function installPwaShell(user) {
   if (!document.querySelector('meta[name="theme-color"]')) {
     const meta = document.createElement('meta');
     meta.name = 'theme-color';
-    meta.content = '#f7fbff';
+    meta.content = '#18d978';
     document.head.appendChild(meta);
   }
 
@@ -75,6 +90,7 @@ function installPwaShell(user) {
   }
 
   installMobileBottomNav(user);
+  installScript('assets/pwa-install.js', () => window.JaxtriPwa?.boot?.(user));
 }
 
 function bottomNavLink(href, label) {
@@ -110,7 +126,6 @@ function installMobileBottomNav(user) {
   nav.innerHTML = links.map(([href, label]) => bottomNavLink(href, label)).join('');
   document.body.appendChild(nav);
 }
-
 
 function isProtectedAppPage() {
   return document.body.classList.contains('dashboard-v2') || document.body.classList.contains('team-page-body');
