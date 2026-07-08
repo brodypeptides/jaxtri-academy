@@ -1,22 +1,28 @@
-# Jaxtri Sidebar Sticky Scroll Fix
+# Jaxtri persistent Command Center sidebar
 
-This patch updates `assets/frost-theme.css` so dashboard sidebars stay visible while the main page scrolls.
-
-## What changed
-
-- Desktop sidebar is now sticky under the header.
-- Sidebar links scroll inside the sidebar if there are too many links.
-- The main page content can scroll without losing the sidebar.
-- Mobile behavior stays normal so the sidebar does not get trapped on small screens.
+This patch keeps the Command Center sidebar categories consistent on every internal page.
 
 ## Files changed
 
-- `assets/frost-theme.css`
+- `assets/session.js`
+- `assets/navigation-categories.css`
 
-## Install
+## What it does
 
-Copy/replace the included `assets/frost-theme.css` into your repo.
+- Keeps the top Jaxtri / Command Center sidebar card visible.
+- Makes the sidebar links scroll inside the sidebar instead of forcing the whole page down.
+- Rebuilds the sidebar into the same categories on every protected page:
+  - Command
+  - People
+  - Money
+  - Community
+- Gives affiliates their own consistent Academy sidebar.
+- Lets managers open Users + Codes in safe read-only/code-helper mode.
+
+## D1
+
+No migration needed.
 
 ## Commit message
 
-`sidebar sticky scroll fix`
+persistent command center sidebar
