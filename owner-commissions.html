@@ -83,6 +83,24 @@
       </div>
     </section>
 
+
+
+    <section class="card compact-card" style="margin-top:18px">
+      <div class="section-head-row">
+        <div>
+          <p class="eyebrow">Sprint 6B</p>
+          <h2>WooCommerce connector</h2>
+        </div>
+        <button class="btn" onclick="copyText(location.origin + '/api/webhooks/woocommerce')">Copy webhook URL</button>
+      </div>
+      <p class="small">Use this when you install the Jaxtri WordPress plugin on the WooCommerce store. The plugin tracks links like <code>?ref=CODE</code> and sends completed/cancelled/refunded order events here.</p>
+      <div class="notice success" style="margin-top:12px">
+        Webhook URL: <code id="wcWebhookUrl"></code><br>
+        Cloudflare env var needed: <code>JAXTRI_WC_WEBHOOK_SECRET</code>
+      </div>
+      <p class="small" style="margin-top:10px">Workflow: generate affiliate code → use store link preview → install WordPress plugin → set matching secret → test webhook → place test WooCommerce order.</p>
+    </section>
+
     <section class="card compact-card" style="margin-top:18px">
       <div class="section-head-row">
         <div><p class="eyebrow">Sales ledger</p><h2>Tracked commissions</h2></div>
@@ -107,6 +125,7 @@ const codesList = document.getElementById('codesList');
 const saleAffiliate = document.getElementById('saleAffiliate');
 const saleSearch = document.getElementById('saleSearch');
 const saleStatusFilter = document.getElementById('saleStatusFilter');
+document.getElementById('wcWebhookUrl')?.append(location.origin + '/api/webhooks/woocommerce');
 let affiliates = [];
 let sales = [];
 let viewer = { is_owner:false };

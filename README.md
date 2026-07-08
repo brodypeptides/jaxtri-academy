@@ -1,99 +1,103 @@
-# Jaxtri Academy — Sprint 6A Commission Dashboard Shell
+# Jaxtri Academy — Sprint 6B WooCommerce Connector
 
-This sprint can be used before the WordPress/payment processor details are known.
+This sprint starts the GoAffPro replacement path now that the store is confirmed to use WooCommerce.
 
-It adds the internal commission foundation:
+## What this adds
 
-- Affiliate referral codes
-- Owner/manager commission center
-- Manual sale entry
-- Automatic commission calculation from each user's saved commission percentage
-- Commission statuses: pending, approved, paid, voided
-- Affiliate-facing "My Commissions" page
-- Sales ledger for owners/managers
-- Safe owner-only controls for marking commissions paid and deleting test records
+- Jaxtri webhook endpoint for WooCommerce sales
+- WordPress plugin for referral cookie tracking
+- WordPress plugin settings screen
+- WooCommerce order status syncing
+- Refund/cancel/failed order handling
+- Webhook event log table
+- Connector instructions inside the Commission Center
 
-## New pages
+## New Jaxtri endpoint
 
-- `owner-commissions.html` — staff commission center
-- `commissions.html` — affiliate/member view of their own commissions
+```text
+/api/webhooks/woocommerce
+```
 
-## New API routes
+The WordPress plugin sends server-to-server POST requests to this endpoint.
 
-- `GET /api/admin/commissions`
-- `POST /api/admin/commissions`
-- `PATCH /api/admin/commissions/:id`
-- `DELETE /api/admin/commissions/:id`
-- `GET /api/admin/affiliate-codes`
-- `POST /api/admin/affiliate-codes`
-- `PATCH /api/admin/affiliate-codes/:id`
-- `GET /api/commissions`
+## Important security setup
+
+In Cloudflare Pages, add an environment variable:
+
+```text
+JAXTRI_WC_WEBHOOK_SECRET=make-a-long-random-secret-here
+```
+
+Use the exact same secret inside the WordPress plugin settings.
 
 ## D1 migration
 
-Run this in Cloudflare D1 before testing:
+Run this in D1:
 
-```sql
-CREATE TABLE IF NOT EXISTS affiliate_codes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  code TEXT NOT NULL UNIQUE,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
-  created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_affiliate_codes_user_id ON affiliate_codes(user_id);
-CREATE INDEX IF NOT EXISTS idx_affiliate_codes_code ON affiliate_codes(code);
-CREATE INDEX IF NOT EXISTS idx_affiliate_codes_status ON affiliate_codes(status);
-
-CREATE TABLE IF NOT EXISTS affiliate_sales (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  affiliate_user_id INTEGER NOT NULL,
-  affiliate_code TEXT,
-  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual','wordpress','webhook','import')),
-  external_order_id TEXT,
-  customer_email TEXT,
-  gross_amount REAL NOT NULL,
-  currency TEXT NOT NULL DEFAULT 'USD',
-  commission_percentage REAL NOT NULL,
-  commission_amount REAL NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','paid','voided')),
-  notes TEXT,
-  created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  status_updated_by INTEGER,
-  status_updated_at TEXT,
-  FOREIGN KEY(affiliate_user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY(status_updated_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_affiliate_sales_affiliate ON affiliate_sales(affiliate_user_id);
-CREATE INDEX IF NOT EXISTS idx_affiliate_sales_status ON affiliate_sales(status);
-CREATE INDEX IF NOT EXISTS idx_affiliate_sales_created_at ON affiliate_sales(created_at);
-CREATE INDEX IF NOT EXISTS idx_affiliate_sales_order_id ON affiliate_sales(external_order_id);
+```text
+database/sprint6b-woocommerce-connector.sql
 ```
 
-The same migration is saved as:
+If D1 does not accept file paths, run the SQL inside that file manually.
 
-`database/sprint6a-commission-dashboard.sql`
+## WordPress plugin
 
-## Testing checklist
+The plugin is included here:
 
-1. Owner login → Users → confirm a fake affiliate has a commission percentage.
-2. Owner login → Commissions → generate affiliate code.
-3. Add a manual sale for the affiliate.
-4. Confirm commission amount calculates correctly.
-5. Change sale status from pending → approved.
-6. As owner, mark sale paid.
-7. Affiliate login → My Commissions → confirm they see their sale and status.
-8. Try manager login → confirm manager can view/manage, but cannot mark paid if blocked.
+```text
+wordpress/jaxtri-wordpress-connector-plugin.zip
+```
 
-## Notes
+Install it in WordPress:
 
-This does not connect to WordPress yet. It prepares the internal tracking system first, then the future WordPress/payment connector can push real orders into `affiliate_sales`.
+```text
+WordPress Admin → Plugins → Add New → Upload Plugin
+```
+
+Then configure it:
+
+```text
+WordPress Admin → Settings → Jaxtri Affiliate
+```
+
+Set:
+
+```text
+Academy webhook URL: https://YOUR-ACADEMY.pages.dev/api/webhooks/woocommerce
+Webhook secret: same as Cloudflare JAXTRI_WC_WEBHOOK_SECRET
+Referral parameter: ref
+Cookie days: 30
+```
+
+## Affiliate links
+
+Use links like:
+
+```text
+https://YOURSTORE.com/?ref=AFFILIATECODE
+```
+
+The plugin saves `AFFILIATECODE` in a browser cookie, attaches it to the WooCommerce order, and sends the sale to Jaxtri when the order becomes processing or completed.
+
+## Order handling
+
+- WooCommerce `processing` / `completed` → creates or updates a pending commission sale
+- WooCommerce `cancelled` / `failed` / `refunded` → voids the sale if it has not already been marked paid
+- Paid commissions are not automatically changed by webhooks to avoid silently altering already-paid records
+
+## Test flow
+
+1. In Jaxtri, create an affiliate code for a test affiliate.
+2. In Cloudflare, set `JAXTRI_WC_WEBHOOK_SECRET`.
+3. Install and configure the WordPress plugin.
+4. Visit the store with `?ref=CODE`.
+5. Place a WooCommerce test order.
+6. Open Jaxtri → Commissions.
+7. Confirm the sale appears as pending.
+8. Cancel/refund the test order and confirm the sale voids.
+
+## Commit message
+
+```text
+sprint 6b woocommerce connector
+```
