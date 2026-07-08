@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Command Center | Jaxtri Academy</title>
-  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css">
 </head>
 <body class="dashboard-v2">
 <header class="header compact-header">
@@ -16,13 +16,18 @@
   <aside class="app-sidebar">
     <div class="side-brand"><span class="side-mark">J</span><div><strong>Jaxtri</strong><small>Command Center</small></div></div>
     <nav class="side-nav">
+      <div class="nav-group-label">Command</div>
       <a class="active" href="owner-dashboard.html">Overview</a>
-      <a href="owner-recruitment.html">Recruitment</a>
-      <a href="owner-feed-review.html">Feed Review</a>
-      <a href="owner-admin.html">Admin + Invites</a>
-      <a href="owner-users.html">Users</a>
+      <div class="nav-group-label">People</div>
+      <a href="owner-recruitment.html">Applications</a>
+      <a href="owner-admin.html">Invites</a>
+      <a href="owner-users.html">Users + Codes</a>
+      <div class="nav-group-label">Money</div>
       <a href="owner-commissions.html">Commissions</a>
       <a href="owner-payouts.html">Payouts</a>
+      <a href="my-affiliate.html">My Affiliate</a>
+      <div class="nav-group-label">Community</div>
+      <a href="owner-feed-review.html">Feed Review</a>
       <a href="team.html">Team Chat</a>
       <a href="academy-dashboard.html">Academy View</a>
     </nav>
@@ -33,47 +38,51 @@
       <div>
         <p class="eyebrow">Owner access</p>
         <h1 class="title">Command center</h1>
-        <p class="lead">A cleaner operator dashboard for recruitment, invites, feed review, payouts, and team activity.</p>
+        <p class="lead">Everything is grouped into People, Money, Community, and Setup so the site feels less scattered.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
 
     <section class="metric-grid">
-      <a class="metric-card" href="owner-recruitment.html">
-        <span>Recruitment</span>
-        <strong id="pendingApps">—</strong>
-        <p id="recruitmentCount">Loading applications...</p>
-      </a>
-      <a class="metric-card" href="owner-admin.html">
-        <span>Active invites</span>
-        <strong id="activeInvites">—</strong>
-        <p id="inviteCount">Loading invites...</p>
-      </a>
-      <a class="metric-card" href="owner-feed-review.html">
-        <span>Feed review</span>
-        <strong id="pendingPosts">—</strong>
-        <p id="feedReviewCount">Loading submissions...</p>
-      </a>
-      <a class="metric-card" href="owner-users.html">
-        <span>Users</span>
-        <strong id="totalUsers">—</strong>
-        <p id="userCount">Loading user directory...</p>
-      </a>
-      <a class="metric-card" href="owner-commissions.html">
-        <span>Commissions</span>
-        <strong id="pendingCommission">—</strong>
-        <p id="commissionCount">Loading commission dashboard...</p>
-      </a>
-      <a class="metric-card" href="owner-payouts.html">
-        <span>Payouts</span>
-        <strong id="pendingPayouts">—</strong>
-        <p id="payoutCount">Loading payout requests...</p>
-      </a>
-      <a class="metric-card" href="team.html">
-        <span>Team</span>
-        <strong>Chat</strong>
-        <p>Open the full messaging workspace.</p>
-      </a>
+      <a class="metric-card" href="owner-recruitment.html"><span>Applications</span><strong id="pendingApps">—</strong><p id="recruitmentCount">Loading applications...</p></a>
+      <a class="metric-card" href="owner-admin.html"><span>Active invites</span><strong id="activeInvites">—</strong><p id="inviteCount">Loading invites...</p></a>
+      <a class="metric-card" href="owner-users.html"><span>Users</span><strong id="totalUsers">—</strong><p id="userCount">Loading user directory...</p></a>
+      <a class="metric-card" href="owner-commissions.html"><span>Pending commission</span><strong id="pendingCommission">—</strong><p id="commissionCount">Loading commission dashboard...</p></a>
+      <a class="metric-card" href="owner-payouts.html"><span>Payout requests</span><strong id="pendingPayouts">—</strong><p id="payoutCount">Loading payout requests...</p></a>
+      <a class="metric-card" href="owner-feed-review.html"><span>Feed review</span><strong id="pendingPosts">—</strong><p id="feedReviewCount">Loading submissions...</p></a>
+    </section>
+
+    <section class="hub-category-grid">
+      <article class="hub-category-card">
+        <p class="eyebrow">People</p>
+        <h2>Recruit + manage</h2>
+        <p class="small">Applications, invites, user access, and affiliate code setup.</p>
+        <div class="hub-link-stack">
+          <a href="owner-recruitment.html">Applications <span>review</span></a>
+          <a href="owner-admin.html">Invites <span>create links</span></a>
+          <a href="owner-users.html">Users + affiliate codes <span>profiles</span></a>
+        </div>
+      </article>
+      <article class="hub-category-card">
+        <p class="eyebrow">Money</p>
+        <h2>Sales + payouts</h2>
+        <p class="small">Commission records, payout requests, and your personal affiliate profile.</p>
+        <div class="hub-link-stack">
+          <a href="owner-commissions.html">Commission center <span>sales</span></a>
+          <a href="owner-payouts.html">Payout requests <span>manual pay</span></a>
+          <a href="my-affiliate.html">My Affiliate <span>your code</span></a>
+        </div>
+      </article>
+      <article class="hub-category-card">
+        <p class="eyebrow">Community</p>
+        <h2>Content + team</h2>
+        <p class="small">Review posts, jump into chat, or view the affiliate-facing academy.</p>
+        <div class="hub-link-stack">
+          <a href="owner-feed-review.html">Feed review <span>publish</span></a>
+          <a href="team.html">Team chat <span>messages</span></a>
+          <a href="academy-dashboard.html">Academy view <span>affiliate side</span></a>
+        </div>
+      </article>
     </section>
 
     <section class="dashboard-two-col" style="margin-top:18px">
@@ -83,17 +92,14 @@
         <div id="ownerFeedPreview" class="feed-list compact-feed"></div>
       </div>
       <div class="card compact-card">
-        <p class="eyebrow">Quick actions</p>
-        <h2>Next moves</h2>
+        <p class="eyebrow">Cleaner workflow</p>
+        <h2>Where affiliate codes live</h2>
         <div class="quick-list">
-          <a href="owner-recruitment.html">Review affiliate applications</a>
-          <a href="owner-feed-review.html">Publish community experiences</a>
-          <a href="owner-admin.html">Create direct invite links</a>
-          <a href="owner-users.html">Manage users and access</a>
-          <a href="owner-commissions.html">Open commission center</a>
-          <a href="owner-payouts.html">Review payout requests</a>
-          <a href="team.html">Open team chat</a>
+          <a href="owner-users.html">Set code on a user profile</a>
+          <a href="owner-commissions.html">Track commission sales</a>
+          <a href="owner-payouts.html">Confirm manual payouts</a>
         </div>
+        <p class="hub-note">Affiliate codes and commission rates are read-only on the affiliate side. Staff sets them from the command center.</p>
       </div>
     </section>
   </main>
@@ -164,12 +170,11 @@ async function loadCounts() {
     const d = await r.json();
     if (r.ok) {
       document.getElementById('totalUsers').textContent = d.stats.total;
-      document.getElementById('userCount').textContent = `${d.stats.active} active • ${d.stats.suspended} suspended`;
+      document.getElementById('userCount').textContent = `${d.stats.active} active • ${d.stats.suspended} suspended • ${d.stats.code_set || 0} codes`;
     } else {
       document.getElementById('userCount').textContent = 'Owner-only user management.';
     }
   } catch { document.getElementById('userCount').textContent = 'Manage users and access.'; }
-
 }
 loadCounts();
 JaxtriFeed.loadPublishedFeed('ownerFeedPreview', 'No published feed posts yet.');

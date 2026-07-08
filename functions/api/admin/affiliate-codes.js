@@ -4,20 +4,24 @@ function isStaff(user) {
   return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
 }
 
+function isOwner(user) {
+  return user && user.status === 'active' && user.role === 'owner';
+}
+
 function clean(value) { return String(value || '').trim(); }
 
 function normalizeCode(value) {
   return clean(value)
-    .toUpperCase()
-    .replace(/[^A-Z0-9_-]/g, '-')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 32);
 }
 
 function baseCode(user) {
-  const raw = normalizeCode(user.username || user.full_name || user.email || 'AFF');
-  return (raw || 'AFF').slice(0, 18);
+  const raw = normalizeCode(user.username || user.full_name || user.email || 'aff');
+  return (raw || 'aff').slice(0, 18);
 }
 
 async function tableExists(env, name) {
@@ -31,14 +35,14 @@ async function uniqueCode(env, user, requested) {
   const wanted = normalizeCode(requested);
   if (wanted) {
     if (wanted.length < 3) throw new Error('Affiliate code must be at least 3 characters.');
-    const taken = await env.DB.prepare('SELECT id, user_id FROM affiliate_codes WHERE code = ? LIMIT 1').bind(wanted).first();
+    const taken = await env.DB.prepare('SELECT id, user_id FROM affiliate_codes WHERE lower(code) = lower(?) LIMIT 1').bind(wanted).first();
     if (taken && Number(taken.user_id) !== Number(user.id)) throw new Error('That affiliate code is already taken.');
     return wanted;
   }
 
   for (let i = 0; i < 8; i++) {
     const candidate = normalizeCode(`${baseCode(user)}-${randomId(3).slice(0, 4)}`);
-    const taken = await env.DB.prepare('SELECT id FROM affiliate_codes WHERE code = ? LIMIT 1').bind(candidate).first();
+    const taken = await env.DB.prepare('SELECT id FROM affiliate_codes WHERE lower(code) = lower(?) LIMIT 1').bind(candidate).first();
     if (!taken) return candidate;
   }
   throw new Error('Could not generate a unique affiliate code. Try a custom code.');
@@ -68,9 +72,15 @@ export async function onRequestGet({ request, env }) {
         ac.created_at,
         ac.updated_at
       FROM users
-      LEFT JOIN affiliate_codes ac ON ac.user_id = users.id
-      WHERE users.role IN ('affiliate','manager')
-      ORDER BY users.role DESC, lower(users.full_name), ac.id DESC
+      LEFT JOIN affiliate_codes ac ON ac.id = (
+        SELECT id
+        FROM affiliate_codes
+        WHERE user_id = users.id AND status = 'active'
+        ORDER BY id DESC
+        LIMIT 1
+      )
+      WHERE users.role IN ('owner','manager','affiliate')
+      ORDER BY CASE users.role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END, lower(users.full_name), ac.id DESC
     `).all();
 
     return json({ codes: result.results || [] });
@@ -102,8 +112,9 @@ export async function onRequestPost({ request, env }) {
     `).bind(userId).first();
 
     if (!target) return json({ error: 'User not found.' }, 404);
-    if (!['affiliate', 'manager'].includes(target.role)) return json({ error: 'Affiliate codes can only be created for affiliates/managers.' }, 400);
+    if (!['owner', 'manager', 'affiliate'].includes(target.role)) return json({ error: 'Affiliate codes can only be created for owner, manager, or affiliate profiles.' }, 400);
     if (target.status !== 'active') return json({ error: 'Affiliate code user must be active.' }, 400);
+    if (target.role === 'owner' && !isOwner(actor)) return json({ error: 'Only owners can set an owner profile affiliate code.' }, 403);
 
     const code = await uniqueCode(env, target, body.code);
     const existing = await env.DB.prepare('SELECT id FROM affiliate_codes WHERE user_id = ? ORDER BY id DESC LIMIT 1').bind(userId).first();

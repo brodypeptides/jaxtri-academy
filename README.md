@@ -1,81 +1,71 @@
-# Sprint 6D — Manual Payout Requests (No R2)
+# Sprint 6E — Navigation Cleanup + Affiliate Code Controls
 
-This version avoids Cloudflare R2 completely. It uses D1 only.
+This patch cleans up the dashboard structure and adds affiliate-code setup directly to user profiles.
 
-## What this adds
+## What changed
 
-- `my-affiliate.html`
-  - personal affiliate stats
-  - active affiliate code
-  - referral link copy
-  - pending commission
-  - approved/requestable commission
-  - requested payout amount
-  - total paid
-  - payout profile settings
-  - request payout button
-  - payout request history
+- Adds grouped dashboard categories so the site feels less scattered.
+- Adds `assets/navigation-categories.css` for hub cards and sidebar group labels.
+- Updates `academy-dashboard.html` into clear affiliate categories:
+  - Earn
+  - Learn
+  - Connect
+- Updates `owner-dashboard.html` into clear owner categories:
+  - People
+  - Money
+  - Community
+- Updates `owner-users.html` into **Users + Affiliate Codes**.
+- Adds affiliate-code controls to each user profile card.
+- Affiliates still cannot change their own code or commission rate.
+- Owners can attach a code to owner, manager, and affiliate profiles.
+- Managers can attach codes to manager/affiliate profiles, but not owner profiles.
+- Owner role/status/commission changes are still protected and D1-only.
 
-- `owner-payouts.html`
-  - manager/owner payout queue
-  - requested / paid / rejected filters
-  - PayPal/reference ID field
-  - proof link field
-  - paid / reject controls
+## Files included
 
-- APIs
-  - `GET /api/payout-requests`
-  - `PATCH /api/payout-requests`
-  - `POST /api/payout-requests`
-  - `GET /api/admin/payout-requests`
-  - `PATCH /api/admin/payout-requests/:id`
-
-## No R2 setup needed
-
-Do not create an R2 bucket.
-Do not add an R2 binding to `wrangler.toml`.
-This patch only needs D1.
-
-For payout proof, owners/managers can paste a PayPal transaction ID and/or a proof link. Later, if you decide you want direct screenshot uploads, we can add storage separately.
+```text
+assets/navigation-categories.css
+academy-dashboard.html
+owner-dashboard.html
+owner-users.html
+functions/api/admin/users.js
+functions/api/admin/affiliate-codes.js
+functions/api/admin/affiliate-codes/[id].js
+functions/api/admin/commissions.js
+```
 
 ## D1 migration
 
-Run this file in Cloudflare D1:
+No new migration is required for this patch.
+
+This patch uses the existing Sprint 6A tables:
 
 ```text
-database/sprint6d-manual-payouts-no-r2.sql
+affiliate_codes
+affiliate_sales
 ```
 
-## Install
+If affiliate code controls say the code table is missing, run the Sprint 6A commission migration first.
 
-1. Copy this patch into the repo.
-2. Do not change `wrangler.toml` for R2.
-3. Run the D1 migration.
-4. Commit and push.
-5. Wait for Cloudflare Pages to redeploy.
+## How to add your owner code
 
-## Test flow
+After pushing this patch:
 
-Affiliate side:
+1. Login as owner.
+2. Go to `owner-users.html`.
+3. Search your owner profile.
+4. In **Affiliate code**, enter:
 
-1. Open `my-affiliate.html`.
-2. Save payout method/email.
-3. Confirm stats show code, pending, available, requested, paid.
-4. If approved unpaid sales exist, click `Request payout`.
+```text
+brody
+```
 
-Owner/manager side:
+5. Click **Set code**.
 
-1. Open `owner-payouts.html`.
-2. See the requested payout.
-3. Pay manually through PayPal/Cash App/etc.
-4. Enter PayPal transaction/reference ID.
-5. Optional: paste proof link.
-6. Click `Mark paid`.
-
-When a request is marked paid, the attached approved sales become `paid` in the commission ledger.
+Your owner profile can now receive WooCommerce/coupon attribution through that code, as long as your owner user also has a valid commission percentage in D1.
 
 ## Commit message
 
 ```text
-sprint 6d manual payout requests no r2
+sprint 6e navigation cleanup affiliate code controls
 ```

@@ -4,6 +4,10 @@ function isStaff(user) {
   return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
 }
 
+function isOwner(user) {
+  return user && user.status === 'active' && user.role === 'owner';
+}
+
 function clean(value) { return String(value || '').trim(); }
 
 export async function onRequestPatch({ request, env, params }) {
@@ -20,8 +24,15 @@ export async function onRequestPatch({ request, env, params }) {
     const status = clean(body.status).toLowerCase();
     if (!['active', 'disabled'].includes(status)) return json({ error: 'Invalid code status.' }, 400);
 
-    const existing = await env.DB.prepare('SELECT id, user_id, code FROM affiliate_codes WHERE id = ? LIMIT 1').bind(id).first();
+    const existing = await env.DB.prepare(`
+      SELECT ac.id, ac.user_id, ac.code, u.role
+      FROM affiliate_codes ac
+      JOIN users u ON u.id = ac.user_id
+      WHERE ac.id = ?
+      LIMIT 1
+    `).bind(id).first();
     if (!existing) return json({ error: 'Affiliate code not found.' }, 404);
+    if (existing.role === 'owner' && !isOwner(actor)) return json({ error: 'Only owners can update an owner profile affiliate code.' }, 403);
 
     await env.DB.prepare("UPDATE affiliate_codes SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(status, id).run();
 

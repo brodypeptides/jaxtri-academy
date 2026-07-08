@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dashboard | Jaxtri Academy</title>
-  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css">
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/frost-theme.css"><link rel="stylesheet" href="assets/navigation-categories.css">
 </head>
 <body class="dashboard-v2">
 <header class="header compact-header">
@@ -16,13 +16,17 @@
   <aside class="app-sidebar">
     <div class="side-brand"><span class="side-mark">J</span><div><strong>Academy</strong><small>Affiliate Portal</small></div></div>
     <nav class="side-nav">
+      <div class="nav-group-label">Start</div>
       <a class="active" href="academy-dashboard.html">Dashboard</a>
-      <a href="feed.html">Feed</a>
+      <div class="nav-group-label">Earn</div>
       <a href="my-affiliate.html">My Affiliate</a>
-      <a href="commissions.html">Commissions</a>
+      <a href="commissions.html">Commission Ledger</a>
+      <div class="nav-group-label">Learn + Create</div>
       <a href="training.html">Training</a>
       <a href="content-vault.html">Content Vault</a>
       <a href="resources.html">Resources</a>
+      <a href="feed.html">Feed</a>
+      <div class="nav-group-label">Team</div>
       <a href="team.html">Team Chat</a>
     </nav>
   </aside>
@@ -32,12 +36,43 @@
       <div>
         <p class="eyebrow">Academy</p>
         <h1 class="title">Dashboard</h1>
-        <p class="lead">Training, content, team updates, and reviewed community experiences in one clean workspace.</p>
+        <p class="lead">A cleaner affiliate home base grouped by Earn, Learn, Create, and Connect.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
 
-    <section class="dashboard-two-col">
+    <section class="hub-category-grid">
+      <article class="hub-category-card">
+        <p class="eyebrow">Earn</p>
+        <h2>Affiliate money</h2>
+        <p class="small">Your code, referral link, unpaid commission, payout requests, and ledger.</p>
+        <div class="hub-link-stack">
+          <a href="my-affiliate.html">My Affiliate <span>code + payouts</span></a>
+          <a href="commissions.html">Commission ledger <span>sales history</span></a>
+        </div>
+      </article>
+      <article class="hub-category-card">
+        <p class="eyebrow">Learn</p>
+        <h2>Training + tools</h2>
+        <p class="small">Playbooks, reference links, scripts, and resources for outreach.</p>
+        <div class="hub-link-stack">
+          <a href="training.html">Training <span>modules</span></a>
+          <a href="resources.html">Resources <span>tools</span></a>
+          <a href="content-vault.html">Content Vault <span>scripts</span></a>
+        </div>
+      </article>
+      <article class="hub-category-card">
+        <p class="eyebrow">Connect</p>
+        <h2>Team + feed</h2>
+        <p class="small">Share wins, submit posts, read published experiences, and message the team.</p>
+        <div class="hub-link-stack">
+          <a href="feed.html">Feed <span>community</span></a>
+          <a href="team.html">Team Chat <span>messages</span></a>
+        </div>
+      </article>
+    </section>
+
+    <section class="dashboard-two-col" style="margin-top:18px">
       <div class="card compact-card">
         <p class="eyebrow">Share experience</p>
         <h2>Submit a post for review</h2>
@@ -58,14 +93,6 @@
         </div>
         <div id="dashboardFeed" class="feed-list compact-feed"></div>
       </div>
-    </section>
-
-    <section class="metric-grid" style="margin-top:18px">
-      <a class="metric-card" href="training.html"><span>Learn</span><strong>Training</strong><p>Modules and playbooks.</p></a>
-      <a class="metric-card" href="content-vault.html"><span>Create</span><strong>Vault</strong><p>Hooks, scripts, and content resources.</p></a>
-      <a class="metric-card" href="resources.html"><span>Tools</span><strong>Resources</strong><p>Links and reference material.</p></a>
-      <a class="metric-card" href="team.html"><span>Connect</span><strong>Team</strong><p>Channels, DMs, and presence.</p></a>
-      <a class="metric-card" href="my-affiliate.html"><span>Earnings</span><strong>My Affiliate</strong><p>Code, stats, unpaid commission, and payout requests.</p></a>
     </section>
   </main>
 </div>

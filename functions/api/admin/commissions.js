@@ -4,6 +4,10 @@ function isStaff(user) {
   return user && user.status === 'active' && (user.role === 'owner' || user.role === 'manager');
 }
 
+function isOwner(user) {
+  return user && user.status === 'active' && user.role === 'owner';
+}
+
 function clean(value) {
   return String(value || '').trim();
 }
@@ -125,7 +129,13 @@ export async function onRequestGet({ request, env }) {
     const codeReady = await tableExists(env, 'affiliate_codes');
     const hasCommission = await columnExists(env, 'users', 'commission_percentage');
     const codeJoin = codeReady ? `
-      LEFT JOIN affiliate_codes ac ON ac.user_id = users.id AND ac.status = 'active'
+      LEFT JOIN affiliate_codes ac ON ac.id = (
+        SELECT id
+        FROM affiliate_codes
+        WHERE user_id = users.id AND status = 'active'
+        ORDER BY id DESC
+        LIMIT 1
+      )
     ` : '';
     const codeSelect = codeReady ? ', ac.code AS affiliate_code' : ', NULL AS affiliate_code';
     const commissionSelect = hasCommission ? ', users.commission_percentage' : ', NULL AS commission_percentage';
@@ -134,8 +144,8 @@ export async function onRequestGet({ request, env }) {
       SELECT users.id, users.full_name, users.email, users.username, users.role, users.status${commissionSelect}${codeSelect}
       FROM users
       ${codeJoin}
-      WHERE users.role IN ('affiliate','manager')
-      ORDER BY users.role DESC, lower(users.full_name)
+      WHERE users.role IN ('owner','affiliate','manager')
+      ORDER BY CASE users.role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END, lower(users.full_name)
     `).all();
 
     return json({
@@ -185,7 +195,8 @@ export async function onRequestPost({ request, env }) {
     `).bind(affiliateUserId).first();
 
     if (!affiliate) return json({ error: 'Affiliate user not found.' }, 404);
-    if (!['affiliate', 'manager'].includes(affiliate.role)) return json({ error: 'Sales can only be assigned to affiliate or manager profiles.' }, 400);
+    if (!['owner', 'affiliate', 'manager'].includes(affiliate.role)) return json({ error: 'Sales can only be assigned to owner, affiliate, or manager profiles.' }, 400);
+    if (affiliate.role === 'owner' && !isOwner(actor)) return json({ error: 'Only owners can assign sales to owner profiles.' }, 403);
     if (affiliate.status !== 'active') return json({ error: 'Sales can only be assigned to active users.' }, 400);
 
     let rate = affiliate.commission_percentage;

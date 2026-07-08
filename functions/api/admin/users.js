@@ -55,14 +55,26 @@ export async function onRequestGet({ request, env }) {
     const roleFilter = clean(url.searchParams.get('role')).toLowerCase();
     const statusFilter = clean(url.searchParams.get('status')).toLowerCase();
     const hasCommission = await columnExists(env, 'users', 'commission_percentage');
-    const commissionSelect = hasCommission ? ', commission_percentage' : ', NULL AS commission_percentage';
+    const hasCodes = await tableExists(env, 'affiliate_codes');
+    const commissionSelect = hasCommission ? ', users.commission_percentage' : ', NULL AS commission_percentage';
+    const codeSelect = hasCodes ? ', ac.id AS affiliate_code_id, ac.code AS affiliate_code, ac.status AS affiliate_code_status' : ', NULL AS affiliate_code_id, NULL AS affiliate_code, NULL AS affiliate_code_status';
+    const codeJoin = hasCodes ? `
+      LEFT JOIN affiliate_codes ac ON ac.id = (
+        SELECT id
+        FROM affiliate_codes
+        WHERE user_id = users.id AND status = 'active'
+        ORDER BY id DESC
+        LIMIT 1
+      )
+    ` : '';
 
     const usersResult = await env.DB.prepare(`
-      SELECT id, full_name, email, username, role, company_title, status, created_at, updated_at${commissionSelect}
+      SELECT users.id, users.full_name, users.email, users.username, users.role, users.company_title, users.status, users.created_at, users.updated_at${commissionSelect}${codeSelect}
       FROM users
+      ${codeJoin}
       ORDER BY
-        CASE role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END,
-        datetime(created_at) DESC
+        CASE users.role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END,
+        datetime(users.created_at) DESC
     `).all();
 
     let users = usersResult.results || [];
@@ -122,13 +134,14 @@ export async function onRequestGet({ request, env }) {
     }
 
     if (q) {
-      users = users.filter((user) => [user.full_name, user.email, user.username, user.company_title]
+      users = users.filter((user) => [user.full_name, user.email, user.username, user.company_title, user.affiliate_code]
         .some((value) => String(value || '').toLowerCase().includes(q)));
     }
     if (roleFilter && roleFilter !== 'all') users = users.filter((user) => user.role === roleFilter);
     if (statusFilter && statusFilter !== 'all') users = users.filter((user) => user.status === statusFilter);
 
     const commissionSet = users.filter((user) => user.commission_percentage !== null && user.commission_percentage !== undefined && user.commission_percentage !== '').length;
+    const codeSet = users.filter((user) => String(user.affiliate_code || '').trim()).length;
     const stats = {
       total: users.length,
       owners: users.filter((user) => user.role === 'owner').length,
@@ -139,6 +152,7 @@ export async function onRequestGet({ request, env }) {
       suspended: users.filter((user) => user.status === 'suspended').length,
       online: users.filter((user) => user.presence === 'online').length,
       commission_set: commissionSet,
+      code_set: codeSet,
     };
 
     return json({
@@ -148,7 +162,10 @@ export async function onRequestGet({ request, env }) {
         role: actor.role,
         can_edit_users: isOwner(actor),
         can_edit_commission: isOwner(actor),
+        can_edit_affiliate_codes: isStaff(actor),
+        can_edit_owner_codes: isOwner(actor),
         commission_ready: hasCommission,
+        affiliate_codes_ready: hasCodes,
       },
     });
   } catch (error) {
