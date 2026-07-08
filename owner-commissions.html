@@ -32,7 +32,7 @@
       <div>
         <p class="eyebrow">Sprint 6A</p>
         <h1 class="title">Commission center</h1>
-        <p class="lead">Manual sales tracking, affiliate codes, and commission status management while we wait for WordPress checkout details.</p>
+        <p class="lead">Manual sales tracking, affiliate codes, WooCommerce referral links, coupon-code attribution, and commission status management.</p>
       </div>
       <div id="me" class="notice account-chip">Loading account...</div>
     </div>
@@ -93,12 +93,12 @@
         </div>
         <button class="btn" onclick="copyText(location.origin + '/api/webhooks/woocommerce')">Copy webhook URL</button>
       </div>
-      <p class="small">Use this when you install the Jaxtri WordPress plugin on the WooCommerce store. The plugin tracks links like <code>?ref=CODE</code> and sends completed/cancelled/refunded order events here.</p>
+      <p class="small">Use this when you install the Jaxtri WordPress plugin on the WooCommerce store. The plugin tracks both links like <code>?ref=CODE</code> and WooCommerce coupon codes used at checkout, then sends completed/cancelled/refunded order events here.</p>
       <div class="notice success" style="margin-top:12px">
         Webhook URL: <code id="wcWebhookUrl"></code><br>
         Cloudflare env var needed: <code>JAXTRI_WC_WEBHOOK_SECRET</code>
       </div>
-      <p class="small" style="margin-top:10px">Workflow: generate affiliate code → use store link preview → install WordPress plugin → set matching secret → test webhook → place test WooCommerce order.</p>
+      <p class="small" style="margin-top:10px">Workflow: generate affiliate code → use store link preview and/or matching coupon code → install updated WordPress plugin → set matching secret → test webhook → place test WooCommerce order.</p>
     </section>
 
     <section class="card compact-card" style="margin-top:18px">

@@ -1,103 +1,78 @@
-# Jaxtri Academy — Sprint 6B WooCommerce Connector
+# Jaxtri Sprint 6B.1 — WooCommerce Link + Coupon Tracking
 
-This sprint starts the GoAffPro replacement path now that the store is confirmed to use WooCommerce.
+This patch upgrades the WooCommerce connector so Jaxtri can credit affiliate sales from both:
 
-## What this adds
+- referral links such as `https://store.com/?ref=BRODY`
+- WooCommerce coupon codes entered at checkout, such as `BRODY10`
 
-- Jaxtri webhook endpoint for WooCommerce sales
-- WordPress plugin for referral cookie tracking
-- WordPress plugin settings screen
-- WooCommerce order status syncing
-- Refund/cancel/failed order handling
-- Webhook event log table
-- Connector instructions inside the Commission Center
+## Attribution priority
 
-## New Jaxtri endpoint
+When an order has both a referral cookie and one or more coupons, Jaxtri checks codes in this order:
+
+1. WooCommerce coupon codes used at checkout
+2. referral cookie/link code
+
+Only codes that exist as active affiliate codes in Jaxtri will count. This prevents regular store coupons like `SALE20` from accidentally becoming affiliate commissions unless you intentionally create `SALE20` as an affiliate code.
+
+## What changed
+
+- WordPress plugin now sends `coupon_codes`, `referral_code`, and `affiliate_code_candidates`.
+- Jaxtri webhook now checks all candidate codes and uses the first active affiliate code it finds.
+- Sales notes now show whether the commission came from a coupon code or referral link.
+- Existing referral-link tracking still works.
+- No new D1 migration required.
+
+## Files changed
+
+- `functions/api/webhooks/woocommerce.js`
+- `owner-commissions.html`
+- `wordpress/jaxtri-affiliate-connector/jaxtri-affiliate-connector.php`
+- `wordpress/jaxtri-wordpress-connector-plugin.zip`
+
+## Install steps
+
+1. Copy this package into your Jaxtri repo.
+2. Keep your existing `wrangler.toml`.
+3. Commit and push:
 
 ```text
-/api/webhooks/woocommerce
+sprint 6b.1 coupon code tracking
 ```
 
-The WordPress plugin sends server-to-server POST requests to this endpoint.
-
-## Important security setup
-
-In Cloudflare Pages, add an environment variable:
-
-```text
-JAXTRI_WC_WEBHOOK_SECRET=make-a-long-random-secret-here
-```
-
-Use the exact same secret inside the WordPress plugin settings.
-
-## D1 migration
-
-Run this in D1:
-
-```text
-database/sprint6b-woocommerce-connector.sql
-```
-
-If D1 does not accept file paths, run the SQL inside that file manually.
-
-## WordPress plugin
-
-The plugin is included here:
+4. Upload the updated WordPress plugin ZIP from this package:
 
 ```text
 wordpress/jaxtri-wordpress-connector-plugin.zip
 ```
 
-Install it in WordPress:
+or use the separate ZIP named:
 
 ```text
-WordPress Admin → Plugins → Add New → Upload Plugin
+jaxtri-wordpress-connector-plugin-6b1.zip
 ```
 
-Then configure it:
+## Testing
 
-```text
-WordPress Admin → Settings → Jaxtri Affiliate
-```
+Test both paths:
 
-Set:
+### Referral link test
 
-```text
-Academy webhook URL: https://YOUR-ACADEMY.pages.dev/api/webhooks/woocommerce
-Webhook secret: same as Cloudflare JAXTRI_WC_WEBHOOK_SECRET
-Referral parameter: ref
-Cookie days: 30
-```
+1. Generate an affiliate code in Jaxtri, for example `BRODY`.
+2. Visit the WooCommerce store with `?ref=BRODY`.
+3. Place a test order.
+4. Confirm the sale appears in `Owner → Commissions`.
 
-## Affiliate links
+### Coupon code test
 
-Use links like:
+1. Make sure the affiliate code exists in Jaxtri.
+2. Create/use a matching WooCommerce coupon code at checkout, such as `BRODY` or `BRODY10`.
+3. Place a test order without clicking a referral link.
+4. Confirm the sale appears in `Owner → Commissions`.
 
-```text
-https://YOURSTORE.com/?ref=AFFILIATECODE
-```
+### Both-at-once test
 
-The plugin saves `AFFILIATECODE` in a browser cookie, attaches it to the WooCommerce order, and sends the sale to Jaxtri when the order becomes processing or completed.
+1. Visit store with `?ref=AFFILIATEA`.
+2. Checkout with coupon `AFFILIATEB`.
+3. Jaxtri should credit the coupon match first.
 
-## Order handling
-
-- WooCommerce `processing` / `completed` → creates or updates a pending commission sale
-- WooCommerce `cancelled` / `failed` / `refunded` → voids the sale if it has not already been marked paid
-- Paid commissions are not automatically changed by webhooks to avoid silently altering already-paid records
-
-## Test flow
-
-1. In Jaxtri, create an affiliate code for a test affiliate.
-2. In Cloudflare, set `JAXTRI_WC_WEBHOOK_SECRET`.
-3. Install and configure the WordPress plugin.
-4. Visit the store with `?ref=CODE`.
-5. Place a WooCommerce test order.
-6. Open Jaxtri → Commissions.
-7. Confirm the sale appears as pending.
-8. Cancel/refund the test order and confirm the sale voids.
-
-## Commit message
-
-```text
-sprint 6b woocommerce connector
-```
+If a checkout uses a coupon that is not an active affiliate code, Jaxtri falls back to the referral link if one exists.

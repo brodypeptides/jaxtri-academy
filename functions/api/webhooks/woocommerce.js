@@ -83,6 +83,51 @@ async function getExistingSale(env, externalOrderId) {
   `).bind(externalOrderId).first();
 }
 
+function asArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string' && value.includes(',')) return value.split(',');
+  if (value === undefined || value === null || value === '') return [];
+  return [value];
+}
+
+function uniqueCodes(values) {
+  const seen = new Set();
+  const out = [];
+  for (const value of values) {
+    const code = clean(value).slice(0, 80);
+    const key = code.toLowerCase();
+    if (!code || seen.has(key)) continue;
+    seen.add(key);
+    out.push(code);
+  }
+  return out;
+}
+
+function getCandidateCodes(payload) {
+  const couponCodes = uniqueCodes(asArray(payload.coupon_codes));
+  const referralCode = clean(payload.referral_code || payload.ref || payload.referral_cookie || '').slice(0, 80);
+  const explicitCandidates = uniqueCodes(asArray(payload.affiliate_code_candidates));
+  const legacyCode = clean(payload.affiliate_code || payload.referral_code || payload.ref || payload.referral_code).slice(0, 80);
+  return uniqueCodes([...explicitCandidates, ...couponCodes, referralCode, legacyCode]);
+}
+
+function attributionFor(selectedCode, payload) {
+  const selected = clean(selectedCode).toLowerCase();
+  const couponCodes = uniqueCodes(asArray(payload.coupon_codes)).map((x) => x.toLowerCase());
+  const referralCode = clean(payload.referral_code || payload.ref || payload.referral_cookie || '').toLowerCase();
+  if (selected && couponCodes.includes(selected)) return 'coupon_code';
+  if (selected && referralCode && selected === referralCode) return 'referral_link';
+  return clean(payload.attribution_source || payload.source_detail || 'unknown') || 'unknown';
+}
+
+async function findFirstMatchingAffiliate(env, codes) {
+  for (const code of codes) {
+    const affiliate = await findAffiliateByCode(env, code);
+    if (affiliate) return { affiliate, code };
+  }
+  return { affiliate: null, code: '' };
+}
+
 export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -126,7 +171,7 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true, test: true, message: 'Jaxtri WooCommerce webhook is reachable.' });
     }
 
-    const affiliateCode = clean(payload.affiliate_code || payload.ref || payload.referral_code).slice(0, 80);
+    const candidateCodes = getCandidateCodes(payload);
     const rawOrderId = clean(payload.order_id || payload.order_number || payload.external_order_id).slice(0, 120);
     const externalOrderId = rawOrderId ? `wc:${rawOrderId}` : '';
     const saleStatus = classifySaleStatus(payload);
@@ -134,25 +179,31 @@ export async function onRequestPost({ request, env }) {
     const currency = clean(payload.currency || 'USD').toUpperCase().slice(0, 8) || 'USD';
     const customerEmail = clean(payload.customer_email || payload.billing_email).toLowerCase().slice(0, 180) || null;
 
-    if (!affiliateCode) {
-      await logEvent(env, { ...payload, status: 'ignored', message: 'No affiliate code was attached to this order.', payload });
-      return json({ ok: true, ignored: true, reason: 'No affiliate code.' });
+    if (!candidateCodes.length) {
+      await logEvent(env, { ...payload, status: 'ignored', message: 'No referral link or checkout coupon code was attached to this order.', payload });
+      return json({ ok: true, ignored: true, reason: 'No referral link or coupon code.' });
     }
 
     if (!externalOrderId) {
-      await logEvent(env, { ...payload, affiliate_code: affiliateCode, status: 'error', message: 'Missing WooCommerce order ID.', payload });
+      await logEvent(env, { ...payload, affiliate_code: candidateCodes.join(','), status: 'error', message: 'Missing WooCommerce order ID.', payload });
       return json({ error: 'Missing WooCommerce order ID.' }, 400);
     }
 
     if (saleStatus === 'ignored') {
-      await logEvent(env, { ...payload, affiliate_code: affiliateCode, external_order_id: externalOrderId, status: 'ignored', message: `Order status ignored: ${clean(payload.order_status || payload.status)}`, payload });
+      await logEvent(env, { ...payload, affiliate_code: candidateCodes.join(','), external_order_id: externalOrderId, status: 'ignored', message: `Order status ignored: ${clean(payload.order_status || payload.status)}`, payload });
       return json({ ok: true, ignored: true, reason: 'Order status not commissionable yet.' });
     }
 
-    const affiliate = await findAffiliateByCode(env, affiliateCode);
+    const match = await findFirstMatchingAffiliate(env, candidateCodes);
+    const affiliate = match.affiliate;
+    const affiliateCode = match.code;
+    const attributionSource = attributionFor(affiliateCode, payload);
+    const couponCodes = uniqueCodes(asArray(payload.coupon_codes));
+    const referralCode = clean(payload.referral_code || payload.ref || payload.referral_cookie || '').slice(0, 80);
+
     if (!affiliate) {
-      await logEvent(env, { ...payload, affiliate_code: affiliateCode, external_order_id: externalOrderId, status: 'ignored', message: 'Affiliate code not found or disabled.', payload });
-      return json({ ok: true, ignored: true, reason: 'Affiliate code not found or disabled.' });
+      await logEvent(env, { ...payload, affiliate_code: candidateCodes.join(','), external_order_id: externalOrderId, status: 'ignored', message: `No active affiliate matched these codes: ${candidateCodes.join(', ')}`, payload });
+      return json({ ok: true, ignored: true, reason: 'No active affiliate matched referral/coupon codes.' });
     }
 
     if (affiliate.user_status !== 'active') {
@@ -202,7 +253,7 @@ export async function onRequestPost({ request, env }) {
         rate,
         commissionAmount,
         nextStatus,
-        `WooCommerce order ${rawOrderId}. Last webhook: ${clean(payload.event || payload.order_status || 'order update')}.`,
+        `WooCommerce order ${rawOrderId}. Attribution: ${attributionSource}${affiliateCode ? ` (${affiliateCode})` : ''}. Coupons: ${couponCodes.length ? couponCodes.join(', ') : 'none'}. Referral: ${referralCode || 'none'}. Last webhook: ${clean(payload.event || payload.order_status || 'order update')}.`,
         nextStatus,
         existing.id
       ).run();
@@ -230,7 +281,7 @@ export async function onRequestPost({ request, env }) {
       currency,
       rate,
       commissionAmount,
-      `Imported from WooCommerce order ${rawOrderId}.`
+      `Imported from WooCommerce order ${rawOrderId}. Attribution: ${attributionSource}${affiliateCode ? ` (${affiliateCode})` : ''}. Coupons: ${couponCodes.length ? couponCodes.join(', ') : 'none'}. Referral: ${referralCode || 'none'}.`
     ).run();
 
     const saleId = result.meta?.last_row_id || null;

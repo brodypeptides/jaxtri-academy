@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Jaxtri Affiliate Connector
- * Description: Tracks Jaxtri affiliate referral codes and sends WooCommerce order events to Jaxtri Academy.
- * Version: 0.1.0
+ * Description: Tracks Jaxtri affiliate referral links and WooCommerce coupon codes, then sends order events to Jaxtri Academy.
+ * Version: 0.1.1
  * Author: Jaxtri Labs
  */
 
@@ -70,7 +70,8 @@ class Jaxtri_Affiliate_Connector {
         ?>
         <div class="wrap">
             <h1>Jaxtri Affiliate Connector</h1>
-            <p>This plugin stores affiliate referral codes from URLs like <code>?ref=CODE</code> and sends WooCommerce order events to Jaxtri Academy.</p>
+            <p>This plugin tracks both affiliate referral links like <code>?ref=CODE</code> and WooCommerce coupon codes used at checkout.</p>
+            <p><strong>Attribution priority:</strong> matching coupon code first, then referral cookie/link fallback.</p>
             <?php if (isset($_GET['jaxtri_test'])) : ?>
                 <div class="notice notice-info"><p><?php echo esc_html(wp_unslash($_GET['jaxtri_test'])); ?></p></div>
             <?php endif; ?>
@@ -117,8 +118,7 @@ class Jaxtri_Affiliate_Connector {
             return;
         }
 
-        $code = sanitize_text_field(wp_unslash($_GET[$param]));
-        $code = preg_replace('/[^A-Za-z0-9_\-]/', '', $code);
+        $code = $this->sanitize_affiliate_code(wp_unslash($_GET[$param]));
         if (!$code) {
             return;
         }
@@ -146,12 +146,48 @@ class Jaxtri_Affiliate_Connector {
         }
     }
 
+    private function sanitize_affiliate_code($value) {
+        $code = sanitize_text_field($value);
+        return preg_replace('/[^A-Za-z0-9_\-]/', '', $code);
+    }
+
     private function current_referral_code() {
         if (empty($_COOKIE[self::COOKIE_NAME])) {
             return '';
         }
-        $code = sanitize_text_field(wp_unslash($_COOKIE[self::COOKIE_NAME]));
-        return preg_replace('/[^A-Za-z0-9_\-]/', '', $code);
+        return $this->sanitize_affiliate_code(wp_unslash($_COOKIE[self::COOKIE_NAME]));
+    }
+
+    private function order_coupon_codes($order) {
+        if (!$order || !is_a($order, 'WC_Order') || !method_exists($order, 'get_coupon_codes')) {
+            return array();
+        }
+        $codes = array();
+        foreach ((array) $order->get_coupon_codes() as $coupon_code) {
+            $clean = $this->sanitize_affiliate_code($coupon_code);
+            if ($clean) {
+                $codes[] = $clean;
+            }
+        }
+        return array_values(array_unique($codes));
+    }
+
+    private function order_referral_code($order) {
+        $code = '';
+        if ($order && is_a($order, 'WC_Order')) {
+            $code = $this->sanitize_affiliate_code($order->get_meta('_jaxtri_affiliate_code'));
+        }
+        return $code ?: $this->current_referral_code();
+    }
+
+    private function affiliate_code_candidates($order) {
+        $coupon_codes = $this->order_coupon_codes($order);
+        $referral_code = $this->order_referral_code($order);
+        $candidates = $coupon_codes;
+        if ($referral_code) {
+            $candidates[] = $referral_code;
+        }
+        return array_values(array_unique(array_filter($candidates)));
     }
 
     public function handle_order_status_changed($order_id, $old_status, $new_status, $order) {
@@ -162,7 +198,7 @@ class Jaxtri_Affiliate_Connector {
             return;
         }
 
-        $tracked_statuses = array('processing', 'completed', 'cancelled', 'failed', 'refunded');
+        $tracked_statuses = array('processing', 'completed', 'cancelled', 'canceled', 'failed', 'refunded');
         if (!in_array($new_status, $tracked_statuses, true)) {
             return;
         }
@@ -179,8 +215,11 @@ class Jaxtri_Affiliate_Connector {
     }
 
     private function send_order_webhook($order, $event, $status) {
-        $code = $order->get_meta('_jaxtri_affiliate_code');
-        if (!$code) {
+        $coupon_codes = $this->order_coupon_codes($order);
+        $referral_code = $this->order_referral_code($order);
+        $candidates = $this->affiliate_code_candidates($order);
+
+        if (empty($candidates)) {
             return;
         }
 
@@ -194,7 +233,11 @@ class Jaxtri_Affiliate_Connector {
             'customer_email' => $order->get_billing_email(),
             'gross_amount' => (float) $order->get_total(),
             'currency' => $order->get_currency(),
-            'affiliate_code' => $code,
+            'affiliate_code' => $candidates[0],
+            'affiliate_code_candidates' => $candidates,
+            'coupon_codes' => $coupon_codes,
+            'referral_code' => $referral_code,
+            'attribution_priority' => 'coupon_then_referral',
             'created_at' => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
             'paid_at' => $order->get_date_paid() ? $order->get_date_paid()->date('c') : null,
         );
@@ -217,6 +260,10 @@ class Jaxtri_Affiliate_Connector {
             'gross_amount' => 1,
             'currency' => 'USD',
             'affiliate_code' => 'TEST',
+            'affiliate_code_candidates' => array('TEST'),
+            'coupon_codes' => array('TEST'),
+            'referral_code' => '',
+            'attribution_priority' => 'coupon_then_referral',
         );
 
         $result = $this->post_to_jaxtri($payload, true);
