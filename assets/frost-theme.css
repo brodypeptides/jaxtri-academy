@@ -1,0 +1,360 @@
+/* Jaxtri Frost White + Logo Color System
+   Load this AFTER assets/styles.css. It keeps the current app layout/features,
+   but shifts the whole platform to a clean frost-white dashboard look with
+   Jaxtri green/cyan accents. */
+
+:root{
+  --bg:#f7fbff;
+  --panel:#ffffff;
+  --panel2:#f1f8f6;
+  --text:#09201b;
+  --muted:#5b6d68;
+  --line:#d9e8e4;
+  --cyan:#18c9e8;
+  --purple:#13a977;
+  --green:#18d978;
+  --red:#e64b5d;
+  --yellow:#b48718;
+  --frost:#fbfdff;
+  --frost2:#edf8f6;
+  --ink:#071b17;
+  --soft-shadow:0 16px 42px rgba(7,27,23,.08);
+  --soft-shadow-sm:0 8px 22px rgba(7,27,23,.06);
+}
+
+*{box-sizing:border-box}
+html{background:#f7fbff}
+body,
+body.dashboard-v2,
+body.team-page-body{
+  background:
+    radial-gradient(circle at 12% -8%,rgba(24,217,120,.16),transparent 34%),
+    radial-gradient(circle at 92% 4%,rgba(24,201,232,.14),transparent 32%),
+    linear-gradient(180deg,#ffffff 0%,#f7fbff 42%,#eef8f6 100%) !important;
+  color:var(--text) !important;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  background:
+    linear-gradient(90deg,rgba(24,217,120,.045) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(24,201,232,.035) 1px,transparent 1px);
+  background-size:46px 46px;
+  mask-image:linear-gradient(180deg,rgba(0,0,0,.45),transparent 68%);
+}
+
+.header,
+.header.compact-header{
+  background:rgba(255,255,255,.84) !important;
+  border-bottom:1px solid rgba(18,169,119,.16) !important;
+  box-shadow:0 10px 34px rgba(7,27,23,.06) !important;
+  backdrop-filter:blur(18px) saturate(1.2);
+}
+.brand,
+.side-brand strong,
+.team-sidebar-head h1,
+.title,
+h1,h2,h3,strong{color:var(--text)}
+.brand{letter-spacing:-.045em}
+.nav{color:var(--muted)}
+.nav a:hover{color:#0f9e73}
+
+.wrap{width:min(1120px,90vw)}
+.hero{padding:68px 0}
+.title{
+  color:var(--text) !important;
+  font-size:clamp(2.35rem,5.6vw,5.25rem);
+  line-height:.94;
+  letter-spacing:-.07em;
+}
+.lead,p{color:var(--muted)}
+.eyebrow{
+  color:#0fae79 !important;
+  letter-spacing:.22em;
+}
+
+.card,
+.metric-card,
+.feed-post,
+.user-card,
+.sale-row,
+.commission-code-row,
+.quick-list a,
+.quick-list div,
+.team-panel,
+.roster-shell,
+.roster-me,
+.roster-member,
+.roster-messages,
+.roster-message,
+.roster-attach-box,
+.roster-create-channel,
+.team-me,
+.team-detail-block,
+.team-mini-member,
+.notice,
+.user-meta-grid div,
+.app-sidebar{
+  background:rgba(255,255,255,.78) !important;
+  border-color:var(--line) !important;
+  color:var(--text) !important;
+  box-shadow:var(--soft-shadow-sm) !important;
+}
+.card,
+.metric-card,
+.feed-post,
+.user-card,
+.sale-row,
+.team-panel,
+.app-sidebar{
+  border-radius:18px !important;
+}
+
+.card,
+.compact-card{padding:18px}
+.metric-card{min-height:116px;padding:15px}
+.metric-card:hover,
+.feed-post:hover,
+.user-card:hover,
+.sale-row:hover,
+.quick-list a:hover{
+  border-color:rgba(24,217,120,.36) !important;
+  background:rgba(255,255,255,.92) !important;
+  box-shadow:0 16px 42px rgba(18,169,119,.11) !important;
+}
+.metric-card strong{font-size:1.55rem;color:#063c31}
+.metric-card span,
+.user-meta-grid span,
+.small,
+.sale-money span,
+.sale-money small,
+.side-brand small{color:var(--muted) !important}
+
+.app-shell{width:min(1440px,96vw)}
+.app-sidebar{
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(240,250,247,.78)) !important;
+  border-color:rgba(18,169,119,.16) !important;
+}
+.side-mark,
+.user-avatar,
+.roster-avatar,
+.feed-avatar{
+  background:linear-gradient(135deg,rgba(24,217,120,.18),rgba(24,201,232,.16)) !important;
+  border:1px solid rgba(18,169,119,.22) !important;
+  color:#067a59 !important;
+  box-shadow:none !important;
+}
+.side-nav a{
+  color:#536a64 !important;
+  border-radius:12px;
+}
+.side-nav a:hover,
+.side-nav a.active{
+  color:#063c31 !important;
+  background:linear-gradient(135deg,rgba(24,217,120,.12),rgba(24,201,232,.08)) !important;
+  border-color:rgba(18,169,119,.22) !important;
+}
+
+.field input,
+.field textarea,
+.field select,
+.user-filter-grid input,
+.user-filter-grid select,
+.user-edit-grid input,
+.user-edit-grid select,
+.commission-filters input,
+.commission-filters select,
+.sale-actions select,
+.roster-message-form textarea,
+.roster-message-form input,
+.roster-create-channel input,
+.roster-create-channel select,
+.team-page-composer textarea,
+.team-page-composer input,
+.team-create-channel input,
+.team-create-channel select{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border:1px solid #cfe2dd !important;
+  border-radius:12px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75);
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.user-filter-grid input:focus,
+.user-filter-grid select:focus,
+.user-edit-grid input:focus,
+.user-edit-grid select:focus,
+.commission-filters input:focus,
+.commission-filters select:focus,
+.roster-message-form textarea:focus,
+.roster-message-form input:focus,
+.team-page-composer textarea:focus,
+.team-page-composer input:focus{
+  outline:none;
+  border-color:rgba(24,201,232,.75) !important;
+  box-shadow:0 0 0 4px rgba(24,201,232,.12);
+}
+
+.btn{
+  border:1px solid #cfe2dd !important;
+  background:#ffffff !important;
+  color:#0c342c !important;
+  border-radius:12px !important;
+  padding:10px 14px !important;
+  font-weight:850;
+  box-shadow:var(--soft-shadow-sm);
+}
+.btn:hover{
+  border-color:rgba(18,169,119,.36) !important;
+  background:#f6fffb !important;
+}
+.btn.primary{
+  border:none !important;
+  background:linear-gradient(135deg,#18d978,#18c9e8) !important;
+  color:#031713 !important;
+  box-shadow:0 12px 28px rgba(24,217,120,.22) !important;
+}
+.btn.danger{
+  border-color:rgba(230,75,93,.35) !important;
+  background:rgba(255,255,255,.86) !important;
+  color:#b32034 !important;
+}
+
+.notice{
+  border-color:rgba(24,201,232,.24) !important;
+  background:rgba(255,255,255,.76) !important;
+  color:#164c43 !important;
+}
+.notice.success{
+  border-color:rgba(24,217,120,.32) !important;
+  background:rgba(24,217,120,.08) !important;
+  color:#076342 !important;
+}
+.notice.error{
+  border-color:rgba(230,75,93,.35) !important;
+  background:rgba(230,75,93,.08) !important;
+  color:#9f1d2d !important;
+}
+
+.pill{
+  background:#ffffff;
+  border-color:#d2e4df !important;
+  color:#557069 !important;
+}
+.pill.pending{color:#9b7214 !important;border-color:rgba(180,135,24,.32) !important;background:rgba(180,135,24,.07)}
+.pill.approved,.pill.published{color:#08784d !important;border-color:rgba(24,217,120,.35) !important;background:rgba(24,217,120,.08)}
+.pill.rejected{color:#b32034 !important;border-color:rgba(230,75,93,.32) !important;background:rgba(230,75,93,.07)}
+.pill.archived{color:#60736e !important;background:#f7fbff}
+
+/* Public pages: frost-white with subtle logo color glow */
+body:not(.dashboard-v2):not(.team-page-body) .hero .card{
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(245,253,250,.8)) !important;
+  border-color:rgba(18,169,119,.18) !important;
+}
+body:not(.dashboard-v2):not(.team-page-body) .title{
+  max-width:920px;
+}
+body:not(.dashboard-v2):not(.team-page-body) .grid{
+  gap:46px;
+}
+
+/* Team / chat */
+.roster-toggle{
+  background:linear-gradient(135deg,#18d978,#18c9e8) !important;
+  border:none !important;
+  color:#041713 !important;
+  box-shadow:0 16px 38px rgba(24,217,120,.24) !important;
+}
+.roster-toggle-grip{color:#064b3d !important}
+.roster-shell{
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(239,249,246,.94)) !important;
+  border-left:1px solid rgba(18,169,119,.18) !important;
+}
+.roster-tabs button,
+.team-tabs button{
+  background:#ffffff !important;
+  color:var(--muted) !important;
+  border-color:#d2e4df !important;
+}
+.roster-tabs button.active,
+.team-tabs button.active{
+  background:linear-gradient(135deg,rgba(24,217,120,.14),rgba(24,201,232,.09)) !important;
+  border-color:rgba(18,169,119,.28) !important;
+  color:#063c31 !important;
+}
+.roster-message.mine,
+.team-page-message.mine{
+  background:linear-gradient(135deg,rgba(24,217,120,.13),rgba(24,201,232,.08)) !important;
+  border-color:rgba(24,217,120,.28) !important;
+}
+.roster-message p,
+.team-page-message p{color:var(--text) !important}
+.roster-section-title{color:#0fae79 !important}
+.roster-attachment,
+.feed-link,
+.commission-code-row code,
+.own-code-display code,
+.sale-money strong{color:#0b9b76 !important}
+.roster-dot.online{background:var(--green) !important}
+.roster-dot.away{background:#d6a72a !important}
+.roster-dot.offline{background:#9aacaa !important}
+
+.team-page{
+  color:var(--text) !important;
+}
+.team-sidebar,
+.team-details{
+  background:transparent !important;
+}
+.team-chat-main{
+  background:rgba(255,255,255,.78) !important;
+}
+.team-page-messages,
+.team-list{
+  scrollbar-color:rgba(18,169,119,.28) transparent;
+}
+.team-empty{color:var(--muted) !important}
+
+/* Feed / commissions / users */
+.feed-media,
+.roster-attachment img{
+  border-color:#d4e6e1 !important;
+}
+.feed-link{
+  background:rgba(24,217,120,.07) !important;
+  border-color:rgba(24,217,120,.25) !important;
+}
+.user-presence.online{color:#08784d !important;background:rgba(24,217,120,.08) !important;border-color:rgba(24,217,120,.30) !important}
+.user-presence.away{color:#9b7214 !important;background:rgba(180,135,24,.07) !important;border-color:rgba(180,135,24,.25) !important}
+.user-presence{background:#fff !important;color:var(--muted) !important}
+.sale-row,
+.feed-post,
+.user-card{background:rgba(255,255,255,.82) !important}
+.sale-actions{gap:8px}
+
+/* Keep the app feeling professional, not oversized */
+.actions{gap:9px}
+.card h2{font-size:1.35rem}
+.field label{font-size:.92rem}
+.dashboard{padding-top:46px}
+.compact-page-head .title,
+.dashboard-v2 .title{
+  font-size:clamp(2rem,3.2vw,3.25rem) !important;
+  letter-spacing:-.06em;
+}
+
+@media(max-width:980px){
+  .app-sidebar{background:rgba(255,255,255,.88) !important}
+}
+@media(max-width:620px){
+  .hero{padding:42px 0}
+  .title{font-size:2.35rem !important}
+  .btn{width:auto;min-height:40px}
+  .card,.compact-card,.metric-card{padding:14px !important}
+}

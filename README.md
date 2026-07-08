@@ -1,43 +1,46 @@
-# Quick Public Soft Theme
+# Jaxtri Frost White + Logo Color Theme
 
-This is a small owner-requested public website style patch.
+This patch changes the whole site/app to a clean frost-white dashboard look with Jaxtri green/cyan accents.
 
-## What it changes
+## What changed
 
-- Public-facing pages get a warm off-white background, not harsh pure white.
-- Green/teal Jaxtri-style accents.
-- Softer cards and smaller rounded buttons.
-- Internal dashboards keep the existing darker operator-app style.
+- White/frost background instead of dark/off-cream
+- Green + cyan accent colors throughout
+- Cleaner cards and sidebars
+- Smaller, more professional buttons
+- Whole-site theme file: `assets/frost-theme.css`
+- Every HTML page now loads the theme after `assets/styles.css`
 
 ## Files changed
 
-- `index.html`
-- `apply.html`
-- `application-submitted.html`
-- `login.html`
-- `invite.html`
-- `assets/public-soft-theme.css`
+- `assets/frost-theme.css`
+- `assets/styles.css` and existing asset files included so replacing the `assets` folder on Mac does not delete needed files
+- All `.html` pages updated to include the frost theme
 
 ## Install
 
-Copy this package into the repo without deleting existing files.
+Copy the contents of this folder into your repo. Keep your existing `wrangler.toml`.
 
 Commit message:
 
 ```text
-quick public soft theme
+frost white logo color theme
 ```
 
-Then push and wait for Cloudflare Pages to redeploy.
+No D1 changes needed.
 
 ## Test
 
-Visit:
+Open these first:
 
-- `/`
-- `/apply.html`
-- `/login.html`
-- `/application-submitted.html`
-- `/invite.html`
+```text
+/
+apply.html
+login.html
+owner-dashboard.html
+academy-dashboard.html
+team.html
+owner-commissions.html
+```
 
-The background should feel light/white, but still blended with green/teal branding.
+The site should feel white/frosted, but still use Jaxtri green/cyan accents instead of harsh plain white.
