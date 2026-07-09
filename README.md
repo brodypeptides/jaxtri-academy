@@ -1,18 +1,20 @@
-# Jaxtri Delete User Production Wording Hotfix
+# Delete User Functional Hotfix Safe
 
-This hotfix removes production-facing "test user" wording from the user management page.
+This patch fixes the production user delete flow.
 
-## Apply
+It adds:
+- functions/api/admin/users/[id]/delete.js
+- assets/delete-user-production-fix.js
 
-1. Copy this folder's contents into the root of your `jaxtri-academy` repo.
-2. Double-click `apply-delete-user-production-hotfix.bat`.
-3. Review changes in GitHub Desktop.
-4. Delete `apply-delete-user-production-hotfix.bat` and `tools/` before committing.
-5. Commit and push.
+It patches:
+- owner-users.html wording and script include
+- assets/session.js fallback loader
 
-Expected main change:
+Apply:
+1. Copy the contents of this folder into the jaxtri-academy repo root.
+2. Run apply-delete-user-functional-hotfix-safe.bat.
+3. Review GitHub Desktop.
+4. Commit and push.
 
-- `owner-users.html`: `Delete test user` becomes `Delete user`.
-- The delete confirmation prompt no longer says the feature is only for test users.
-
-It also lightly cleans matching production wording in commissions/PWA files if those old phrases are present.
+Commit message suggestion:
+fix production user delete flow

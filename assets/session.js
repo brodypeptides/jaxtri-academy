@@ -332,6 +332,7 @@ async function loadSession(){
     installDesktopAlertChip(d.user);
     installBranding(d.user);
     installProductionMode();
+    installScript('assets/delete-user-production-fix.js');
     refreshAlertBadges();
 
     if(target) target.textContent=`Logged in as ${d.user.full_name} — ${d.user.role}${d.user.company_title?` (${d.user.company_title})`:''}`;

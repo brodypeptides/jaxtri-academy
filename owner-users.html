@@ -17,7 +17,7 @@
     <section id="usersStatus" class="notice" style="margin-top:16px">Loading users...</section><section id="usersList" class="user-list"></section>
   </main>
 </div>
-<script src="assets/session.js"></script><script src="assets/roster.js"></script>
+<script src="assets/session.js"></script><script src="assets/delete-user-production-fix.js"></script><script src="assets/roster.js"></script>
 <script>
 const usersList=document.getElementById('usersList'),usersStatus=document.getElementById('usersStatus'),searchInput=document.getElementById('searchInput'),roleFilter=document.getElementById('roleFilter'),statusFilter=document.getElementById('statusFilter'),refreshUsers=document.getElementById('refreshUsers');
 let users=[];let viewer={can_edit_users:false,can_edit_commission:false,can_edit_affiliate_codes:false,can_edit_owner_codes:false,commission_ready:false,role:""};
